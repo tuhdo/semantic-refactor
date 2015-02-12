@@ -43,7 +43,7 @@ This package includes the following features:
 
 -   Extract function with proper type information
 
-[More info and demo](srefactor-demos/gen-class-impl.md)
+[More info and demos](srefactor-demos/demos.md)
 
 # Usage<a id="sec-3" name="sec-3"></a>
 
