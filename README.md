@@ -54,6 +54,8 @@ the context at point, appropriate menu items are offered.
 Configuration:
 
 ```elisp
+    (add-to-list 'load-path "/path/to/this/repo/")
+    (require 'srefactor)
     (semantic-mode 1)
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
