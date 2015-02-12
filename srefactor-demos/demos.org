@@ -1,0 +1,102 @@
+* Context-sensitive menu: 
+When user runs the command, a menu appears and offer refactoring
+choices based on current scope of semantic tag. For example, if the
+cursor is inside a class, the menu lists choices such as generate
+function implementations for the class, generate class
+getters/setters... Each menu item also includes its own set of
+options, such as perform a refactoring option in current file or other
+file.
+
+* Generate class and function implementation
+From the header file, all function prototypes of a class can be
+generated into corresponding empty function implementation in a source
+file. The generated function implementations also include all of their
+(nested) parents as prefix in the names, if any. If the class is a
+template, then the generated functions also includes all templates
+declarations and in the parent prefix properly.
+
+Since all function implementations can be generated a class, this
+feature should be present.
+
+Demonstration 1 (with nested classes):
+
+[[file:class-gen-func-impl.gif][file:class-gen-func-impl.gif]]
+
+Demonstration 2 (with nested classes and templates):
+
+[[file:class-template-gen-func-impl.gif][file:class-template-gen-func-impl.gif]]
+
+* Generate class getters and setters
+All getters and setters of all variables in a class can be
+automatically generated with appropriate type information. Obviously,
+generating individual getter and setter for each variable works as
+well.
+
+Demonstration:
+
+[[file:class-gen-getters-setters.gif][file:class-gen-getters-setters.gif]]
+
+* Generate function prototype
+When the cursor is in a function implementation, a function prototype
+can be generated and placed in a selected file. When the prototype is
+moved into, its prefix is stripped.
+
+Demonstration:
+
+[[file:func-impl-to-prototypep.gif][file:func-impl-to-prototypep.gif]]
+
+* Convert function to function pointer
+Any function can be converted to a function pointer with typedef. 
+
+Demonstration:
+
+[[file:function-pointer-gen.gif][file:function-pointer-gen.gif]]
+
+* Convert function to function parameter
+The converted function pointer can also be placed as a parameter of a
+function. In this case, all the parameter names of the function
+pointer is stripped.
+
+Demonstration:
+
+[[file:function-pointer-as-parameter-gen.gif][file:function-pointer-as-parameter-gen.gif]]
+
+* Move semantic units
+Any meaningful tags recognized by Semantic (class, function, variable,
+namespace...) can be moved relative to other tags in current file or
+any other file.
+
+Demonstration:
+
+[[file:class-move.gif][file:class-move.gif]]
+
+* Extract function
+Select a region and turn it into a function, with relevant variables
+turned into function parameters and preserve full type information.
+
+Demonstration (C mode):
+
+[[file:extract-function.gif][file:extract-function.gif]]
+
+Demonstration (C++ mode):
+
+[[file:extract-function-cpp.gif][file:extract-function-cpp.gif]]
+
+* Current limitation
+In the C++ demo, the extracted function does not include namespace
+prefix for its parameters. This is because currently Semantic Refactor
+can only operate with Semantic tags in current buffer. Things starts
+getting much more complicated outside of current file. For example,
+the namespace information of =map= is not in =map= header file that we
+include, but in =bits/stl_map.h=. To search for such information
+requires Semantic to perform exhaustive search for all the included
+files, which would take a long time and block Emacs.
+
+One solution to this problem is to use a fast external indexer like
+GNU Global along with Semantic. GNU Global can generate tag database
+fast, but lack necessary information for smart refactoring; Semantic
+is smart but is slow. We can combine them to make the best of both:
+Global collects tag positions and Semantic decides which tag position
+is valid and how to refactor with valid tags. 
+
+This is just a plan.
