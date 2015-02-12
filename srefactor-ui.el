@@ -125,16 +125,21 @@ when the corresponding MENU-ITEM is selected."
         (or buffer-name (format "*%s*" "*Srefactor Menu*"))
       (let ((major-mode 'c-mode))
         (widget-insert (if tag
-                           (concat (propertize (semantic-format-tag-summarize tag nil t)
-                                               'semantic-tag tag)
-                                   "\n")
+                           (concat (semantic-format-tag-summarize tag nil t) "\n")
                          "")
                        (if srefactor-ui-menu-show-help
                            (concat  (if add-shortcut
                                         (concat "Press "
                                                 (propertize "1-9" 'face  'font-lock-preprocessor-face)
-                                                " or click on an action to execute.\nClick on ")
-                                      "Click on an action to execute.\nClick on ")
+                                                " or click on an action to execute.\n")
+                                      "Click on an action to execute.\n")
+                                    "Press "
+                                    (propertize "o" 'face  'bold)
+                                    " or "
+                                    (propertize "O" 'face  'bold)
+                                    " to switch to next/previous option."
+                                    "\n"
+                                    "Click on "
                                     (propertize "[Cancel]" 'face 'bold)
                                     " or press "
                                     (propertize "q" 'face 'bold)
