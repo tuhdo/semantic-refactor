@@ -25,13 +25,13 @@ structure of the analyzed language, instead of plain text structure.
 
 This package includes the following features:
 
--   Context-sensitive menu
+-   Context-sensitive menu offers appropriate refactoring actions
 
--   Generate class implementation.
+-   Generate class implementation (also handles nested class and class template)
 
 -   Generate class getters and setters
 
--   Generate function implementation
+-   Generate function implementation (also handles function template)
 
 -   Generate function prototype
 
@@ -39,27 +39,24 @@ This package includes the following features:
 
 -   Convert function to function parameter
 
--   Move semantic units
+-   Move semantic units (class, function, variable)
 
--   Extract function with type information
+-   Extract function with proper type information
 
-[More info and demo](srefactor-demos/demos.md)
+[More info and demo](srefactor-demos/gen-class-impl.md)
 
 # Usage<a id="sec-3" name="sec-3"></a>
 
 To use this package, a user only needs to use this single command:
-`srefactor-refactor-at-point` and `semanti-mode` activated. Based on
+`srefactor-refactor-at-point` and `semantic-mode` activated. Based on
 the context at point, appropriate menu items are offered.
 
 Configuration:
 
-```elisp
-    (add-to-list 'load-path "/path/to/this/repo/")
-    (require 'srefactor)
     (semantic-mode 1)
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
-```
+
 # TODOS<a id="sec-4" name="sec-4"></a>
 
 -   Add local variable rename
