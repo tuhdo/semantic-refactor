@@ -26,7 +26,7 @@ Demonstration 2 (with nested classes and templates):
 
 [[file:class-template-gen-func-impl.gif][file:class-template-gen-func-impl.gif]]
 
-Notice that in the demos, you see some regions highlighted with red
+Note that in the demos, you see some regions highlighted with red
 colors. Those regions are spaces inserted by Semantic Refactor, so
 when you move the cursor inside a generated function body, you can
 start typing code immediately without indenting.
