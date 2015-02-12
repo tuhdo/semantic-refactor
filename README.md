@@ -53,10 +53,11 @@ the context at point, appropriate menu items are offered.
 
 Configuration:
 
+```elisp
     (semantic-mode 1)
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
-
+```
 # TODOS<a id="sec-4" name="sec-4"></a>
 
 -   Add local variable rename
