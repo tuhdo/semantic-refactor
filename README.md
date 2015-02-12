@@ -59,9 +59,15 @@ Configuration:
 
 Key bindings of contextual menu:
 
--   <kbd>1..9</kbd> to quickly execute an action.
--   <kbd>o</kbd> to switch to next option, `O` to switch to previous option.
--   <kbd>q</kbd> or <kbd>C-g</kbd> to quit.
+-   `1..9` to quickly execute an action.
+-   `o` to switch to next option, `O` to switch to previous option.
+-   `n` to go to the next line, `p` to got to previous line.
+-   `q` or `C-g` to quit.
+
+You can hide the help message in the menu with by customizing
+`srefactor-ui-menu-show-help` and set it to `nil`.
+
+    (setq srefactor-ui-menu-show-help nil)
 
 # TODOS<a id="sec-4" name="sec-4"></a>
 

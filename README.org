@@ -51,7 +51,15 @@ Key bindings of contextual menu:
 
 - =1..9= to quickly execute an action.
 - =o= to switch to next option, =O= to switch to previous option.
+- =n= to go to the next line, =p= to got to previous line.
 - =q= or =C-g= to quit.
+
+You can hide the help message in the menu with by customizing
+=srefactor-ui-menu-show-help= and set it to =nil=.
+
+#+begin_src emacs-lisp
+  (setq srefactor-ui-menu-show-help nil)
+#+end_src
 
 * TODOS
 - Add local variable rename
