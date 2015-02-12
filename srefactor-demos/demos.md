@@ -1,3 +1,5 @@
+**NOTICE**: All demos begin when the string "START DEMO" is in the minibuffer.
+
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
