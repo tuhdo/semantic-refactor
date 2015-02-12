@@ -57,6 +57,12 @@ Configuration:
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
 
+Key bindings of contextual menu:
+
+-   <kbd>1..9</kbd> to quickly execute an action.
+-   <kbd>o</kbd> to switch to next option, `O` to switch to previous option.
+-   <kbd>q</kbd> or <kbd>C-g</kbd> to quit.
+
 # TODOS<a id="sec-4" name="sec-4"></a>
 
 -   Add local variable rename

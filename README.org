@@ -47,6 +47,12 @@ Configuration:
   (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
 #+end_src
 
+Key bindings of contextual menu:
+
+- =1..9= to quickly execute an action.
+- =o= to switch to next option, =O= to switch to previous option.
+- =q= or =C-g= to quit.
+
 * TODOS
 - Add local variable rename
 - Add function prototype/implementation generation from lambda
