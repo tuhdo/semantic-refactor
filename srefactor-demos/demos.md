@@ -45,6 +45,11 @@ Demonstration 2 (with nested classes and templates):
 
 [![img](class-template-gen-func-impl.gif)](class-template-gen-func-impl.gif)
 
+Notice that in the demos, you see some regions highlighted with red
+colors. Those regions are spaces inserted by Semantic Refactor, so
+when you move the cursor inside a generated function body, you can
+start typing code immediately without indenting.
+
 # Generate class getters and setters<a id="sec-3" name="sec-3"></a>
 
 All getters and setters of all variables in a class can be
@@ -98,6 +103,9 @@ Demonstration:
 
 Select a region and turn it into a function, with relevant variables
 turned into function parameters and preserve full type information.
+Notice that after the region is replaced with a function call, in the
+minibuffer (at the bottom), Semantic shows the interface of newly
+function immediately if `global-semantic-idle-summary-mode` is enabled.
 
 Demonstration (C mode):
 
