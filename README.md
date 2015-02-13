@@ -43,7 +43,7 @@ This package includes the following features:
 
 -   Extract function with proper type information
 
-[More info and demos](srefactor-demos/demos.md)
+[More info and demos](srefactor-demos/demos.org)
 
 # Usage<a id="sec-3" name="sec-3"></a>
 
@@ -53,9 +53,11 @@ the context at point, appropriate menu items are offered.
 
 Configuration:
 
+```elisp
     (semantic-mode 1)
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
+```
 
 Key bindings of contextual menu:
 

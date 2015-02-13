@@ -1,4 +1,8 @@
-* Context-sensitive menu: 
+#+TOC: headlines 2 
+*NOTICE*: All demos begin when the string `START DEMO` is in the
+minibuffer.
+
+* Context-sensitive menu 
 When user runs the command, a menu appears and offer refactoring
 choices based on current scope of semantic tag. For example, if the
 cursor is inside a class, the menu lists choices such as generate
