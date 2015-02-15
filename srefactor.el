@@ -285,9 +285,9 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
             ;; (setq dest-tag (cdr (assoc (completing-read "Select a place to insert: "
             ;;                                             tag-list)
             ;;                            tag-list)))
-            (srefactor-ui-create-menu (srefactor-ui-menu "tag-menu"
-                                                         :items tag-list
-                                                         :action #'srefactor-ui--tag-action)))
+            (oset srefactor-ui--current-active-menu :items tag-list)
+            (oset srefactor-ui--current-active-menu :action #'srefactor-ui--tag-action)
+            (srefactor-ui-create-menu srefactor-ui--current-active-menu))
         (srefactor--insert-tag refactor-tag nil func-type)))))
 
 (defun srefactor--refactor-type (dest-buffer refactor-tag)
