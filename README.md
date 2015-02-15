@@ -44,16 +44,16 @@ This package includes the following features:
 
 -   Extract function with proper type information
 
-[More info and demos](srefactor-demos/demos.md)
+[More info and demos](srefactor-demos/demos.org)
 
 # Installation<a id="sec-3" name="sec-3"></a>
 
 This package can be obtained from MELPA:
 
--   \`M-x list-packages\`
--   Move to \`srefactor\` and press \`i\`.
--   Press \`x\` to install.
--   Then, place this configuration in \`~/.emacs.d/init.el\` or \`~/.emacs\`:
+-   `M-x list-packages``
+-   Move to `srefactor` and press `i`.
+-   Press <kbd>x</kbd> to install.
+-   Then, place this configuration in `~/.emacs.d/init.el` or `~/.emacs`:
 
 ```elisp
     (require 'srefactor)
@@ -71,10 +71,10 @@ context for offering appropriate refactor actions.
 
 Key bindings of contextual menu:
 
--   `1..9` to quickly execute an action.
--   `o` to switch to next option, `O` to switch to previous option.
--   `n` to go to the next line, `p` to got to previous line.
--   `q` or `C-g` to quit.
+-   <kbd>1..9</kbd> to quickly execute an action.
+-   <kbd>o</kbd> to switch to next option, <kbd>O</kbd> to switch to previous option.
+-   <kbd>n</kbd> to go to the next line, <kbd>p</kbd> to got to previous line.
+-   <kbd>q</kbd> or <kbd>C-g</kbd> to quit.
 
 You can hide the help message in the menu with by customizing
 `srefactor-ui-menu-show-help` and set it to `nil`.
