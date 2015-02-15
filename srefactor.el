@@ -124,44 +124,49 @@ Each menu item added returns a token for what type of refactoring
 to perform."
   (interactive)
   (semantic-fetch-tags)
-  (let (menu
+  (let (menu-item-list
         (srefactor--file-options (srefactor-ui--return-option-list 'file))
-        (tag (semantic-current-tag)))
+        (tag (semantic-current-tag))
+        (menu (srefactor-ui-menu "menu")))
     (when (srefactor--menu-add-function-implementation-p tag)
-      (add-to-list 'menu `("Generate Function Implementation (Other file)"
-                           gen-func-impl
-                           ,srefactor--file-options)))
+      (add-to-list 'menu-item-list `("Generate Function Implementation (Other file)"
+                                     gen-func-impl
+                                     ,srefactor--file-options)))
     (when (srefactor--menu-add-function-proto-p tag)
-      (add-to-list 'menu `("Generate Function Prototype (Other file)"
-                           gen-func-proto
-                           ,srefactor--file-options)))
+      (add-to-list 'menu-item-list `("Generate Function Prototype (Other file)"
+                                     gen-func-proto
+                                     ,srefactor--file-options)))
     (when (srefactor--menu-add-function-pointer-p tag)
-      (add-to-list 'menu `("Generate Function Pointer (Current file)"
-                           gen-func-ptr
-                           ,srefactor--file-options)))
+      (add-to-list 'menu-item-list `("Generate Function Pointer (Current file)"
+                                     gen-func-ptr
+                                     ,srefactor--file-options)))
     (when (srefactor--menu-add-getters-setters-p tag)
-      (add-to-list 'menu `("Generate Getters and Setters (Current file)"
-                           gen-getters-setters
-                           ("(Current file)"))))
+      (add-to-list 'menu-item-list `("Generate Getters and Setters (Current file)"
+                                     gen-getters-setters
+                                     ("(Current file)"))))
     (when (srefactor--menu-add-getter-setter-p tag)
-      (add-to-list 'menu `("Generate Setter (Current file)"
-                           gen-setter
-                           ("(Current file)")))
-      (add-to-list 'menu `("Generate Getter (Current file)"
-                           gen-getter
-                           ("(Current file)")))
-      (add-to-list 'menu `("Generate Getter and Setter (Current file)"
-                           gen-getter-setter
-                           ("(Current file)"))))
+      (add-to-list 'menu-item-list `("Generate Setter (Current file)"
+                                     gen-setter
+                                     ("(Current file)")))
+      (add-to-list 'menu-item-list `("Generate Getter (Current file)"
+                                     gen-getter
+                                     ("(Current file)")))
+      (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
+                                     gen-getter-setter
+                                     ("(Current file)"))))
     (when (and (semantic-current-tag) (not (region-active-p)))
-      (add-to-list 'menu `("Move (Current file)"
-                           move
-                           ,srefactor--file-options)))
+      (add-to-list 'menu-item-list `("Move (Current file)"
+                                     move
+                                     ,srefactor--file-options)))
     (when (region-active-p)
-      (add-to-list 'menu `("Extract function (Current file)"
-                           extract-function
-                           nil)))
-    (srefactor-ui-menu menu #'srefactor-ui--refactor-action 'file tag nil t)))
+      (add-to-list 'menu-item-list `("Extract function (Current file)"
+                                     extract-function
+                                     nil)))
+    (oset menu :items menu-item-list)
+    (oset menu :action #'srefactor-ui--refactor-action)
+    (oset menu :context tag)
+    (oset menu :shortcut-p t)
+    (srefactor-ui-create-menu menu)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; High level functions that select action to make
@@ -273,7 +278,6 @@ FUNC-TYPE is a refactoring action to be performed.
 ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
   (let (dest-tag
         (tag-list (nreverse (srefactor--fetch-candidates))))
-    (setq srefactor-ui--refactor-tag refactor-tag)
     (setq srefactor-ui--func-type func-type)
     (with-current-buffer buffer
       (if (and ask-place-p tag-list)
@@ -281,7 +285,9 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
             ;; (setq dest-tag (cdr (assoc (completing-read "Select a place to insert: "
             ;;                                             tag-list)
             ;;                            tag-list)))
-            (srefactor-ui-menu tag-list #'srefactor-ui--tag-action 'tag))
+            (srefactor-ui-create-menu (srefactor-ui-menu "tag-menu"
+                                                         :items tag-list
+                                                         :action #'srefactor-ui--tag-action)))
         (srefactor--insert-tag refactor-tag nil func-type)))))
 
 (defun srefactor--refactor-type (dest-buffer refactor-tag)
@@ -311,7 +317,7 @@ REFACTOR-TAG is a Semantic tag that holds information of a C++ class."
 (defun srefactor--insert-tag (refactor-tag dest-tag insert-type &optional pos)
   "Insert a Semantic TAG to current buffer.
 
-REFACTOR-TAG is selected Semantic tag to be refactored.  
+REFACTOR-TAG is selected Semantic tag to be refactored.
 
 DEST-TAG is destination tag for refactored tag to be inserted
 next to it. If nil, insert at the end of file.
@@ -368,7 +374,7 @@ namespace.
                     (insert (srefactor--function-to-function-pointer refactor-tag))
                     (insert ";"))
                 (yank)
-		(indent-according-to-mode))
+                (indent-according-to-mode))
               (newline-and-indent))
              (t (senator-yank-tag)))))
       (goto-char (point-max))
@@ -1065,7 +1071,7 @@ wrapper for `srefactor--fetch-candidates-helper'.  See
 (defun srefactor--fetch-candidates-helper (tags depth &optional class)
   "Return a list of lists '(DISPLAY TAG OPTIONS).
 
-This function is intended to be used with `srefactor-ui-menu' to
+This function is intended to be used with `srefactor-ui-create-menu' to
 be displayed as a list of menu items.
 
 DISPLAY is the string to bepresented to user, TAG is a semantic
@@ -1182,6 +1188,21 @@ tag and OPTIONS is a list of possible choices for each menu item.
                               (string-equal type-type-tag "struct"))))
         struct-p)
     (error nil)))
+
+(defun srefactor--collect-lines-regexp (regexp buffer)
+  (srefactor--collect-lines (lambda () (re-search-forward regexp nil t)) buffer))
+
+(defun srefactor--collect-lines (predicate buffer)
+  (with-current-buffer buffer
+    (save-excursion
+      (goto-char (point-min))
+      (let (lines)
+        (while (funcall predicate)
+          (push (cons (line-number-at-pos (point))
+                      (buffer-substring-no-properties (line-beginning-position)
+                                                      (line-end-position)))
+                lines))
+        lines))))
 
 (provide 'srefactor)
 

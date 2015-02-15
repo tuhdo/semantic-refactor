@@ -60,37 +60,16 @@
 (defvar srefactor-ui--current-active-region-end nil
   "Store the end of an active region of current window if any.")
 
-(defvar srefactor-ui--refactor-tag nil
-  "Store current Semantic tag for refactoring.")
-
-(defvar srefactor-ui--tag-selected nil
-  "Store the selected destination Semantic tag for inserting `srefactor-ui--tag-selected'.")
-
-(defvar srefactor-ui--menu-type nil
-  "Menu type can be either 'file or 'tag, for displaying menu
-  items with file options or tag options.")
+(defvar srefactor-ui--current-active-menu nil
+  "Current menu object biing used.")
 
 (defvar srefactor-ui--func-type nil
   "What type of refactoring to perform.")
 
-(defvar srefactor-ui--commands nil)
 (defcustom srefactor-ui-menu-show-help t
   "Turn on/off help message."
   :group 'srefactor-ui
   :type 'boolean)
-
-(defun srefactor-ui--return-option-list (type)
-  (let (options)
-    (cond
-     ((eq type 'file)
-      (push "(Current file)" options)
-      (push "(Other file)" options)
-      (when (featurep 'projectile)
-	(push "(Project file)" options))
-      (push "(File)" options))
-     ((eq type 'tag)
-      '("(Before)" "(Inside)" "(After)"))
-     (t))))
 
 (defsubst srefactor-ui--menu-label (e)
   (car e))
@@ -110,6 +89,51 @@ the menu item string displayed.  MENU-VALUE is the file to be open
 when the corresponding MENU-ITEM is selected."
   (cons menu-item menu-value))
 
+(defclass srefactor-ui-menu ()
+  ((name
+    :initarg :name
+    :initform "*Srefactor Menu*"
+    :accessor name
+    :type string
+    :documentation
+    "Name of the menu to be displayed in the modeline.")
+   (items
+    :initarg :items
+    :initform nil
+    :accessor items
+    :type list
+    :documentation
+    "Item list to be displayed in a menu. Item is a list
+          '(DISPLAY REAL OPTIONS).")
+   (action
+    :initarg :action
+    :initform nil
+    :accessor action
+    :documentation
+    "An action to run when a menu item is selected.")
+   (context
+    :initarg :context
+    :initform nil
+    :accessor context
+    :documentation
+    "Current Semantic tag in scope, used as context to
+     select appropriate refactor actions.")
+   (shortcut-p
+    :initarg :shortcut-p
+    :initform nil
+    :accessor shortcut-p
+    :type boolean
+    :documentation
+    "If t, first 9 actions can be executed by digit
+               keys 1-9.")
+   (persistent-action
+    :initarg :persistent-action
+    :initform nil
+    :documentation
+    "An action to execute without exiting the
+                      menu."))
+  "Class srefactor-ui-menu ")
+
 (defmacro srefactor-ui--menu (name &rest forms)
   "Show a dialog buffer with NAME, setup with FORMS."
   (declare (indent 1) (debug t))
@@ -126,14 +150,12 @@ when the corresponding MENU-ITEM is selected."
      (switch-to-buffer (current-buffer))
      (hl-line-mode 1)))
 
-(defun srefactor-ui-menu (commands menu-item-action type &optional tag buffer-name add-shortcut)
+(defun srefactor-ui-create-menu (menu)
   (interactive)
-  (unless commands
+  (unless (items menu)
     (error "No available action."))
-  (setq srefactor-ui--commands commands)
   (setq srefactor-ui--current-active-window (car (window-list)))
-  (setq srefactor-ui--tag-selected nil)
-  (setq srefactor-ui--menu-type type)
+  (setq srefactor-ui--current-active-menu menu)
   (if (region-active-p)
       (progn
         (setq srefactor-ui--current-active-region-start (region-beginning))
@@ -142,13 +164,14 @@ when the corresponding MENU-ITEM is selected."
     (setq srefactor-ui--current-active-region-end nil))
   (with-selected-window (select-window (split-window-below))
     (srefactor-ui--menu
-        (or buffer-name (format "*%s*" "*Srefactor Menu*"))
+        (or (name srefactor-ui--current-active-menu)
+            (format "*%s*" "*Srefactor Menu*"))
       (let ((major-mode 'c-mode))
-        (widget-insert (if tag
-                           (concat (semantic-format-tag-summarize tag nil t) "\n")
+        (widget-insert (if (context srefactor-ui--current-active-menu)
+                           (concat (semantic-format-tag-summarize (context srefactor-ui--current-active-menu) nil t) "\n")
                          "")
                        (if srefactor-ui-menu-show-help
-                           (concat  (if add-shortcut
+                           (concat  (if (shortcut-p srefactor-ui--current-active-menu)
                                         (concat "Press "
                                                 (propertize "1-9" 'face  'font-lock-preprocessor-face)
                                                 " or click on an action to execute.\n")
@@ -169,7 +192,10 @@ when the corresponding MENU-ITEM is selected."
              `(group
                :indent 2
                :format "\n%v\n"
-               ,@(srefactor-ui--generate-items commands menu-item-action add-shortcut)))
+               ,@(srefactor-ui--generate-items
+                  (items srefactor-ui--current-active-menu)
+                  (action srefactor-ui--current-active-menu)
+                  (shortcut-p srefactor-ui--current-active-menu))))
       (widget-create
        'push-button
        :notify 'srefactor-ui--menu-quit
@@ -181,13 +207,26 @@ when the corresponding MENU-ITEM is selected."
                           (/ (* (frame-height) 10)
                              100))))
 
+(defun srefactor-ui--return-option-list (type)
+  (let (options)
+    (cond
+     ((eq type 'file)
+      (push "(Current file)" options)
+      (push "(Other file)" options)
+      (when (featurep 'projectile)
+        (push "(Project file)" options))
+      (push "(File)" options))
+     ((eq type 'tag)
+      '("(Before)" "(Inside)" "(After)"))
+     (t))))
+
 (defun srefactor-ui--generate-items (commands action &optional add-shortcut)
   "Return a list of widgets to display FILES in a dialog buffer."
   (mapcar (lambda (w)
             (srefactor-ui--create-menu-widget w action))
           (if add-shortcut
               (srefactor-ui--show-digit-shortcut (mapcar 'srefactor-ui--make-default-menu-element
-							 commands))
+                                                         commands))
             (mapcar 'srefactor-ui--make-default-menu-element
                     commands))))
 
@@ -209,7 +248,7 @@ when the corresponding MENU-ITEM is selected."
 
 (defun srefactor-ui--make-default-menu-element (command)
   (srefactor-ui--make-menu-element (srefactor-ui--menu-label command)
-				   (srefactor-ui--menu-value-item command)))
+                                   (srefactor-ui--menu-value-item command)))
 
 (defun srefactor-ui--create-menu-widget (menu-element action)
   "Return a widget to display MENU-ELEMENT in a dialog buffer."
@@ -245,9 +284,8 @@ when the corresponding MENU-ITEM is selected."
 (defun srefactor-ui--tag-action (widget &rest _ignore)
   (interactive)
   (srefactor-ui--clean-up-menu-window)
-  (setq srefactor-ui--tag-selected (car (widget-value widget)))
-  (srefactor--insert-tag srefactor-ui--refactor-tag
-                         srefactor-ui--tag-selected
+  (srefactor--insert-tag (context srefactor-ui--current-active-menu)
+                         (car (widget-value widget))
                          srefactor-ui--func-type
                          (srefactor-ui--get-current-menu-option (widget-get widget :tag))))
 
@@ -266,7 +304,7 @@ when the corresponding MENU-ITEM is selected."
              (kill-buffer (current-buffer))
              (delete-window (car (window-list)))
              (select-window srefactor-ui--current-active-window)
-             (srefactor--refactor-based-on-tag-class (car (nth (- ,k 1)  srefactor-ui--commands)))))
+             (srefactor--refactor-based-on-tag-class (car (nth (- ,k 1)  (items srefactor-ui--current-active-menu))))))
         ;; Bind it to a digit key.
         (define-key km (vector (+ k ?0)) cmd)))
     km)
@@ -290,7 +328,7 @@ when the corresponding MENU-ITEM is selected."
       (error nil))
     (select-window menu-window)))
 
-(defun srefactor-ui--cycle-option (direction current-option options type)
+(defun srefactor-ui--cycle-option (direction current-option options)
   (let* ((options options)
          (pos (position current-option options :test #'string-equal))
          (l (length options)))
@@ -315,7 +353,7 @@ when the corresponding MENU-ITEM is selected."
          (current-opt (srefactor-ui--get-current-menu-option (widget-get link :tag)))
          (options (cadr (widget-value-value-get link)))
          (check (unless current-opt (throw 'option-not-available "No option is available for this tag.")))
-         (next-opt (srefactor-ui--cycle-option direction current-opt options srefactor-ui--menu-type))
+         (next-opt (srefactor-ui--cycle-option direction current-opt options))
          (next-tag (replace-regexp-in-string "(\\(.*\\))" "" (widget-get link :tag))))
     (when link
       (widget-put link :tag (concat next-tag next-opt))
