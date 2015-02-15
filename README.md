@@ -4,8 +4,9 @@
 <ul>
 <li><a href="#sec-1">1. What is Semantic Refactor?</a></li>
 <li><a href="#sec-2">2. Features</a></li>
-<li><a href="#sec-3">3. Usage</a></li>
-<li><a href="#sec-4">4. TODOS</a></li>
+<li><a href="#sec-3">3. Installation</a></li>
+<li><a href="#sec-4">4. Usage</a></li>
+<li><a href="#sec-5">5. TODOS</a></li>
 </ul>
 </div>
 </div>
@@ -43,21 +44,30 @@ This package includes the following features:
 
 -   Extract function with proper type information
 
-[More info and demos](srefactor-demos/demos.org)
+[More info and demos](srefactor-demos/demos.md)
 
-# Usage<a id="sec-3" name="sec-3"></a>
+# Installation<a id="sec-3" name="sec-3"></a>
 
-To use this package, a user only needs to use this single command:
-`srefactor-refactor-at-point` and `semantic-mode` activated. Based on
-the context at point, appropriate menu items are offered.
+This package can be obtained from MELPA:
 
-Configuration:
+-   \`M-x list-packages\`
+-   Move to \`srefactor\` and press \`i\`.
+-   Press \`x\` to install.
+-   Then, place this configuration in \`~/.emacs.d/init.el\` or \`~/.emacs\`:
 
 ```elisp
+    (require 'srefactor)
     (semantic-mode 1)
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
 ```
+# Usage<a id="sec-4" name="sec-4"></a>
+
+To use this package, a user only needs to use this single command:
+`srefactor-refactor-at-point` and `semantic-mode` activated. Based on
+the context at point, appropriate menu items are offered. When the
+menu opens up, the top line contains the tag at point, which is the
+context for offering appropriate refactor actions.
 
 Key bindings of contextual menu:
 
@@ -71,7 +81,7 @@ You can hide the help message in the menu with by customizing
 
     (setq srefactor-ui-menu-show-help nil)
 
-# TODOS<a id="sec-4" name="sec-4"></a>
+# TODOS<a id="sec-5" name="sec-5"></a>
 
 -   Add local variable rename
 -   Add function prototype/implementation generation from lambda

@@ -33,19 +33,28 @@ This package includes the following features:
 
 [[file:srefactor-demos/demos.org][More info and demos]]
 
-* Usage
+* Installation
+This package can be obtained from MELPA:
 
-To use this package, a user only needs to use this single command:
-=srefactor-refactor-at-point= and =semantic-mode= activated. Based on
-the context at point, appropriate menu items are offered.
-
-Configuration:
+- `M-x list-packages`
+- Move to `srefactor` and press `i`.
+- Press `x` to install.
+- Then, place this configuration in `~/.emacs.d/init.el` or `~/.emacs`:
 
 #+begin_src emacs-lisp
+  (require 'srefactor)
   (semantic-mode 1)
   (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
   (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
 #+end_src
+
+* Usage
+
+To use this package, a user only needs to use this single command:
+=srefactor-refactor-at-point= and =semantic-mode= activated. Based on
+the context at point, appropriate menu items are offered. When the
+menu opens up, the top line contains the tag at point, which is the
+context for offering appropriate refactor actions.
 
 Key bindings of contextual menu:
 
