@@ -45,6 +45,7 @@
 
 (with-no-warnings
   (require 'cl))
+(require 'recentf)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables
