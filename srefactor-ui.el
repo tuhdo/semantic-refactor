@@ -41,7 +41,8 @@
 ;;
 ;;; Code:
 
-(require 'cl)
+(with-no-warnings
+  (require 'cl))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables
@@ -354,3 +355,6 @@ when the corresponding MENU-ITEM is selected."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; srefactor-ui-ui.el ends here
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions)
+;; End:

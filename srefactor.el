@@ -89,7 +89,8 @@
 ;;
 ;;; Code:
 
-(require 'cl)
+(with-no-warnings
+  (require 'cl))
 (require 'semantic)
 (require 'srefactor-ui)
 
@@ -1147,3 +1148,6 @@ tag and OPTIONS is a list of possible choices for each menu item.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; srefactor.el ends here
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions)
+;; End:
