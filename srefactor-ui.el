@@ -40,6 +40,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
+(declare-function 'srefactor--refactor-based-on-tag-class "srefactor.el")
+(declare-function 'srefactor--insert-tag "srefactor.el")
 
 (with-no-warnings
   (require 'cl))
