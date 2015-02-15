@@ -364,7 +364,8 @@ namespace.
               (save-excursion
                 (with-current-buffer (semantic-tag-buffer refactor-tag)
                   (goto-char (semantic-tag-start refactor-tag))
-                  (senator-kill-tag)))
+                  (senator-kill-tag)
+                  (delete-horizontal-space)))
               (if (and (or (srefactor--tag-struct-p dest-tag)
                            (srefactor--tag-struct-p
                             (srefactor--calculate-parent-tag dest-tag)))
