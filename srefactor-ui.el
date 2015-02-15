@@ -107,6 +107,22 @@ the menu item string displayed.  MENU-VALUE is the file to be open
 when the corresponding MENU-ITEM is selected."
   (cons menu-item menu-value))
 
+(defmacro srefactor-ui--menu (name &rest forms)
+  "Show a dialog buffer with NAME, setup with FORMS."
+  (declare (indent 1) (debug t))
+  `(with-current-buffer (get-buffer-create ,name)
+     ;; Cleanup buffer
+     (let ((inhibit-read-only t)
+           (ol (overlay-lists)))
+       (mapc 'delete-overlay (car ol))
+       (mapc 'delete-overlay (cdr ol))
+       (erase-buffer))
+     (srefactor-ui-menu-mode)
+     ,@forms
+     (widget-setup)
+     (switch-to-buffer (current-buffer))
+     (hl-line-mode 1)))
+
 (defun srefactor-ui-menu (commands menu-item-action type &optional tag buffer-name add-shortcut)
   (interactive)
   (unless commands
@@ -161,22 +177,6 @@ when the corresponding MENU-ITEM is selected."
                              100)
                           (/ (* (frame-height) 10)
                              100))))
-
-(defmacro srefactor-ui--menu (name &rest forms)
-  "Show a dialog buffer with NAME, setup with FORMS."
-  (declare (indent 1) (debug t))
-  `(with-current-buffer (get-buffer-create ,name)
-     ;; Cleanup buffer
-     (let ((inhibit-read-only t)
-           (ol (overlay-lists)))
-       (mapc 'delete-overlay (car ol))
-       (mapc 'delete-overlay (cdr ol))
-       (erase-buffer))
-     (srefactor-ui-menu-mode)
-     ,@forms
-     (widget-setup)
-     (switch-to-buffer (current-buffer))
-     (hl-line-mode 1)))
 
 (defun srefactor-ui--generate-items (commands action &optional add-shortcut)
   "Return a list of widgets to display FILES in a dialog buffer."
