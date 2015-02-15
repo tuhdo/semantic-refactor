@@ -106,6 +106,13 @@
   :group 'srefactor)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Developer Options
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar srefactor-use-srecode-p nil
+  "Use experimental SRecode tag insertion mechanism.")
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Commands - only one currently
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -378,6 +385,7 @@ namespace.
     (indent-according-to-mode)
 
     ;; post content insertion based on context
+    (unless srefactor-use-srecode-p
     (unless parent-is-func-p
       (if (eq insert-type 'gen-func-impl)
           (progn
@@ -395,7 +403,8 @@ namespace.
               (indent-according-to-mode)
               (srefactor--indent-and-newline 1))
             (goto-char (line-end-position)))
-        (srefactor--maybe-insert-function-end dest-tag insert-type)))))
+        (srefactor--maybe-insert-function-end dest-tag insert-type))))
+    ))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions - IO
@@ -541,13 +550,43 @@ content changed."
 ;;
 
 (defun srefactor--insert-function-implementation (func-tag)
-  "Insert function implementations for FUNC-TAG, a tag that is a function."
+  "Insert function implementations for FUNC-TAG at point, a tag that is a function."
+  (forward-line 0)
+  (open-line 1)
+  (forward-line 1)
+  (if srefactor-use-srecode-p
+      ;; Try using SRecode as the mechanism for inserting a tag.
+      (let* ((copy (semantic-tag-copy func-tag))
+	     ;; (parent (semantic-tag-calculate-parent func-tag))
+	     ;; TODO - below srefactor fcn should be a part of semantic or srecode.
+	     (parentstring1 (srefactor--tag-parents-string func-tag))
+	     (parentstring (substring parentstring1 0 (- (length parentstring1) 2)))
+	     (endofinsert nil))
+	;; Copied this line from original
+	(semantic-tag-put-attribute func-tag :typemodifiers nil)
+	(semantic-tag-put-attribute func-tag :parent parentstring)
+	;; Insert the tag
+	(require 'srecode/semantic)
+	;; TODO - does it need any special dictionary entries?
+	(setq endofinsert
+	      (srecode-semantic-insert-tag 
+	       func-tag
+	       nil ;; Style
+	       (lambda (localtag)
+		 (srefactor--insert-initial-content-based-on-return-type
+		  (if (or (srefactor--tag-function-constructor copy)
+			  (srefactor--tag-function-destructor copy))
+		      ""
+		    (semantic-tag-type copy)))
+		 ) ;; Callbck for function body.
+	       ;; Dictionary entries go here.
+	       ))
+	(goto-char endofinsert)
+	(insert "\n\n")
+	)
   (let ((func-tag-name (semantic-tag-name func-tag)))
     (when (srefactor--tag-function-modifiers func-tag)
       (semantic-tag-put-attribute func-tag :typemodifiers nil))
-    (forward-line 0)
-    (open-line 1)
-    (forward-line 1)
     (insert (srefactor--tag-templates-declaration-string (srefactor--calculate-parent-tag func-tag)))
     (insert (srefactor--tag-function-string func-tag))
     (search-backward func-tag-name)
@@ -565,7 +604,7 @@ content changed."
         (c-beginning-of-statement-1)
         (re-search-forward func-tag-name)
         (replace-match ""))
-       (t)))))
+       (t))))))
 
 (defun srefactor--insert-function-pointer (tag)
   "Insert function pointer definition for TAG."
