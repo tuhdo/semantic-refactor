@@ -287,6 +287,7 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
             ;;                            tag-list)))
             (oset srefactor-ui--current-active-menu :items tag-list)
             (oset srefactor-ui--current-active-menu :action #'srefactor-ui--tag-action)
+            (oset srefactor-ui--current-active-menu :shortcut-p nil)
             (srefactor-ui-create-menu srefactor-ui--current-active-menu))
         (srefactor--insert-tag refactor-tag nil func-type)))))
 
