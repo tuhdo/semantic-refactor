@@ -361,11 +361,11 @@ namespace.
              ((srefactor--tag-pointer refactor-tag)
               (semantic-insert-foreign-tag (srefactor--function-pointer-to-function refactor-tag)))
              ((eq insert-type 'move)
-              (save-excursion
-                (with-current-buffer (semantic-tag-buffer refactor-tag)
+              (with-current-buffer (semantic-tag-buffer refactor-tag)
+                (save-excursion
                   (goto-char (semantic-tag-start refactor-tag))
                   (senator-kill-tag)
-                  (delete-horizontal-space)))
+                  (delete-blank-lines)))
               (if (and (or (srefactor--tag-struct-p dest-tag)
                            (srefactor--tag-struct-p
                             (srefactor--calculate-parent-tag dest-tag)))
