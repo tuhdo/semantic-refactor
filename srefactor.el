@@ -1192,14 +1192,16 @@ tag and OPTIONS is a list of possible choices for each menu item.
 
 (defun srefactor--local-var-at-point ()
   "Check whether text at point is a local variable."
-  (catch 'exist
-    (mapc (lambda (v)
-            (save-excursion
-              (srefactor--mark-symbol-at-point)
-              (when (srefactor--var-in-region-p v (line-beginning-position) (line-end-position))
-                (setq mark-active nil)
-                (throw 'exist v))))
-          (semantic-get-all-local-variables))))
+  (condition-case nil
+      (catch 'exist
+        (mapc (lambda (v)
+                (save-excursion
+                  (srefactor--mark-symbol-at-point)
+                  (when (srefactor--var-in-region-p v (line-beginning-position) (line-end-position))
+                    (setq mark-active nil)
+                    (throw 'exist v))))
+              (semantic-get-all-local-variables)))
+    (error nil)))
 
 (defun srefactor--activate-region (beg end)
   "Activate a region from BEG to END."
