@@ -154,6 +154,10 @@ to perform."
       (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
                                      gen-getter-setter
                                      ("(Current file)"))))
+    (when (srefactor--local-var-at-point)
+      (add-to-list 'menu-item-list `("Rename local variable (Current file)"
+                                     rename-local-var
+                                     ("(Current file)"))))
     (when (and (semantic-current-tag) (not (region-active-p)))
       (add-to-list 'menu-item-list `("Move (Current file)"
                                      move
@@ -184,6 +188,12 @@ FILE-OPTION is a file destination associated with OPERATION."
       (cond
        ((eq operation 'extract-function)
         (srefactor--extract-region 'function))
+       ((eq operation 'rename-local-var)
+        (let* ((local-var (srefactor--local-var-at-point))
+               (prompt (format "Replace (%s) with: " (semantic-tag-name local-var))))
+          (srefactor--rename-local-var local-var
+                                       (semantic-current-tag)
+                                       (read-from-minibuffer prompt))))
        (t
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -441,7 +451,7 @@ OTHER-FILE is the selected file from the menu."
     (current-buffer)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions that insert actual text
+;; Functions that insert actual text or modify text
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
@@ -776,6 +786,19 @@ TAG-TYPE is the return type such as int, long, float, double..."
     (newline-and-indent)))
 
 ;;
+;; VARIABLE
+;;
+(defun srefactor--rename-local-var (local-var-tag function-tag new-name)
+  "Rename the name of a LOCAL-VAR-TAG in FUNCTION-TAG to NEW-NAME."
+  (save-excursion
+    (mapc (lambda (l)
+            (goto-line l)
+            (search-forward-regexp (srefactor--local-var-regexp local-var-tag))
+            (replace-match new-name t t nil 1))
+          (srefactor--collect-local-var-lines local-var-tag function-tag nil)))
+  (message (format "Renamed %s to %s" (semantic-tag-name local-var-tag) new-name)))
+
+;;
 ;; GENERAL
 ;;
 
@@ -954,6 +977,10 @@ The returned string is formatted as:
   "Return `:constructor-flag' attribute of a TAG, that is either t or nil."
   (semantic-tag-get-attribute tag :constructor-flag))
 
+(defun srefactor--local-var-regexp (tag)
+  "Return regexp for seraching local variable TAG."
+  (format "\\(\\_\<%s\\)\\([^[:alnum:]]\\)" (semantic-tag-name tag)))
+
 (defun srefactor--tag-pointer (tag)
   "Return `:pointer' attribute of a TAG."
   (semantic-tag-get-attribute tag :pointer))
@@ -1057,6 +1084,7 @@ EXTRACT-TYPE can be 'function or 'macro."
 (defun srefactor--mark-symbol-at-point ()
   "Activate mark for a symbol at point."
   (interactive)
+  (forward-symbol -1)
   (set-mark-command nil)
   (forward-symbol 1)
   (setq deactivate-mark nil))
@@ -1162,6 +1190,25 @@ tag and OPTIONS is a list of possible choices for each menu item.
        (eq (semantic-tag-class (semantic-tag-calculate-parent tag)) 'type)
        (not (region-active-p))))
 
+(defun srefactor--local-var-at-point ()
+  "Check whether text at point is a local variable."
+  (catch 'exist
+    (mapc (lambda (v)
+            (save-excursion
+              (srefactor--mark-symbol-at-point)
+              (when (srefactor--var-in-region-p v (line-beginning-position) (line-end-position))
+                (setq mark-active nil)
+                (throw 'exist v))))
+          (semantic-get-all-local-variables))))
+
+(defun srefactor--activate-region (beg end)
+  "Activate a region from BEG to END."
+  (interactive)
+  (goto-char beg)
+  (set-mark-command nil)
+  (goto-char end)
+  (setq deactivate-mark nil))
+
 (defun srefactor--menu-for-region-p ()
   "Check whether to add exclusive menu item for a region."
   (region-active-p))
@@ -1171,10 +1218,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
   (when (region-active-p)
     (save-excursion
       (goto-char beg)
-      (search-forward-regexp (format "\\_\<%s\\([^[:alnum:]]\\)"
-                                     (semantic-tag-name tag))
-                             end
-                             t))))
+      (search-forward-regexp (srefactor--local-var-regexp tag) end t))))
 
 (defun srefactor--tag-struct-p (tag)
   "Check if TAG is a C struct."
@@ -1191,19 +1235,35 @@ tag and OPTIONS is a list of possible choices for each menu item.
         struct-p)
     (error nil)))
 
-(defun srefactor--collect-lines-regexp (regexp buffer)
-  (srefactor--collect-lines (lambda () (re-search-forward regexp nil t)) buffer))
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions - Utilities
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun srefactor--collect-local-var-lines (local-var-tag function-tag &optional with-content)
+  "Return all lines that LOCAL-VAR-TAG occurs in FUNCTION-TAG.
+If WITH-CONTENT is nil, returns a list of line numbers.  If
+WITH-CONTENT is t, returns a list of pairs, in which each element
+is a cons of a line and the content of that line."
+  (save-excursion
+    (goto-char (semantic-tag-start function-tag))
+    (srefactor--collect-lines-regexp (srefactor--local-var-regexp local-var-tag)
+                                     (current-buffer)
+                                     (semantic-tag-end function-tag)
+                                     with-content)))
 
-(defun srefactor--collect-lines (predicate buffer)
+(defun srefactor--collect-lines-regexp (regexp buffer &optional bound with-content)
+  (srefactor--collect-lines (lambda () (re-search-forward regexp bound t)) buffer with-content))
+
+(defun srefactor--collect-lines (predicate buffer &optional with-content)
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
       (let (lines)
         (while (funcall predicate)
-          (push (cons (line-number-at-pos (point))
-                      (buffer-substring-no-properties (line-beginning-position)
-                                                      (line-end-position)))
-                lines))
+          (push  (if with-content
+                     (cons (line-number-at-pos (point))
+                           (buffer-substring-no-properties (line-beginning-position)
+                                                           (line-end-position)))
+                   (line-number-at-pos (point))) lines))
         lines))))
 
 (provide 'srefactor)
