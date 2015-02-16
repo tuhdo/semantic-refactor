@@ -499,8 +499,9 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
                   (unless (semantic-tag-variable-constant-p tag)
                     "const ")
                   (srefactor--tag-type-string tag)
-                  (unless (and (listp (semantic-tag-type tag))
-                               (srefactor--tag-reference tag))
+                  (when (and (listp (semantic-tag-type tag))
+                             ;; (srefactor--tag-reference tag)
+                             (not (srefactor--tag-pointer tag)))
                     "&")
                   " "
                   (semantic-tag-name tag)
