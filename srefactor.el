@@ -195,10 +195,10 @@ FILE-OPTION is a file destination associated with OPERATION."
           (unwind-protect
               (condition-case nil
                   (progn
-                    (srefactor--highlight-tag local-var 'match)
+                    (srefactor--highlight-tag local-var refactor-tag 'match)
                     (setq prompt (format "Replace (%s) with: " (semantic-tag-name local-var)))
                     (srefactor--rename-local-var local-var
-                                                 (semantic-current-tag)
+                                                 refactor-tag
                                                  (read-from-minibuffer prompt))
                     (srefactor--unhighlight-tag local-var))
                 (error nil))
@@ -1330,13 +1330,40 @@ WITH-CONTENT, if t, returns the content associated with each line."
                    (line-number-at-pos (point))) lines))
         lines))))
 
-(defun srefactor--highlight-tag (tag &optional face)
+(defun srefactor--highlight-tag (tag &optional scope-tag face)
   "Highlight TAG with FACE."
-  (highlight-regexp (srefactor--local-var-regexp tag) face))
+  (let ((lines (srefactor--collect-tag-occurrences tag scope-tag)))
+    (mapc (lambda (l)
+            (save-excursion
+              (goto-line l)
+              (goto-char (line-beginning-position))
+
+              (search-forward-regexp (srefactor--local-var-regexp tag)
+                                     (if scope-tag
+                                         (semantic-tag-end scope-tag)
+                                       (point-max))
+                                     t)
+
+              ;; if so, go back to the beginning
+              (search-backward-regexp (srefactor--local-var-regexp tag)
+                                      (if scope-tag
+                                          (semantic-tag-start scope-tag)
+                                        (point-min))
+                                      t)
+              (setq beg (point))
+              (forward-char 1)
+              (forward-symbol 1)
+              (setq end (point))
+
+              (let ((overlay (make-overlay beg end)))
+                (overlay-put overlay 'srefactor-overlay t)
+                (overlay-put overlay 'srefactor-overlay-regexp "print_viable_colors")
+                (overlay-put overlay 'face 'match))))
+          lines)))
 
 (defun srefactor--unhighlight-tag (tag)
   "Unhighlight TAG."
-  (unhighlight-regexp (srefactor--local-var-regexp tag)))
+  (remove-overlays))
 
 (provide 'srefactor)
 
