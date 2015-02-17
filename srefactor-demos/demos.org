@@ -3,30 +3,31 @@
 minibuffer.
 
 * Context-sensitive menu 
-When user runs the command, a menu appears and offer refactoring
-choices based on current scope of semantic tag. For example, if the
-cursor is inside a class, the menu lists choices such as generate
-function implementations for the class, generate class
+_Description_: When user runs the command, a menu appears and offer
+refactoring choices based on current scope of semantic tag. For
+example, if the cursor is inside a class, the menu lists choices such
+as generate function implementations for the class, generate class
 getters/setters... Each menu item also includes its own set of
 options, such as perform a refactoring option in current file or other
 file.
 
 * Generate class and function implementation
-From the header file, all function prototypes of a class can be
-generated into corresponding empty function implementation in a source
-file. The generated function implementations also include all of their
-(nested) parents as prefix in the names, if any. If the class is a
-template, then the generated functions also includes all templates
-declarations and in the parent prefix properly.
+_Description_: From the header file, all function prototypes of a
+class can be generated into corresponding empty function
+implementation in a source file. The generated function
+implementations also include all of their (nested) parents as prefix
+in the names, if any. If the class is a template, then the generated
+functions also includes all templates declarations and in the parent
+prefix properly.
 
 Since all function implementations can be generated a class, this
 feature should be present.
 
-Demonstration 1 (with nested classes):
+_Demonstration_ 1 (with nested classes):
 
 [[file:class-gen-func-impl.gif][file:class-gen-func-impl.gif]]
 
-Demonstration 2 (with nested classes and templates):
+_Demonstration_ 2 (with nested classes and templates):
 
 [[file:class-template-gen-func-impl.gif][file:class-template-gen-func-impl.gif]]
 
@@ -36,28 +37,29 @@ when you move the cursor inside a generated function body, you can
 start typing code immediately without indenting.
 
 * Generate class getters and setters
-All getters and setters of all variables in a class can be
-automatically generated with appropriate type information. Obviously,
-generating individual getter and setter for each variable works as
-well.
+_Description_: All getters and setters of all variables in a class can
+be automatically generated with appropriate type information.
+Obviously, generating individual getter and setter for each variable
+works as well.
 
-Demonstration:
+_Demonstration_:
 
 [[file:class-gen-getters-setters.gif][file:class-gen-getters-setters.gif]]
 
 * Generate function prototype
-When the cursor is in a function implementation, a function prototype
-can be generated and placed in a selected file. When the prototype is
-moved into, its prefix is stripped.
+_Description_: When the cursor is in a function implementation, a
+function prototype can be generated and placed in a selected file.
+When the prototype is moved into, its prefix is stripped.
 
-Demonstration:
+_Demonstration_:
 
 [[file:func-impl-to-prototypep.gif][file:func-impl-to-prototypep.gif]]
 
 * Convert function to function pointer
-Any function can be converted to a function pointer with typedef. 
+_Description_: Any function can be converted to a function pointer
+with typedef.
 
-Demonstration:
+_Demonstration_:
 
 [[file:function-pointer-gen.gif][file:function-pointer-gen.gif]]
 
@@ -66,33 +68,51 @@ The converted function pointer can also be placed as a parameter of a
 function. In this case, all the parameter names of the function
 pointer is stripped.
 
-Demonstration:
+_Demonstration_:
 
 [[file:function-pointer-as-parameter-gen.gif][file:function-pointer-as-parameter-gen.gif]]
 
-* Move semantic units
+_Description_: * Move semantic units
 Any meaningful tags recognized by Semantic (class, function, variable,
 namespace...) can be moved relative to other tags in current file or
 any other file.
 
-Demonstration:
+_Demonstration_:
 
 [[file:class-move.gif][file:class-move.gif]]
 
 * Extract function
-Select a region and turn it into a function, with relevant variables
-turned into function parameters and preserve full type information.
-Notice that after the region is replaced with a function call, in the
-minibuffer (at the bottom), Semantic shows the interface of newly
-function immediately if =global-semantic-idle-summary-mode= is enabled.
+_Description_: Select a region and turn it into a function, with
+relevant variables turned into function parameters and preserve full
+type information. Notice that after the region is replaced with a
+function call, in the minibuffer (at the bottom), Semantic shows the
+interface of newly function immediately if
+=global-semantic-idle-summary-mode= is enabled.
 
-Demonstration (C mode):
+_Demonstration_ (C mode):
 
 [[file:extract-function.gif][file:extract-function.gif]]
 
-Demonstration (C++ mode):
+_Demonstration_ (C++ mode):
 
 [[file:extract-function-cpp.gif][file:extract-function-cpp.gif]]
+
+* Rename local variable
+_Description_: User can move a cursor to a variable and rename all
+occurrences of it. Note that if there are texts equivalent to the
+variable name but not represent the underlying object of the variable,
+Semantic Refactor won't wrongly rename such instances.
+
+_Demonstration_:
+
+[[file:rename-local.gif][file:rename-local.gif]]
+
+As the demo shows, the functions =print_viable_colors= in the class
+Test which is called through the object =test= and in the namespace
+=test_ns= were not renamed, while the correct occurrences of the
+local lambda function =print_viable_colors= are renamed accordingly.
+After it is renamed to =new_name=, I move the cursor to each
+new occurrence to verify and everything was renamed accordingly.
 
 * Current limitation
 In the C++ demo, the extracted function does not include namespace

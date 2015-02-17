@@ -44,6 +44,8 @@ This package includes the following features:
 
 -   Extract function with proper type information
 
+-   Local variable rename
+
 [More info and demos](srefactor-demos/demos.org)
 
 # Installation<a id="sec-3" name="sec-3"></a>
@@ -51,7 +53,7 @@ This package includes the following features:
 This package can be obtained from MELPA:
 
 -   `M-x list-packages``
--   Move to `srefactor` and press `i`.
+-   Move to `srefactor` and press <kbd>i</kbd>.
 -   Press <kbd>x</kbd> to install.
 -   Then, place this configuration in `~/.emacs.d/init.el` or `~/.emacs`:
 
@@ -83,7 +85,7 @@ You can hide the help message in the menu with by customizing
 
 # TODOS<a id="sec-5" name="sec-5"></a>
 
--   Add local variable rename
+-   **DONE** Add local variable rename
 -   Add function prototype/implementation generation from lambda
 -   Insert function pointer if there is a lambda as local variable in
     extracted region.
