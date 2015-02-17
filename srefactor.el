@@ -159,7 +159,7 @@ to perform."
       (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
                                      gen-getter-setter
                                      ("(Current file)"))))
-    (when (srefactor--menu-add-rename-local)
+    (when (srefactor--menu-add-rename-local-p)
       (add-to-list 'menu-item-list `("Rename local variable (Current file)"
                                      rename-local-var
                                      ("(Current file)"))))
@@ -1190,10 +1190,10 @@ tag and OPTIONS is a list of possible choices for each menu item.
                   (semantic-tag-prototype-p tag)))
          (not (region-active-p)))))
 
-(defun srefactor--menu-add-rename-local ()
+(defun srefactor--menu-add-rename-local-p ()
   "Check whether to add rename menu item."
   (and (srefactor--local-var-at-point)
-       (eq (semantic-current-tag) 'function)
+       (eq (semantic-tag-class (semantic-current-tag)) 'function)
        (not (region-active-p))))
 
 (defun srefactor--menu-add-function-pointer-p (tag)
@@ -1283,10 +1283,22 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Collect all TAG occurrences.
 PARENT-TAG is the tag that contains TAG, such as a function or a class or a namespace."
   (save-excursion
-    (let (lines)
-      (dolist (line (srefactor--collect-var-lines tag (if parent-tag
-                                                          (semantic-tag-end parent-tag)
-                                                        (point-max)) nil) lines)
+    (let ((matching-lines (srefactor--collect-var-lines tag
+                                                        (if parent-tag
+                                                            (semantic-tag-start parent-tag)
+                                                          (point-min))
+                                                        (if parent-tag
+                                                            (semantic-tag-end parent-tag)
+                                                          (point-max))
+                                                        nil))
+          (parent-start (semantic-tag-start parent-tag))
+          lines)
+      (save-excursion
+        (dolist (l matching-lines)
+          (when (< l (line-number-at-pos parent-start))
+            (delete l matching-lines))))
+
+      (dolist (line  matching-lines lines)
         (srefactor--goto-line line)
         (when (and
                ;; search forward to see if it exists
@@ -1308,15 +1320,16 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
             (push line lines))))))
   )
 
-(defun srefactor--collect-var-lines (local-var-tag &optional bound with-content)
+(defun srefactor--collect-var-lines (local-var-tag &optional beg end  with-content)
   "Return all lines that LOCAL-VAR-TAG occurs in FUNCTION-TAG.
 If WITH-CONTENT is nil, returns a list of line numbers.  If
 WITH-CONTENT is t, returns a list of pairs, in which each element
 is a cons of a line and the content of that line."
   (save-excursion
+    (srefactor--goto-line beg)
     (srefactor--collect-lines-regexp (srefactor--local-var-regexp local-var-tag)
                                      (current-buffer)
-                                     bound
+                                     end
                                      with-content)))
 
 (defun srefactor--collect-lines-regexp (regexp buffer &optional bound with-content)
@@ -1343,7 +1356,7 @@ WITH-CONTENT, if t, returns the content associated with each line."
 (defun srefactor--goto-line (line)
   "Goto LINE non-interactively."
   (goto-char (point-min))
-  (forward-line line)
+  (forward-line (1- line))
   (goto-char (line-beginning-position)))
 
 (defun srefactor--highlight-tag (tag &optional scope-tag face)
