@@ -1,4 +1,4 @@
-;;; srefactor-ui-ui.el --- A refactoring tool based on Semantic parser framework
+;;; srefactor-ui.el --- A refactoring tool based on Semantic parser framework
 ;;
 ;; Filename: srefactor-ui.el
 ;; Description: A refactoring tool based on Semantic parser framework
@@ -396,7 +396,7 @@ when the corresponding MENU-ITEM is selected."
 (provide 'srefactor-ui)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; srefactor-ui-ui.el ends here
+;;; srefactor-ui.el ends here
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions)
 ;; End:
