@@ -702,6 +702,7 @@ This means, the function is converted into a function pointer."
                 (setq p2 (point)))
               (widen)
               (re-search-backward "new_function" nil t)
+              (forward-char 1)
               (srefactor--mark-symbol-at-point)
               (setq name (read-from-minibuffer "Enter function name: "))
               (when (re-search-backward "new_function" nil t)
@@ -994,7 +995,7 @@ The returned string is formatted as:
 (defun srefactor--local-var-regexp (tag)
   "Return regexp for seraching local variable TAG."
   (format (concat "\\(\\_\<%s\\)[ ]*\\([^[:alnum:]"
-                  (unless (srefactor--tag-lambda-p tag) ")")
+                  (unless (srefactor--tag-lambda-p tag) "(")
                   "]\\)") (semantic-tag-name tag)))
 
 (defun srefactor--tag-pointer (tag)
@@ -1234,7 +1235,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
   (save-excursion
     (goto-char beg)
     (search-forward-regexp (srefactor--local-var-regexp tag)
-                           (line-end-position) t)))
+                           end t)))
 
 (defun srefactor--tag-struct-p (tag)
   "Check if TAG is a C struct."
