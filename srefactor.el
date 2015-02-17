@@ -1206,20 +1206,14 @@ tag and OPTIONS is a list of possible choices for each menu item.
 
 (defun srefactor--local-var-at-point ()
   "Check whether text at point is a local variable."
-  (condition-case nil
-      (catch 'exist
-        (let (beg end)
-          (mapc (lambda (v)
-                  (save-excursion
-                    (srefactor--mark-symbol-at-point)
-                    (setq beg (region-beginning))
-                    (setq end (region-end))
-                    (setq mark-active nil)
-                    (when (srefactor--var-in-region-p v beg end)
-                      (throw 'exist v))))
-                (semantic-get-all-local-variables)))
-        nil)
-    (error nil)))
+  (let* ((ctxt (semantic-analyze-current-context (point)))
+	 (pf (when ctxt
+	       ;; The CTXT is an EIEIO object.  The below
+	       ;; method will attempt to pick the most interesting
+	       ;; tag associated with the current context.
+	       (semantic-analyze-interesting-tag ctxt)))
+         )
+    pf))
 
 (defun srefactor--activate-region (beg end)
   "Activate a region from BEG to END."
