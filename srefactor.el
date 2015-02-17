@@ -803,6 +803,7 @@ TAG-TYPE is the return type such as int, long, float, double..."
 (defun srefactor--rename-local-var (local-var-tag function-tag new-name)
   "Rename the name of a LOCAL-VAR-TAG in FUNCTION-TAG to NEW-NAME."
   (save-excursion
+    (goto-char (semantic-tag-start function-tag))
     (mapc (lambda (l)
             (goto-line l)
             (goto-char (line-beginning-position))
