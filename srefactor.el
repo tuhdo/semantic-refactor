@@ -92,6 +92,7 @@
 (with-no-warnings
   (require 'cl))
 (require 'semantic)
+(require 'hi-lock)
 (require 'srefactor-ui)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -190,10 +191,20 @@ FILE-OPTION is a file destination associated with OPERATION."
         (srefactor--extract-region 'function))
        ((eq operation 'rename-local-var)
         (let* ((local-var (srefactor--local-var-at-point))
-               (prompt (format "Replace (%s) with: " (semantic-tag-name local-var))))
-          (srefactor--rename-local-var local-var
-                                       (semantic-current-tag)
-                                       (read-from-minibuffer prompt))))
+               prompt)
+          (unwind-protect
+              (condition-case nil
+                  (progn
+                    (srefactor--highlight-tag local-var 'isearch)
+                    (setq prompt (format "Replace (%s) with: " (semantic-tag-name local-var)))
+                    (srefactor--rename-local-var local-var
+                                                 (semantic-current-tag)
+                                                 (read-from-minibuffer prompt))
+                    (srefactor--unhighlight-tag local-var))
+                (error nil))
+            (srefactor--unhighlight-tag local-var))
+          (srefactor--unhighlight-tag local-var)
+          ))
        (t
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -1288,6 +1299,14 @@ is a cons of a line and the content of that line."
                                                            (line-end-position)))
                    (line-number-at-pos (point))) lines))
         lines))))
+
+(defun srefactor--highlight-tag (tag &optional face)
+  "Highlight TAG with FACE."
+  (highlight-regexp (srefactor--local-var-regexp tag) face))
+
+(defun srefactor--unhighlight-tag (tag)
+  "Unhighlight TAG."
+  (unhighlight-regexp (srefactor--local-var-regexp tag)))
 
 (provide 'srefactor)
 
