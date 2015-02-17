@@ -155,7 +155,8 @@ to perform."
       (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
                                      gen-getter-setter
                                      ("(Current file)"))))
-    (when (srefactor--local-var-at-point)
+    (when (and (srefactor--local-var-at-point)
+               (not (region-active-p)))
       (add-to-list 'menu-item-list `("Rename local variable (Current file)"
                                      rename-local-var
                                      ("(Current file)"))))
