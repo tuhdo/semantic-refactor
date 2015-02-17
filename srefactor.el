@@ -96,6 +96,7 @@
 (require 'semantic/tag-ls)
 (require 'semantic/bovine/c)
 (require 'semantic/format)
+(require 'srecode/semantic)
 (require 'srefactor-ui)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -809,8 +810,7 @@ TAG-TYPE is the return type such as int, long, float, double..."
   (save-excursion
     (goto-char (semantic-tag-start function-tag))
     (mapc (lambda (l)
-            (goto-line l)
-            (goto-char (line-beginning-position))
+            (srefactor--goto-line l)
             (search-forward-regexp (srefactor--local-var-regexp local-var-tag) (point-max) t)
             (replace-match new-name t t nil 1))
           (srefactor--collect-tag-occurrences local-var-tag function-tag)))
@@ -1352,7 +1352,7 @@ WITH-CONTENT, if t, returns the content associated with each line."
         beg end)
     (mapc (lambda (l)
             (save-excursion
-              (srefactor--goto-line line)
+              (srefactor--goto-line l)
 
               (search-forward-regexp (srefactor--local-var-regexp tag)
                                      (if scope-tag
