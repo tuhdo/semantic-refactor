@@ -809,8 +809,8 @@ TAG-TYPE is the return type such as int, long, float, double..."
   "Rename the name of a LOCAL-VAR-TAG in FUNCTION-TAG to NEW-NAME."
   (save-excursion
     (goto-char (semantic-tag-start function-tag))
-    (mapc (lambda (l)
-            (srefactor--goto-line l)
+    (mapc (lambda (c)
+            (goto-char c)
             (search-forward-regexp (srefactor--local-var-regexp local-var-tag) (point-max) t)
             (replace-match new-name t t nil 1))
           (srefactor--collect-tag-occurrences local-var-tag function-tag)))
@@ -1283,89 +1283,84 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Collect all TAG occurrences.
 PARENT-TAG is the tag that contains TAG, such as a function or a class or a namespace."
   (save-excursion
-    (let ((matching-lines (srefactor--collect-var-lines tag
-                                                        (if parent-tag
-                                                            (semantic-tag-start parent-tag)
-                                                          (point-min))
-                                                        (if parent-tag
-                                                            (semantic-tag-end parent-tag)
-                                                          (point-max))
-                                                        nil))
+    (let ((matching-positions (srefactor--collect-var-positions tag
+                                                            (if parent-tag
+                                                                (semantic-tag-start parent-tag)
+                                                              (point-min))
+                                                            (if parent-tag
+                                                                (semantic-tag-end parent-tag)
+                                                              (point-max))
+                                                            nil))
           (parent-start (semantic-tag-start parent-tag))
-          lines)
+          (parent-end (semantic-tag-end parent-tag))
+          positions)
       (save-excursion
-        (dolist (l matching-lines)
-          (when (< l (line-number-at-pos parent-start))
-            (delete l matching-lines))))
+        (dolist (p matching-positions)
+          (when (< p parent-start)
+            (delete p matching-positions))))
 
-      (dolist (line  matching-lines lines)
-        (srefactor--goto-line line)
+      (dolist (pos matching-positions positions)
+        (goto-char pos)
         (when (and
                ;; search forward to see if it exists
                (search-forward-regexp (srefactor--local-var-regexp tag)
                                       (if parent-tag
-                                          (semantic-tag-end parent-tag)
+                                          parent-end
                                         (point-max))
                                       t)
 
                ;; if so, go back to the beginning
                (search-backward-regexp (srefactor--local-var-regexp tag)
                                        (if parent-tag
-                                           (semantic-tag-start parent-tag)
+                                           parent-start
                                          (point-min))
                                        t))
           ;; forward one character to move point inside the tag
           (forward-char 1)
           (when (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
-            (push line lines))))))
+            (push pos positions))))))
   )
 
-(defun srefactor--collect-var-lines (local-var-tag &optional beg end  with-content)
+(defun srefactor--collect-var-positions (local-var-tag &optional beg end  with-content)
   "Return all lines that LOCAL-VAR-TAG occurs in FUNCTION-TAG.
 If WITH-CONTENT is nil, returns a list of line numbers.  If
 WITH-CONTENT is t, returns a list of pairs, in which each element
 is a cons of a line and the content of that line."
   (save-excursion
-    (srefactor--goto-line beg)
-    (srefactor--collect-lines-regexp (srefactor--local-var-regexp local-var-tag)
-                                     (current-buffer)
-                                     end
-                                     with-content)))
+    (goto-char beg)
+    (srefactor--collect-positions-regexp (srefactor--local-var-regexp local-var-tag)
+                                         (current-buffer)
+                                         end
+                                         with-content)))
 
-(defun srefactor--collect-lines-regexp (regexp buffer &optional bound with-content)
+(defun srefactor--collect-positions-regexp (regexp buffer &optional bound with-content)
   "Collect lines based on REGEXP in BUFFER.
 BOUND is a position to stop searching.
 WITH-CONTENT, if t, returns the content associated with each line."
-  (srefactor--collect-lines (lambda () (re-search-forward regexp bound t))
-                            buffer
-                            with-content))
+  (srefactor--collect-positions (lambda () (re-search-forward regexp bound t))
+                                buffer
+                                with-content))
 
-(defun srefactor--collect-lines (predicate buffer &optional with-content)
+(defun srefactor--collect-positions (predicate buffer &optional with-content)
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
       (let (lines)
         (while (funcall predicate)
           (push  (if with-content
-                     (cons (line-number-at-pos (point))
+                     (cons (line-beginning-position)
                            (buffer-substring-no-properties (line-beginning-position)
                                                            (line-end-position)))
-                   (line-number-at-pos (point))) lines))
+                   (line-beginning-position)) lines))
         lines))))
 
-(defun srefactor--goto-line (line)
-  "Goto LINE non-interactively."
-  (goto-char (point-min))
-  (forward-line (1- line))
-  (goto-char (line-beginning-position)))
-
 (defun srefactor--highlight-tag (tag &optional scope-tag face)
-  "Highlight TAG in SCOPE-tAG with FACE."
-  (let ((lines (srefactor--collect-tag-occurrences tag scope-tag))
+  "Highlight TAG in SCOPE-TAG with FACE."
+  (let ((positions (srefactor--collect-tag-occurrences tag scope-tag))
         beg end)
-    (mapc (lambda (l)
+    (mapc (lambda (p)
             (save-excursion
-              (srefactor--goto-line l)
+              (goto-char p)
 
               (search-forward-regexp (srefactor--local-var-regexp tag)
                                      (if scope-tag
@@ -1388,7 +1383,7 @@ WITH-CONTENT, if t, returns the content associated with each line."
                 (overlay-put overlay 'srefactor-overlay t)
                 (overlay-put overlay 'srefactor-overlay-regexp "print_viable_colors")
                 (overlay-put overlay 'face 'match))))
-          lines)))
+          positions)))
 
 (defun srefactor--unhighlight-tag (tag)
   "Unhighlight TAG."
