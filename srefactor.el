@@ -980,7 +980,9 @@ The returned string is formatted as:
 
 (defun srefactor--local-var-regexp (tag)
   "Return regexp for seraching local variable TAG."
-  (format "\\(\\_\<%s\\)\\([^[:alnum:]]\\)" (semantic-tag-name tag)))
+  (format (concat "\\(\\_\<%s\\)[ ]*\\([^[:alnum:]"
+                  (unless (srefactor--tag-lambda-p tag) ")")
+                  "]\\)") (semantic-tag-name tag)))
 
 (defun srefactor--tag-pointer (tag)
   "Return `:pointer' attribute of a TAG."
@@ -1195,13 +1197,17 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Check whether text at point is a local variable."
   (condition-case nil
       (catch 'exist
-        (mapc (lambda (v)
-                (save-excursion
-                  (srefactor--mark-symbol-at-point)
-                  (when (srefactor--var-in-region-p v (line-beginning-position) (line-end-position))
+        (let (beg end)
+          (mapc (lambda (v)
+                  (save-excursion
+                    (srefactor--mark-symbol-at-point)
+                    (setq beg (region-beginning))
+                    (setq end (region-end))
                     (setq mark-active nil)
-                    (throw 'exist v))))
-              (semantic-get-all-local-variables)))
+                    (when (srefactor--var-in-region-p v beg end)
+                      (throw 'exist v))))
+                (semantic-get-all-local-variables)))
+        nil)
     (error nil)))
 
 (defun srefactor--activate-region (beg end)
@@ -1218,10 +1224,9 @@ tag and OPTIONS is a list of possible choices for each menu item.
 
 (defun srefactor--var-in-region-p (tag beg end)
   "Check if a local variable TAG is in a region from BEG to END."
-  (when (region-active-p)
-    (save-excursion
-      (goto-char beg)
-      (search-forward-regexp (srefactor--local-var-regexp tag) end t))))
+  (save-excursion
+    (goto-char beg)
+    (search-forward-regexp (srefactor--local-var-regexp tag) (line-end-position) t)))
 
 (defun srefactor--tag-struct-p (tag)
   "Check if TAG is a C struct."
@@ -1236,6 +1241,21 @@ tag and OPTIONS is a list of possible choices for each menu item.
           (setq struct-p (and (stringp type-type-tag)
                               (string-equal type-type-tag "struct"))))
         struct-p)
+    (error nil)))
+
+(defun srefactor--tag-auto-p (tag)
+  "Check whether a TAG is an auto variable."
+  (let ((type (semantic-tag-type tag)))
+    (and (listp type)
+         (string-equal "auto" (car type)))))
+
+(defun srefactor--tag-lambda-p (tag)
+  "Check whether TAG is a lambda function."
+  (condition-case nil
+      (save-excursion
+        (goto-char (semantic-tag-start tag))
+        (and (srefactor--tag-auto-p tag)
+             (search-forward-regexp "=[ ]*\\[.*\\][ ]*(.*)[ ]*" (semantic-tag-end tag) t)))
     (error nil)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
