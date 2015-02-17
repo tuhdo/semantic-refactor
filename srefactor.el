@@ -195,7 +195,7 @@ FILE-OPTION is a file destination associated with OPERATION."
           (unwind-protect
               (condition-case nil
                   (progn
-                    (srefactor--highlight-tag local-var 'isearch)
+                    (srefactor--highlight-tag local-var 'match)
                     (setq prompt (format "Replace (%s) with: " (semantic-tag-name local-var)))
                     (srefactor--rename-local-var local-var
                                                  (semantic-current-tag)
@@ -805,9 +805,10 @@ TAG-TYPE is the return type such as int, long, float, double..."
   (save-excursion
     (mapc (lambda (l)
             (goto-line l)
-            (search-forward-regexp (srefactor--local-var-regexp local-var-tag))
+            (goto-char (line-beginning-position))
+            (search-forward-regexp (srefactor--local-var-regexp local-var-tag) (point-max) t)
             (replace-match new-name t t nil 1))
-          (srefactor--collect-local-var-lines local-var-tag function-tag nil)))
+          (srefactor--collect-tag-occurrences local-var-tag function-tag)))
   (message (format "Renamed %s to %s" (semantic-tag-name local-var-tag) new-name)))
 
 ;;
@@ -1231,7 +1232,8 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Check if a local variable TAG is in a region from BEG to END."
   (save-excursion
     (goto-char beg)
-    (search-forward-regexp (srefactor--local-var-regexp tag) (line-end-position) t)))
+    (search-forward-regexp (srefactor--local-var-regexp tag)
+                           (line-end-position) t)))
 
 (defun srefactor--tag-struct-p (tag)
   "Check if TAG is a C struct."
@@ -1266,20 +1268,54 @@ tag and OPTIONS is a list of possible choices for each menu item.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions - Utilities
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun srefactor--collect-local-var-lines (local-var-tag function-tag &optional with-content)
+(defun srefactor--collect-tag-occurrences (tag &optional parent-tag)
+  "Collect all TAG occurrences.
+PARENT-TAG is the tag that contains TAG, such as a function or a class or a namespace."
+  (save-excursion
+    (let (lines)
+      (dolist (line (srefactor--collect-var-lines tag (if parent-tag
+                                                          (semantic-tag-end parent-tag)
+                                                        (point-max)) nil) lines)
+        (goto-line line)
+        (goto-char (line-beginning-position))
+        (when (and
+               ;; search forward to see if it exists
+               (search-forward-regexp (srefactor--local-var-regexp tag)
+                                      (if parent-tag
+                                          (semantic-tag-end parent-tag)
+                                        (point-max))
+                                      t)
+
+               ;; if so, go back to the beginning
+               (search-backward-regexp (srefactor--local-var-regexp tag)
+                                       (if parent-tag
+                                           (semantic-tag-start parent-tag)
+                                         (point-min))
+                                       t))
+          ;; forward one character to move point inside the tag
+          (forward-char 1)
+          (when (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
+            (push line lines))))))
+  )
+
+(defun srefactor--collect-var-lines (local-var-tag &optional bound with-content)
   "Return all lines that LOCAL-VAR-TAG occurs in FUNCTION-TAG.
 If WITH-CONTENT is nil, returns a list of line numbers.  If
 WITH-CONTENT is t, returns a list of pairs, in which each element
 is a cons of a line and the content of that line."
   (save-excursion
-    (goto-char (semantic-tag-start function-tag))
     (srefactor--collect-lines-regexp (srefactor--local-var-regexp local-var-tag)
                                      (current-buffer)
-                                     (semantic-tag-end function-tag)
+                                     bound
                                      with-content)))
 
 (defun srefactor--collect-lines-regexp (regexp buffer &optional bound with-content)
-  (srefactor--collect-lines (lambda () (re-search-forward regexp bound t)) buffer with-content))
+  "Collect lines based on REGEXP in BUFFER.
+BOUND is a position to stop searching.
+WITH-CONTENT, if t, returns the content associated with each line."
+  (srefactor--collect-lines (lambda () (re-search-forward regexp bound t))
+                            buffer
+                            with-content))
 
 (defun srefactor--collect-lines (predicate buffer &optional with-content)
   (with-current-buffer buffer
