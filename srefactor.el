@@ -1194,6 +1194,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Check whether to add rename menu item."
   (and (srefactor--local-var-at-point)
        (eq (semantic-tag-class (semantic-current-tag)) 'function)
+       (not (semantic-tag-prototype-p (semantic-current-tag)))
        (not (region-active-p))))
 
 (defun srefactor--menu-add-function-pointer-p (tag)
