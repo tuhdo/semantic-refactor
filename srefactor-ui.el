@@ -40,12 +40,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
-(autoload 'srefactor--refactor-based-on-tag-class "srefactor")
-(autoload 'srefactor--insert-tag "srefactor")
-
 (with-no-warnings
   (require 'cl))
 (require 'recentf)
+(require 'eieio)
+(require 'semantic/format)
+(autoload 'srefactor--refactor-based-on-tag-class "srefactor")
+(autoload 'srefactor--insert-tag "srefactor")
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables
