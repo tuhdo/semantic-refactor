@@ -623,22 +623,12 @@ content changed."
         (semantic-tag-put-attribute func-tag :typemodifiers nil))
       (insert (srefactor--tag-templates-declaration-string (srefactor--calculate-parent-tag func-tag)))
       (insert (srefactor--tag-function-string func-tag))
-      (search-backward func-tag-name)
-      (save-excursion
-        (when (srefactor--tag-function-destructor func-tag)
-          ;; after go to tag start, point is right next to '~' character
-          (forward-char -1))
-        (insert (srefactor--tag-parents-string func-tag))
-        (cond
-         ;; TODO: insert ~ in correct place
-         ((srefactor--tag-function-destructor func-tag)
-          (re-search-backward "void")
-          (replace-match ""))
-         ((srefactor--tag-function-constructor func-tag)
-          (c-beginning-of-statement-1)
-          (re-search-forward func-tag-name)
-          (replace-match ""))
-         (t))))))
+      (goto-char (line-beginning-position))
+      (search-forward func-tag-name)
+      (forward-symbol -1)
+      (when (srefactor--tag-function-destructor func-tag)
+        (forward-char -1))
+      (insert (srefactor--tag-parents-string func-tag)))))
 
 (defun srefactor--insert-function-pointer (tag)
   "Insert function pointer definition for TAG."
@@ -875,26 +865,27 @@ MEMBERS is a list of tags that are parameters of a function.  The
 parameters are retrieved by the function `semantic-tag-function-arguments'.
 
 The returned string is formatted as \"param1, param2, param3,...\"."
-  (mapconcat (lambda (m)
-               (concat (srefactor--tag-type-string m)
-                       " "
-                       (semantic-tag-name m)
-                       ))
-             members
-             ", "))
+  (string-trim-right
+   (mapconcat (lambda (m)
+                (concat (srefactor--tag-type-string m)
+                        " "
+                        (semantic-tag-name m)
+                        ))
+              members
+              ", ")))
 
 (defun srefactor--tag-function-string (tag)
   "Return a complete string representation of a TAG that is a function."
   (let ((return-type (srefactor--tag-type-string tag))
         (members (semantic-tag-function-arguments tag)))
-    (concat return-type
-            " "
-            (when (srefactor--tag-function-destructor tag)
-              "~")
-            (semantic-tag-name tag)
-            "("
-            (srefactor--tag-function-parameters-string members)
-            ")")))
+    (string-trim-left (concat return-type
+                              " "
+                              (when (srefactor--tag-function-destructor tag)
+                                "~")
+                              (semantic-tag-name tag)
+                              "("
+                              (srefactor--tag-function-parameters-string members)
+                              ")"))))
 
 (defun srefactor--tag-template-string-list (tag)
   "Return a list of templates as a list of strings from a TAG."
@@ -1032,37 +1023,19 @@ complicated language construct, Semantic cannot retrieve it."
 
 (defun srefactor--tag-type-string (tag)
   "Return a complete return type of a TAG as string."
-  (let* ((ptr-level (srefactor--tag-pointer tag))
-         (ref-level (srefactor--tag-reference tag))
-         (tag-type (semantic-tag-type tag))
-         (const-p (semantic-tag-variable-constant-p tag))
-         (template-specifier (when (semantic-tag-p tag-type)
-                               (semantic-c-tag-template-specifier tag-type))))
-    (if template-specifier
-        (replace-regexp-in-string ",>" ">"
-                                  (concat (when (semantic-tag-variable-constant-p tag)
-                                            "const ")
-                                          (when (srefactor--tag-struct-p tag)
-                                            "struct ")
-                                          (car (semantic-tag-type tag))
-                                          "<"
-                                          (srefactor--tag-type-string-inner-template-list template-specifier)
-                                          ">"
-                                          (cond
-                                           (ptr-level
-                                            (make-string ptr-level ?\*))
-                                           (ref-level
-                                            (make-string ref-level ?\&))
-                                           (t ""))))
-      (if (listp tag-type)
-          (concat (when const-p
-                    "const ")
-                  (when (srefactor--tag-struct-p tag)
-                    "struct ")
-                  (car tag-type)
-                  (when (srefactor--tag-reference tag)
-                    "&"))
-        tag-type))))
+  (if (or (srefactor--tag-function-constructor tag)
+          (srefactor--tag-function-destructor tag)
+          (not (or (eq (semantic-tag-class tag) 'function)
+                   (eq (semantic-tag-class tag) 'variable))))
+      ""
+    (save-excursion
+      (let ((tag-string (with-current-buffer (semantic-tag-buffer tag)
+                          (buffer-substring-no-properties (semantic-tag-start tag)
+                                                          (semantic-tag-end tag)))))
+        (string-match (concat "\\([[:ascii:][:nonascii:]]*\\)"
+                              (semantic-tag-name tag))
+                      tag-string)
+        (string-trim-right (replace-regexp-in-string ")" "" (match-string-no-properties 1 tag-string)))))))
 
 (defun srefactor--tag-type-string-inner-template-list (tmpl-spec-list)
   (mapconcat (lambda (tmpl)
