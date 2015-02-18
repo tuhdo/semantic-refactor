@@ -510,7 +510,7 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
     (newline newline-before))
   (let ((tag-type (srefactor--tag-type-string tag))
         (tag-name (semantic-tag-name tag))
-        (tag-type (semantic-tag-type tag))
+        (tag-type (srefactor--tag-type-string tag))
         (tag-pointer (srefactor--tag-pointer tag)))
     (insert "void")
     (insert (concat " " srefactor--setter-prefix (semantic-tag-name tag)))
@@ -571,14 +571,15 @@ content changed."
                                            '(variable label)
                                            (semantic-tag-type-members tag)))
            (variables (srefactor--tag-filter 'semantic-tag-class '(variable) members))
-           (label-pos (srefactor--jump-or-insert-public-label tag)))
+           (label-pos (srefactor--jump-or-insert-public-label tag))
+           (tag-start (semantic-tag-start tag)))
       (newline 1)
       (save-excursion
-        (dolist (tag variables)
-          (when (< (semantic-tag-start tag) label-pos)
-            (srefactor--insert-getter tag)
+        (dolist (v variables)
+          (when (srefactor--tag-private-p v)
+            (srefactor--insert-getter v)
             (newline 2)
-            (srefactor--insert-setter tag)
+            (srefactor--insert-setter v)
             (newline 2)))
         (kill-whole-line))
       (recenter))))
@@ -1252,6 +1253,29 @@ tag and OPTIONS is a list of possible choices for each menu item.
                               (string-equal type-type-tag "struct"))))
         struct-p)
     (error nil)))
+
+(defun srefactor--tag-private-p (tag)
+  "Check whether a TAG is a private variable."
+  (let* ((members (srefactor--tag-filter 'semantic-tag-class
+                                         '(variable label)
+                                         (semantic-tag-type-members (semantic-tag-calculate-parent tag))))
+         (labels (srefactor--tag-filter 'semantic-tag-class
+                                        '(label)
+                                        members))
+         (public-label (car (srefactor--tag-filter 'semantic-tag-name
+                                                   '("public")
+                                                   labels)))
+         (private-label (car (srefactor--tag-filter 'semantic-tag-name
+                                                    '("private")
+                                                    labels)))
+         (tag-start (semantic-tag-start tag))
+         (private-pos (semantic-tag-start private-label))
+         (public-pos (semantic-tag-start public-label)))
+    (or (and private-label (> tag-start private-pos)
+             public-label (< tag-start public-pos))
+        (and public-label (> tag-start public-pos)
+             private-label (> tag-start private-pos)
+             (> private-pos public-pos)))))
 
 (defun srefactor--tag-auto-p (tag)
   "Check whether a TAG is an auto variable."
