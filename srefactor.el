@@ -183,6 +183,22 @@ to perform."
     (srefactor-ui-create-menu menu)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Macros
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmacro srefactor--tag-filter (predicate tag-classes-or-names tags)
+  "Filter TAGS based on PREDICATE that satisfies TAG-CLASSES-OR-NAMES.
+
+TAG-CLASSES-OR-NAMES can be a list of Semantic tag classes, or a
+list of Semantic tag names, but not both.
+
+Based on the type of list passed above, either use
+`semantic-tag-class' or `semantic-tag-name' as PREDICATE."
+  `(let (l)
+     (dolist (tag ,tags l)
+       (when (member (funcall ,predicate tag) ,tag-classes-or-names)
+         (setq l (cons tag l))))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; High level functions that select action to make
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun srefactor--refactor-based-on-tag-class (operation &optional file-option)
@@ -838,19 +854,6 @@ TAG-TYPE is the return type such as int, long, float, double..."
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions that operate on a Semantic tag and return information
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defmacro srefactor--tag-filter (predicate tag-classes-or-names tags)
-  "Filter TAGS based on PREDICATE that satisfies TAG-CLASSES-OR-NAMES.
-
-TAG-CLASSES-OR-NAMES can be a list of Semantic tag classes, or a
-list of Semantic tag names, but not both.
-
-Based on the type of list passed above, either use
-`semantic-tag-class' or `semantic-tag-name' as PREDICATE."
-  `(let (l)
-     (dolist (tag ,tags l)
-       (when (member (funcall ,predicate tag) ,tag-classes-or-names)
-         (setq l (cons tag l))))))
-
 (defun srefactor--get-all-parents (tag)
   "Return a list of parent tags of a TAG.
 The closer to the end of the list, the higher the parents."
