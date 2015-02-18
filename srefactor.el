@@ -1045,11 +1045,15 @@ complicated language construct, Semantic cannot retrieve it."
     (save-excursion
       (let ((tag-string (with-current-buffer (semantic-tag-buffer tag)
                           (buffer-substring-no-properties (semantic-tag-start tag)
-                                                          (semantic-tag-end tag)))))
+                                                          (semantic-tag-end tag))))
+            matched-string)
         (string-match (concat "\\([[:ascii:][:nonascii:]]*\\)"
                               (semantic-tag-name tag))
                       tag-string)
-        (string-trim-right (replace-regexp-in-string ")" "" (match-string-no-properties 1 tag-string)))))))
+        (setq matched-string (match-string-no-properties 1 tag-string))
+        (string-trim-right (replace-regexp-in-string ")" "" (if matched-string
+                                                                matched-string
+                                                              "")))))))
 
 (defun srefactor--tag-type-string-inner-template-list (tmpl-spec-list)
   (mapconcat (lambda (tmpl)
