@@ -312,6 +312,25 @@ FILE-OPTION is a file destination associated with OPERATION."
                    (buffer-file-name (current-buffer))))))
     file))
 
+(defun srefactor--tag-persistent-action ()
+  "Move to a tag when executed."
+  (back-to-indentation)
+  (when srefactor-ui--current-active-tag-overlay
+    (delete-overlay srefactor-ui--current-active-tag-overlay))
+  (let ((link (get-pos-property (point) 'button))
+        tag)
+    (when (and link
+               (listp (widget-value link))
+               (semantic-tag-p (car (widget-value link))))
+      (with-selected-window srefactor-ui--current-active-window
+        (setq tag (car (widget-value link)))
+        (when (car (widget-value link))tag
+              (semantic-go-to-tag tag)
+              (let ((o (make-overlay (semantic-tag-start tag)
+                                     (semantic-tag-end tag))))
+                (setq srefactor-ui--current-active-tag-overlay o)
+                (overlay-put o 'face 'region)))))))
+
 (defun srefactor--refactor-tag (buffer refactor-tag func-type &optional ask-place-p)
   "Refactor a tag.
 
@@ -334,6 +353,7 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
             (oset srefactor-ui--current-active-menu :items tag-list)
             (oset srefactor-ui--current-active-menu :action #'srefactor-ui--tag-action)
             (oset srefactor-ui--current-active-menu :shortcut-p nil)
+            (oset srefactor-ui--current-active-menu :persistent-action 'srefactor--tag-persistent-action)
             (oset srefactor-ui--current-active-menu :post-handler
                   (lambda ()
                     (let ((tag (context srefactor-ui--current-active-menu))
@@ -343,6 +363,16 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
                         (setq tag-string (semantic-format-tag-summarize tag nil nil)))
                       (search-forward tag-string (point-max) t)
                       (back-to-indentation))))
+            (oset srefactor-ui--current-active-menu :keymap
+                  (lambda ()
+                    (define-key srefactor-ui-menu-mode-map "n" (lambda ()
+                                                                 (interactive)
+                                                                 (line-move-1 1 t)
+                                                                 (srefactor--tag-persistent-action)))
+                    (define-key srefactor-ui-menu-mode-map "p" (lambda ()
+                                                                 (interactive)
+                                                                 (line-move-1 -1 t)
+                                                                 (srefactor--tag-persistent-action)))))
             (srefactor-ui-create-menu srefactor-ui--current-active-menu))
         (srefactor--insert-tag refactor-tag nil func-type)))))
 

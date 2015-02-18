@@ -67,6 +67,9 @@
 (defvar srefactor-ui--func-type nil
   "What type of refactoring to perform.")
 
+(defvar srefactor-ui--current-active-tag-overlay nil
+  "Overlay of tag in srefactor-ui--current-active-window.")
+
 (defcustom srefactor-ui-menu-show-help t
   "Turn on/off help message."
   :group 'srefactor-ui
@@ -125,13 +128,19 @@ when the corresponding MENU-ITEM is selected."
     :accessor shortcut-p
     :type boolean
     :documentation
-    "If t, first 9 actions can be executed by digit
-               keys 1-9.")
+    "If t, first 9 actions can be executed by digit keys 1-9.")
    (persistent-action
     :initarg :persistent-action
     :initform nil
+    :accessor persistent-action
     :documentation
     "An action to execute without exiting the menu.")
+   (keymap
+    :initarg :keymap
+    :initform nil
+    :accessor keymap
+    :documentation
+    "A function that set define keys in srefactor-ui-menu-mode-map.")
    (post-handler
     :initarg :post-handler
     :initform nil
@@ -173,7 +182,7 @@ when the corresponding MENU-ITEM is selected."
         (srefactor-ui--menu
             (or (name srefactor-ui--current-active-menu)
                 (format "*%s*" "*Srefactor Menu*"))
-          (let ((major-mode 'c-mode))
+          (let ((major-mode 'c++-mode))
             (widget-insert (if (context srefactor-ui--current-active-menu)
                                (concat (semantic-format-tag-summarize (context srefactor-ui--current-active-menu) nil t) "\n")
                              "")
@@ -209,12 +218,15 @@ when the corresponding MENU-ITEM is selected."
            (propertize  "Cancel" 'face 'bold))
           (recentf-dialog-goto-first 'link)
           (when (post-handler menu)
-            (funcall (post-handler menu))))
+            (funcall (post-handler menu)))
+          (when (keymap menu)
+            (funcall (keymap menu))))
         (fit-window-to-buffer (car (window-list))
                               (/ (* (frame-height) 50)
                                  100)
                               (/ (* (frame-height) 10)
-                                 100)))
+                                 100))
+        )
     (error (srefactor-ui--clean-up-menu-window)
            (message "Error when creating menu."))))
 
@@ -283,7 +295,9 @@ when the corresponding MENU-ITEM is selected."
     (goto-char srefactor-ui--current-active-region-start)
     (set-mark-command nil)
     (goto-char srefactor-ui--current-active-region-end)
-    (setq deactivate-mark nil)))
+    (setq deactivate-mark nil))
+  (when srefactor-ui--current-active-tag-overlay
+    (delete-overlay srefactor-ui--current-active-tag-overlay)))
 
 (defun srefactor-ui--refactor-action (widget &rest _ignore)
   "Open the file stored in WIDGET's value when notified.
@@ -380,6 +394,10 @@ when the corresponding MENU-ITEM is selected."
     (define-key km "q" 'srefactor-ui--menu-quit)
     (define-key km "n" 'next-line)
     (define-key km "p" 'previous-line)
+    (define-key km (kbd "TAB") (lambda ()
+                                 (interactive)
+                                 (when (persistent-action srefactor-ui--current-active-menu)
+                                   (funcall (persistent-action srefactor-ui--current-active-menu)))))
     (define-key km "o" (lambda ()
                          (interactive)
                          (message "%s"
