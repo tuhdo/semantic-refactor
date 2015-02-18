@@ -163,50 +163,53 @@ when the corresponding MENU-ITEM is selected."
         (setq srefactor-ui--current-active-region-end (region-end)))
     (setq srefactor-ui--current-active-region-start nil)
     (setq srefactor-ui--current-active-region-end nil))
-  (with-selected-window (select-window (split-window-below))
-    (srefactor-ui--menu
-        (or (name srefactor-ui--current-active-menu)
-            (format "*%s*" "*Srefactor Menu*"))
-      (let ((major-mode 'c-mode))
-        (widget-insert (if (context srefactor-ui--current-active-menu)
-                           (concat (semantic-format-tag-summarize (context srefactor-ui--current-active-menu) nil t) "\n")
-                         "")
-                       (if srefactor-ui-menu-show-help
-                           (concat  (if (shortcut-p srefactor-ui--current-active-menu)
-                                        (concat "Press "
-                                                (propertize "1-9" 'face  'font-lock-preprocessor-face)
-                                                " or click on an action to execute.\n")
-                                      "Click on an action to execute.\n")
-                                    "Press "
-                                    (propertize "o" 'face  'bold)
-                                    " or "
-                                    (propertize "O" 'face  'bold)
-                                    " to switch to next/previous option."
-                                    "\n"
-                                    "Click on "
-                                    (propertize "[Cancel]" 'face 'bold)
-                                    " or press "
-                                    (propertize "q" 'face 'bold)
-                                    " to quit.\n")
-                         "")))
-      (apply 'widget-create
-             `(group
-               :indent 2
-               :format "\n%v\n"
-               ,@(srefactor-ui--generate-items
-                  (items srefactor-ui--current-active-menu)
-                  (action srefactor-ui--current-active-menu)
-                  (shortcut-p srefactor-ui--current-active-menu))))
-      (widget-create
-       'push-button
-       :notify 'srefactor-ui--menu-quit
-       (propertize  "Cancel" 'face 'bold))
-      (recentf-dialog-goto-first 'link))
-    (fit-window-to-buffer (car (window-list))
-                          (/ (* (frame-height) 50)
-                             100)
-                          (/ (* (frame-height) 10)
-                             100))))
+  (condition-case nil
+      (with-selected-window (select-window (split-window-below))
+        (srefactor-ui--menu
+            (or (name srefactor-ui--current-active-menu)
+                (format "*%s*" "*Srefactor Menu*"))
+          (let ((major-mode 'c-mode))
+            (widget-insert (if (context srefactor-ui--current-active-menu)
+                               (concat (semantic-format-tag-summarize (context srefactor-ui--current-active-menu) nil t) "\n")
+                             "")
+                           (if srefactor-ui-menu-show-help
+                               (concat  (if (shortcut-p srefactor-ui--current-active-menu)
+                                            (concat "Press "
+                                                    (propertize "1-9" 'face  'font-lock-preprocessor-face)
+                                                    " or click on an action to execute.\n")
+                                          "Click on an action to execute.\n")
+                                        "Press "
+                                        (propertize "o" 'face  'bold)
+                                        " or "
+                                        (propertize "O" 'face  'bold)
+                                        " to switch to next/previous option."
+                                        "\n"
+                                        "Click on "
+                                        (propertize "[Cancel]" 'face 'bold)
+                                        " or press "
+                                        (propertize "q" 'face 'bold)
+                                        " to quit.\n")
+                             "")))
+          (apply 'widget-create
+                 `(group
+                   :indent 2
+                   :format "\n%v\n"
+                   ,@(srefactor-ui--generate-items
+                      (items srefactor-ui--current-active-menu)
+                      (action srefactor-ui--current-active-menu)
+                      (shortcut-p srefactor-ui--current-active-menu))))
+          (widget-create
+           'push-button
+           :notify 'srefactor-ui--menu-quit
+           (propertize  "Cancel" 'face 'bold))
+          (recentf-dialog-goto-first 'link))
+        (fit-window-to-buffer (car (window-list))
+                              (/ (* (frame-height) 50)
+                                 100)
+                              (/ (* (frame-height) 10)
+                                 100)))
+    (error (srefactor-ui--clean-up-menu-window)
+           (message "Error when creating menu."))))
 
 (defun srefactor-ui--return-option-list (type)
   (let (options)
@@ -262,9 +265,10 @@ when the corresponding MENU-ITEM is selected."
          :action ,action
          ,(srefactor-ui--menu-value-item menu-element)))
 
-(defun srefactor-ui--clean-up-menu-window ()
+(defun srefactor-ui--clean-up-menu-window (&optional kill-buffer)
   (interactive)
-  (kill-buffer (current-buffer))
+  (when kill-buffer
+    (kill-buffer (current-buffer)))
   (delete-window (car (window-list)))
   (select-window srefactor-ui--current-active-window)
   (when (and srefactor-ui--current-active-region-start
