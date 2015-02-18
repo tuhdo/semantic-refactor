@@ -131,8 +131,13 @@ when the corresponding MENU-ITEM is selected."
     :initarg :persistent-action
     :initform nil
     :documentation
-    "An action to execute without exiting the
-                      menu."))
+    "An action to execute without exiting the menu.")
+   (post-handler
+    :initarg :post-handler
+    :initform nil
+    :accessor post-handler
+    :documentation
+    "A function to be executed after the menu is created."))
   "Class srefactor-ui-menu ")
 
 (defmacro srefactor-ui--menu (name &rest forms)
@@ -202,7 +207,9 @@ when the corresponding MENU-ITEM is selected."
            'push-button
            :notify 'srefactor-ui--menu-quit
            (propertize  "Cancel" 'face 'bold))
-          (recentf-dialog-goto-first 'link))
+          (recentf-dialog-goto-first 'link)
+          (when (post-handler menu)
+            (funcall (post-handler menu))))
         (fit-window-to-buffer (car (window-list))
                               (/ (* (frame-height) 50)
                                  100)

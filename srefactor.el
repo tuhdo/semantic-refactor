@@ -334,6 +334,15 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
             (oset srefactor-ui--current-active-menu :items tag-list)
             (oset srefactor-ui--current-active-menu :action #'srefactor-ui--tag-action)
             (oset srefactor-ui--current-active-menu :shortcut-p nil)
+            (oset srefactor-ui--current-active-menu :post-handler
+                  (lambda ()
+                    (let ((tag (context srefactor-ui--current-active-menu))
+                          tag-string)
+                      (with-temp-buffer
+                        (setq major-mode 'c++-mode)
+                        (setq tag-string (semantic-format-tag-summarize tag nil nil)))
+                      (search-forward tag-string (point-max) t)
+                      (back-to-indentation))))
             (srefactor-ui-create-menu srefactor-ui--current-active-menu))
         (srefactor--insert-tag refactor-tag nil func-type)))))
 
