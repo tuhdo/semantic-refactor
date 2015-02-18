@@ -103,6 +103,13 @@ occurrences of it. Note that if there are texts equivalent to the
 variable name but not represent the underlying object of the variable,
 Semantic Refactor won't wrongly rename such instances.
 
+Local rename is really useful when you first write code, you just want
+to quickly think of a temporary variable name (i.e. something like
+=i=, =j=...) to continue with your problem as fast as possible. It is
+useful because it's not certain that all variables remain when you
+finish solving your problem. Once you're done with your coding
+problem, you can start beautifying your code later.
+
 _Demonstration_:
 
 [[file:rename-local.gif][file:rename-local.gif]]
