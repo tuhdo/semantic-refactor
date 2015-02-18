@@ -97,6 +97,6 @@ You can hide the help message in the menu with by customizing
         region into macro parameter. [Use case](https://github.com/torvalds/linux/blob/9a3c4145af32125c5ee39c0272662b47307a8323/drivers/edac/i7core_edac.c#L802).
 -   Smart tag diff and sync between function declarations and function
     implementations
--   Make use of SemanticDB and GNU Global to fine correct definition for
+-   Make use of SemanticDB and GNU Global to find correct definition for
     function extraction
 -   Create a tree that transparently display tags across buffers
