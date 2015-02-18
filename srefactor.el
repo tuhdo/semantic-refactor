@@ -274,8 +274,16 @@ FILE-OPTION is a file destination associated with OPERATION."
           (srefactor--jump-or-insert-public-label (save-excursion
                                                     (goto-char (semantic-tag-start refactor-tag))
                                                     (semantic-current-tag-parent))))
-        (srefactor--insert-getter refactor-tag 1 1)
-        (srefactor--insert-setter refactor-tag 1 1))))
+        (save-excursion
+          (let ((p1 (point))
+                p2)
+            (insert (with-temp-buffer
+                      (setq major-mode 'c-mode)
+                      (srefactor--insert-getter refactor-tag 1 1)
+                      (srefactor--insert-setter refactor-tag 1 1)
+                      (buffer-substring-no-properties (point-min) (point-max))))
+            (setq p2 (point))
+            (indent-region p1 p2))))))
      ((eq class 'package)
       (message "FIXME: 'package refactoring is not yet implemented."))
      ((eq class 'include)
