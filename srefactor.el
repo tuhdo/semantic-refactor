@@ -97,7 +97,12 @@
 (require 'semantic/bovine/c)
 (require 'semantic/format)
 (require 'srecode/semantic)
+(require 'subr-x)
 (require 'srefactor-ui)
+
+(autoload 'projectile-get-other-files "projectile")
+(autoload 'projectile-current-project-files "projectile")
+(autoload 'projectile-project-root "projectile")
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User options
