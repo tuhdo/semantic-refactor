@@ -282,13 +282,13 @@ when the corresponding MENU-ITEM is selected."
   "Open the file stored in WIDGET's value when notified.
 -IGNORE other arguments."
   (interactive)
-  (srefactor-ui--clean-up-menu-window)
+  (srefactor-ui--clean-up-menu-window t)
   (srefactor--refactor-based-on-tag-class (car (widget-value widget))
                                           (srefactor-ui--get-current-menu-option (widget-get widget :tag))))
 
 (defun srefactor-ui--tag-action (widget &rest _ignore)
   (interactive)
-  (srefactor-ui--clean-up-menu-window)
+  (srefactor-ui--clean-up-menu-window t)
   (srefactor--insert-tag (context srefactor-ui--current-active-menu)
                          (car (widget-value widget))
                          srefactor-ui--func-type
@@ -296,7 +296,7 @@ when the corresponding MENU-ITEM is selected."
 
 (defun srefactor-ui--menu-quit (&rest ignored)
   (interactive)
-  (srefactor-ui--clean-up-menu-window))
+  (srefactor-ui--clean-up-menu-window t))
 
 (defvar srefactor-ui--shortcuts-keymap
   (let ((km (make-sparse-keymap)))
