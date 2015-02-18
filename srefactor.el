@@ -100,9 +100,9 @@
 (require 'subr-x)
 (require 'srefactor-ui)
 
-(autoload 'projectile-get-other-files "projectile")
-(autoload 'projectile-current-project-files "projectile")
-(autoload 'projectile-project-root "projectile")
+(declare-function 'projectile-get-other-files "projectile")
+(declare-function 'projectile-current-project-files "projectile")
+(declare-function 'projectile-project-root "projectile")
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User options
