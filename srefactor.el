@@ -508,27 +508,31 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
 Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
   (when newline-before
     (newline newline-before))
-  (insert "void")
-  (insert (concat " " srefactor--setter-prefix (semantic-tag-name tag)))
-  (insert (concat (insert "(")
-                  (unless (semantic-tag-variable-constant-p tag)
-                    "const ")
-                  (srefactor--tag-type-string tag)
-                  (when (and (listp (semantic-tag-type tag))
-                             ;; (srefactor--tag-reference tag)
-                             (not (srefactor--tag-pointer tag)))
-                    "&")
-                  " "
-                  (semantic-tag-name tag)
-                  ")"))
-  (insert " {")
-  (srefactor--indent-and-newline 1)
-  (insert (concat "this->" (semantic-tag-name tag) " = " (semantic-tag-name tag) ";"))
-  (srefactor--indent-and-newline 1)
-  (insert "}")
-  (indent-according-to-mode)
-  (when newline-after
-    (newline newline-after)))
+  (let ((tag-type (srefactor--tag-type-string tag))
+        (tag-name (semantic-tag-name tag))
+        (tag-type (semantic-tag-type tag))
+        (tag-pointer (srefactor--tag-pointer tag)))
+    (insert "void")
+    (insert (concat " " srefactor--setter-prefix (semantic-tag-name tag)))
+    (insert (concat (insert "(")
+                    (unless (semantic-tag-variable-constant-p tag)
+                      "const ")
+                    tag-type
+                    (when (and (listp tag-type)
+                               ;; (srefactor--tag-reference tag)
+                               (not tag-pointer))
+                      "&")
+                    " "
+                    tag-name
+                    ")"))
+    (insert " {")
+    (srefactor--indent-and-newline 1)
+    (insert (concat "this->" tag-name " = " tag-name ";"))
+    (srefactor--indent-and-newline 1)
+    (insert "}")
+    (indent-according-to-mode)
+    (when newline-after
+      (newline newline-after))))
 
 (defun srefactor--jump-or-insert-public-label (tag)
   "Check if TAG is a class or struct.
