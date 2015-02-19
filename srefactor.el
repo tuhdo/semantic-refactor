@@ -704,7 +704,8 @@ content changed."
       (forward-symbol -1)
       (when (srefactor--tag-function-destructor func-tag)
         (forward-char -1))
-      (insert (srefactor--tag-parents-string func-tag))
+      (unless (srefactor--tag-friend-p func-tag)
+        (insert (srefactor--tag-parents-string func-tag)))
       (when (srefactor--tag-function-constructor func-tag)
         (goto-char (line-end-position))
         (insert ":")
@@ -1118,10 +1119,10 @@ complicated language construct, Semantic cannot retrieve it."
                           (buffer-substring-no-properties (semantic-tag-start tag)
                                                           (semantic-tag-end tag))))
             matched-string)
-        (string-match (concat "\\([[:ascii:][:nonascii:]]*\\)"
+        (string-match (concat "\\(friend\\)?\\([[:ascii:][:nonascii:]]*\\)"
                               (regexp-quote (srefactor--tag-name tag)))
                       tag-string)
-        (setq matched-string (match-string-no-properties 1 tag-string))
+        (setq matched-string (match-string-no-properties 2 tag-string))
         (string-trim-right (replace-regexp-in-string ")" "" (if matched-string
                                                                 matched-string
                                                               "")))))))
@@ -1362,6 +1363,18 @@ tag and OPTIONS is a list of possible choices for each menu item.
              (search-forward-regexp "=[ ]*\\[.*\\][ ]*(.*)[ ]*" (regexp-quote (semantic-tag-end tag)) t)))
     (error nil)))
 
+(defun srefactor--tag-friend-p (tag)
+  "Check whether a TAG is a friend to everyone."
+  (condition-case nil
+      (let ((tag-start (semantic-tag-start tag))
+            (tag-end (semantic-tag-end tag))
+            (tag-buffer (semantic-tag-buffer tag)))
+        (with-current-buffer tag-buffer
+          (save-excursion
+            (goto-char tag-start)
+            (search-forward-regexp "friend" tag-end t))))
+    (error nil)))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions - Utilities
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1370,13 +1383,13 @@ tag and OPTIONS is a list of possible choices for each menu item.
 PARENT-TAG is the tag that contains TAG, such as a function or a class or a namespace."
   (save-excursion
     (let ((matching-positions (srefactor--collect-var-positions tag
-                                                            (if parent-tag
-                                                                (semantic-tag-start parent-tag)
-                                                              (point-min))
-                                                            (if parent-tag
-                                                                (semantic-tag-end parent-tag)
-                                                              (point-max))
-                                                            nil))
+                                                                (if parent-tag
+                                                                    (semantic-tag-start parent-tag)
+                                                                  (point-min))
+                                                                (if parent-tag
+                                                                    (semantic-tag-end parent-tag)
+                                                                  (point-max))
+                                                                nil))
           (parent-start (semantic-tag-start parent-tag))
           (parent-end (semantic-tag-end parent-tag))
           positions)
