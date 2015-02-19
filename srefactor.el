@@ -376,7 +376,7 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
                       (with-temp-buffer
                         (setq major-mode 'c++-mode)
                         (setq tag-string (semantic-format-tag-summarize tag nil nil)))
-                      (search-forward (regexp-quote tag-string) (point-max) t)
+                      (search-forward-regexp (regexp-quote tag-string) (point-max) t)
                       (back-to-indentation))))
             (oset srefactor-ui--current-active-menu :keymap
                   (lambda ()
@@ -703,7 +703,7 @@ content changed."
       (insert (srefactor--tag-templates-declaration-string parent))
       (insert (srefactor--tag-function-string func-tag))
       (goto-char (line-beginning-position))
-      (search-forward (regexp-quote func-tag-name))
+      (search-forward-regexp (regexp-quote func-tag-name) (semantic-tag-end func-tag) t)
       (forward-symbol -1)
       (when (srefactor--tag-function-destructor func-tag)
         (forward-char -1))
