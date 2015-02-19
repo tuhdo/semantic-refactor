@@ -400,9 +400,9 @@ REFACTOR-TAG is a Semantic tag that holds information of a C++ class."
   (let* ((members (semantic-tag-type-members refactor-tag))
          (dest-buffer-tags (with-current-buffer dest-buffer
                              (semantic-fetch-tags)))
-         (diff (set-difference members
-                               dest-buffer-tags
-                               :test #'semantic-equivalent-tag-p))
+         (diff (nreverse (set-difference members
+                                         dest-buffer-tags
+                                         :test #'semantic-equivalent-tag-p)))
          )
     (dolist (tag diff)
       (cond
@@ -708,14 +708,14 @@ content changed."
         (goto-char endofinsert)
         (insert "\n\n")
         )
-    (let ((func-tag-name (semantic-tag-name func-tag))
+    (let ((func-tag-name (srefactor--tag-name func-tag))
           (parent (srefactor--calculate-parent-tag func-tag)))
       (when (srefactor--tag-function-modifiers func-tag)
         (semantic-tag-put-attribute func-tag :typemodifiers nil))
-      (insert (srefactor--tag-templates-declaration-string parent))
-      (insert (srefactor--tag-function-string func-tag))
-      (goto-char (line-beginning-position))
-      (search-forward-regexp (regexp-quote func-tag-name) (semantic-tag-end func-tag) t)
+      (save-excursion
+        (insert (srefactor--tag-templates-declaration-string parent))
+        (insert (srefactor--tag-function-string func-tag)))
+      (search-forward-regexp (regexp-quote func-tag-name) (point-max) t)
       (forward-symbol -1)
       (when (srefactor--tag-function-destructor func-tag)
         (forward-char -1))
@@ -969,7 +969,7 @@ The returned string is formatted as \"param1, param2, param3,...\"."
                               " "
                               (when (srefactor--tag-function-destructor tag)
                                 "~")
-                              (semantic-tag-name tag)
+                              (srefactor--tag-name tag)
                               "("
                               (srefactor--tag-function-parameters-string members)
                               ")"))))
@@ -1122,7 +1122,7 @@ complicated language construct, Semantic cannot retrieve it."
                                                           (semantic-tag-end tag))))
             matched-string)
         (string-match (concat "\\([[:ascii:][:nonascii:]]*\\)"
-                              (regexp-quote (semantic-tag-name tag)))
+                              (regexp-quote (srefactor--tag-name tag)))
                       tag-string)
         (setq matched-string (match-string-no-properties 1 tag-string))
         (string-trim-right (replace-regexp-in-string ")" "" (if matched-string
