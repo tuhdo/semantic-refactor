@@ -100,10 +100,6 @@
 (require 'subr-x)
 (require 'srefactor-ui)
 
-(declare-function 'projectile-get-other-files "projectile")
-(declare-function 'projectile-current-project-files "projectile")
-(declare-function 'projectile-project-root "projectile")
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User options
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -294,10 +290,18 @@ FILE-OPTION is a file destination associated with OPERATION."
 
 (defun srefactor--select-file (option)
   "Select a file based on OPTION selected by a user."
-  (let (other-files file l)
-    (cond
-     ((string-equal option "(Other file)")
-      (when  (featurep 'projectile)
+  (let ((projectile-func-list '(projectile-get-other-files
+                                projectile-current-project-files
+                                projectile-project-root
+                                projectile-find-file))
+        other-files file l)
+    (when  (and (featurep 'projectile)
+                (cl-reduce (lambda (acc f)
+                             (and (fboundp f) acc))
+                           projectile-func-list
+                           :initial-value t))
+      (cond
+       ((string-equal option "(Other file)")
         (setq other-files (projectile-get-other-files (buffer-file-name)
                                                       (projectile-current-project-files)
                                                       nil))
@@ -308,16 +312,19 @@ FILE-OPTION is a file destination associated with OPERATION."
                                                    other-files))
                                  ((= l 1)
                                   (car other-files))
-                                 (t (projectile-find-file)))))))
-     ((string-equal option "(Current file)")
+                                 (t (projectile-find-file))))))
+       ((and (string-equal option "(Project file)") (featurep 'projectile))
+        (setq file (concat (projectile-project-root)
+                           (completing-read "Select a file: "
+                                            (projectile-current-project-files)))))
+       ))
+
+    (when (string-equal option "(Current file)")
       (setq file (buffer-file-name (current-buffer))))
-     ((and (string-equal option "(Project file)") (featurep 'projectile))
-      (setq file (concat (projectile-project-root)
-                         (completing-read "Select a file: "
-                                          (projectile-current-project-files)))))
-     ((string-equal option "(File)")
+
+    (when (string-equal option "(File)")
       (setq file (with-current-buffer (call-interactively 'find-file-other-window)
-                   (buffer-file-name (current-buffer))))))
+                   (buffer-file-name (current-buffer)))))
     file))
 
 (defun srefactor--tag-persistent-action ()
