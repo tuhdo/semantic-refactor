@@ -661,6 +661,18 @@ content changed."
 ;; FUNCTION
 ;;
 
+(defun srefactor--tag-name (tag)
+  "Return TAG name and handle edge cases."
+  (let ((tag-name (semantic-tag-name tag)))
+    (if (not (string-empty-p tag-name))
+        tag-name
+      (with-current-buffer (semantic-tag-buffer tag)
+        (if (string-match "operator.*\\*"
+                          (buffer-substring-no-properties (semantic-tag-start tag)
+                                                          (semantic-tag-end tag)))
+            "*"
+          "")))))
+
 (defun srefactor--insert-function-implementation (func-tag)
   "Insert function implementations for FUNC-TAG at point, a tag that is a function."
   (forward-line 0)
