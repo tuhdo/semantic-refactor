@@ -362,9 +362,6 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
     (with-current-buffer buffer
       (if (and ask-place-p tag-list)
           (progn
-            ;; (setq dest-tag (cdr (assoc (completing-read "Select a place to insert: "
-            ;;                                             tag-list)
-            ;;                            tag-list)))
             (oset srefactor-ui--current-active-menu :items tag-list)
             (oset srefactor-ui--current-active-menu :action #'srefactor-ui--tag-action)
             (oset srefactor-ui--current-active-menu :shortcut-p nil)
@@ -660,18 +657,6 @@ content changed."
 ;;
 ;; FUNCTION
 ;;
-
-(defun srefactor--tag-name (tag)
-  "Return TAG name and handle edge cases."
-  (let ((tag-name (semantic-tag-name tag)))
-    (if (not (string-empty-p tag-name))
-        tag-name
-      (with-current-buffer (semantic-tag-buffer tag)
-        (if (string-match "operator.*\\*"
-                          (buffer-substring-no-properties (semantic-tag-start tag)
-                                                          (semantic-tag-end tag)))
-            "*"
-          "")))))
 
 (defun srefactor--insert-function-implementation (func-tag)
   "Insert function implementations for FUNC-TAG at point, a tag that is a function."
@@ -1108,6 +1093,18 @@ complicated language construct, Semantic cannot retrieve it."
           (re-search-forward (concat ".*&[ ]+.*" (regexp-quote (semantic-tag-name tag)))
                              (semantic-tag-end tag)
                              t))))))
+
+(defun srefactor--tag-name (tag)
+  "Return TAG name and handle edge cases."
+  (let ((tag-name (semantic-tag-name tag)))
+    (if (not (string-empty-p tag-name))
+        tag-name
+      (with-current-buffer (semantic-tag-buffer tag)
+        (if (string-match "operator.*\\*"
+                          (buffer-substring-no-properties (semantic-tag-start tag)
+                                                          (semantic-tag-end tag)))
+            "*"
+          "")))))
 
 (defun srefactor--tag-type-string (tag)
   "Return a complete return type of a TAG as string."
