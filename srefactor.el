@@ -400,13 +400,11 @@ REFACTOR-TAG is a Semantic tag that holds information of a C++ class."
   (let* ((members (semantic-tag-type-members refactor-tag))
          (dest-buffer-tags (with-current-buffer dest-buffer
                              (semantic-fetch-tags)))
-         ;; (diff (set-difference members
-         ;;                       dest-buffer-tags
-         ;;                       :test (lambda (t1 t2)
-         ;;                               (string-equal (semantic-format-tag-summarize t1 nil nil)
-         ;;                                             (semantic-format-tag-summarize t2 nil nil)))))
+         (diff (set-difference members
+                               dest-buffer-tags
+                               :test #'semantic-equivalent-tag-p))
          )
-    (dolist (tag members)
+    (dolist (tag diff)
       (cond
        ((and (eq (semantic-tag-class tag) 'function)
              (semantic-tag-prototype-p tag))
