@@ -376,7 +376,7 @@ ASK-PLACE-P, if true, asks user to select a tag in BUFFER to insert next to it."
                       (with-temp-buffer
                         (setq major-mode 'c++-mode)
                         (setq tag-string (semantic-format-tag-summarize tag nil nil)))
-                      (search-forward tag-string (point-max) t)
+                      (search-forward (regexp-quote tag-string) (point-max) t)
                       (back-to-indentation))))
             (oset srefactor-ui--current-active-menu :keymap
                   (lambda ()
@@ -703,7 +703,7 @@ content changed."
       (insert (srefactor--tag-templates-declaration-string parent))
       (insert (srefactor--tag-function-string func-tag))
       (goto-char (line-beginning-position))
-      (search-forward func-tag-name)
+      (search-forward (regexp-quote func-tag-name))
       (forward-symbol -1)
       (when (srefactor--tag-function-destructor func-tag)
         (forward-char -1))
@@ -1065,7 +1065,8 @@ The returned string is formatted as:
   "Return regexp for seraching local variable TAG."
   (format (concat "\\(\\_\<%s\\)[ ]*\\([^[:alnum:]"
                   (unless (srefactor--tag-lambda-p tag) "(")
-                  "]\\)") (semantic-tag-name tag)))
+                  "]\\)")
+          (regexp-quote (semantic-tag-name tag))))
 
 (defun srefactor--tag-pointer (tag)
   "Return `:pointer' attribute of a TAG."
@@ -1092,7 +1093,7 @@ complicated language construct, Semantic cannot retrieve it."
                                ;; carry buffer information
                                (current-buffer))
           (goto-char (semantic-tag-start tag))
-          (re-search-forward (concat ".*&[ ]+.*" (semantic-tag-name tag))
+          (re-search-forward (concat ".*&[ ]+.*" (regexp-quote (semantic-tag-name tag)))
                              (semantic-tag-end tag)
                              t))))))
 
@@ -1109,7 +1110,7 @@ complicated language construct, Semantic cannot retrieve it."
                                                           (semantic-tag-end tag))))
             matched-string)
         (string-match (concat "\\([[:ascii:][:nonascii:]]*\\)"
-                              (semantic-tag-name tag))
+                              (regexp-quote (semantic-tag-name tag)))
                       tag-string)
         (setq matched-string (match-string-no-properties 1 tag-string))
         (string-trim-right (replace-regexp-in-string ")" "" (if matched-string
@@ -1349,7 +1350,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
       (save-excursion
         (goto-char (semantic-tag-start tag))
         (and (srefactor--tag-auto-p tag)
-             (search-forward-regexp "=[ ]*\\[.*\\][ ]*(.*)[ ]*" (semantic-tag-end tag) t)))
+             (search-forward-regexp "=[ ]*\\[.*\\][ ]*(.*)[ ]*" (regexp-quote (semantic-tag-end tag)) t)))
     (error nil)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
