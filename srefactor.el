@@ -423,7 +423,6 @@ the option \"Before|Inside|After\" that appears when a
 destination tag can have its own members, such as a class or a
 namespace.
 "
-  (semantic-fetch-tags)
   (let* ((parent-is-func-p (eq (semantic-tag-class (semantic-tag-calculate-parent dest-tag))
                                'function))
          (class (semantic-tag-class refactor-tag)))
@@ -1183,7 +1182,6 @@ EXTRACT-TYPE can be 'function or 'macro."
 Each candidate is a list '(DISPLAY TAG OPTIONS).  This is a
 wrapper for `srefactor--fetch-candidates-helper'.  See
 `srefactor--fetch-candidates-helper' for more details."
-  (semantic-fetch-tags)
   (srefactor--fetch-candidates-helper (semantic-fetch-tags) 0 nil))
 
 (defun srefactor--fetch-candidates-helper (tags depth &optional class)
