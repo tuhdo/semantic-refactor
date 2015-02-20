@@ -691,30 +691,33 @@ content changed."
                ;; Dictionary entries go here.
                ))
         (goto-char endofinsert)
-        (insert "\n\n")
-        )
+        (insert "\n\n"))
     (let ((func-tag-name (srefactor--tag-name func-tag))
           (parent (srefactor--calculate-parent-tag func-tag)))
       (when (srefactor--tag-function-modifiers func-tag)
         (semantic-tag-put-attribute func-tag :typemodifiers nil))
       (save-excursion
-        (insert (srefactor--tag-templates-declaration-string parent))
+        (when (and (eq major-mode 'c++-mode) parent)
+          (insert (srefactor--tag-templates-declaration-string parent)))
         (insert (srefactor--tag-function-string func-tag)))
-      (search-forward-regexp (regexp-quote func-tag-name) (point-max) t)
-      (forward-symbol -1)
-      (when (srefactor--tag-function-destructor func-tag)
-        (forward-char -1))
-      (unless (srefactor--tag-friend-p func-tag)
-        (insert (srefactor--tag-parents-string func-tag)))
-      (when (srefactor--tag-function-constructor func-tag)
-        (goto-char (line-end-position))
-        (insert ":")
-        (let ((variables (srefactor--tag-filter #'semantic-tag-class '(variable) (semantic-tag-type-members parent))))
-          (mapc (lambda (v)
-                  (when (string-match "const" (srefactor--tag-type-string v))
-                    (insert (semantic-tag-name v))
-                    (insert "()")))
-                variables))))))
+      (unless (eq major-mode 'c-mode)
+        (search-forward-regexp (regexp-quote func-tag-name) (point-max) t)
+        (forward-symbol -1)
+        (when (srefactor--tag-function-destructor func-tag)
+          (forward-char -1))
+        (unless (srefactor--tag-friend-p func-tag)
+          (insert (srefactor--tag-parents-string func-tag)))
+        (when (srefactor--tag-function-constructor func-tag)
+          (goto-char (line-end-position))
+          (insert ":")
+          (let ((variables (srefactor--tag-filter #'semantic-tag-class
+                                                  '(variable)
+                                                  (semantic-tag-type-members parent))))
+            (mapc (lambda (v)
+                    (when (string-match "const" (srefactor--tag-type-string v))
+                      (insert (semantic-tag-name v))
+                      (insert "()")))
+                  variables)))))))
 
 (defun srefactor--insert-function-pointer (tag)
   "Insert function pointer definition for TAG."
@@ -924,13 +927,12 @@ The closer to the end of the list, the higher the parents."
 It is used for prepending to function or variable name defined
 outside of a scope."
   (let ((parents (srefactor--get-all-parents tag)))
-    (unless (or (semantic-current-tag-parent)
-                (semantic-current-tag)
-                (not parents))
-      (concat (mapconcat (lambda (T)
-                           (concat (semantic-tag-name T)
-                                   (srefactor--tag-templates-parameters-string T)))
-                         (nreverse parents) "::") "::"))))
+    (if parents
+        (concat (mapconcat (lambda (T)
+                             (concat (semantic-tag-name T)
+                                     (srefactor--tag-templates-parameters-string T)))
+                           (nreverse parents) "::") "::")
+      "")))
 
 (defun srefactor--tag-function-parameters-string (members)
   "Return function parameter string of a function.
@@ -1003,8 +1005,10 @@ The returned string is formatted as:
 \"template <class T1, class T2>\"
 \"template <class T3>\"
 \"....\"."
-  (let ((parent (srefactor--calculate-parent-tag tag))
-        (tmpl-list (srefactor--tag-template-string-list tag)))
+  (let* ((parent (condition-case nil
+                     (srefactor--calculate-parent-tag tag)
+                   (error nil)))
+         (tmpl-list (when parent (srefactor--tag-template-string-list tag))))
     (if tmpl-list
         (concat (if parent
                     (srefactor--tag-templates-declaration-string parent)
