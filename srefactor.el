@@ -132,7 +132,7 @@ to perform."
   (semantic-fetch-tags)
   (let (menu-item-list
         (srefactor--file-options (srefactor-ui--return-option-list 'file))
-        (tag (semantic-current-tag))
+        (tag (srefactor--copy-tag))
         (menu (srefactor-ui-menu "menu")))
     (when (srefactor--menu-add-function-implementation-p tag)
       (add-to-list 'menu-item-list `("Generate Function Implementation (Other file)"
@@ -194,6 +194,26 @@ Based on the type of list passed above, either use
        (when (member (funcall ,predicate tag) ,tag-classes-or-names)
          (setq l (cons tag l))))))
 
+(defun srefactor--copy-tag ()
+  "Take the current tag, and place it in the tag ring."
+  (interactive)
+  (semantic-fetch-tags)
+  (let ((ft (semantic-obtain-foreign-tag)))
+    (when ft
+      (ring-insert senator-tag-ring ft)
+      (kill-ring-save (save-excursion
+                        (beginning-of-defun-raw)
+                        ;; (search-backward-regexp "/")
+                        (semantic-tag-set-bounds ft
+                                                 (point)
+                                                 (semantic-tag-end ft))
+                        (point))
+                      (semantic-tag-end ft))
+      (when (called-interactively-p 'interactive)
+        (message "Use C-y to yank text.  \
+Use `senator-yank-tag' for prototype insert.")))
+    ft))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; High level functions that select action to make
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -202,8 +222,7 @@ Based on the type of list passed above, either use
 
 OPERATION is a refactoring type user selected from the menu.
 FILE-OPTION is a file destination associated with OPERATION."
-  (senator-copy-tag)
-  (let* ((refactor-tag (ring-ref senator-tag-ring 0))
+  (let* ((refactor-tag (srefactor--copy-tag))
          (class (semantic-tag-class refactor-tag)))
     (cond
      ((eq class 'function)
@@ -459,8 +478,11 @@ namespace.
               (with-current-buffer (semantic-tag-buffer refactor-tag)
                 (save-excursion
                   (goto-char (semantic-tag-start refactor-tag))
-                  (senator-kill-tag)
+                  (filter-buffer-substring (semantic-tag-start refactor-tag)
+                                           (semantic-tag-end refactor-tag)
+                                           t)
                   (delete-blank-lines)))
+              (search-forward-regexp "$")
               (if (and (or (srefactor--tag-struct-p dest-tag)
                            (srefactor--tag-struct-p
                             (srefactor--calculate-parent-tag dest-tag)))
