@@ -1007,7 +1007,7 @@ The returned string is formatted as:
   (let* ((parent (condition-case nil
                      (srefactor--calculate-parent-tag tag)
                    (error nil)))
-         (tmpl-list (when parent (srefactor--tag-template-string-list tag))))
+         (tmpl-list (srefactor--tag-template-string-list tag)))
     (if tmpl-list
         (concat (if parent
                     (srefactor--tag-templates-declaration-string parent)
