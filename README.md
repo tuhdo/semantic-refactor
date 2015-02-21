@@ -24,8 +24,6 @@ structure of the analyzed language, instead of plain text structure.
 
 # Features<a id="sec-2" name="sec-2"></a>
 
-This package includes the following features:
-
 -   Context-sensitive menu offers appropriate refactoring actions
 
 -   Generate class implementation (also handles nested class and class template)
