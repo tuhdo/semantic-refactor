@@ -194,6 +194,17 @@ Based on the type of list passed above, either use
        (when (member (funcall ,predicate tag) ,tag-classes-or-names)
          (setq l (cons tag l))))))
 
+(defun srefactor--tag-start-with-comment (tag)
+  (save-excursion
+    (goto-char (semantic-tag-start tag))
+    (if (eq (semantic-tag-class tag) 'function)
+        (if (semantic-documentation-comment-preceeding-tag tag)
+            (search-backward-regexp "/\\*")
+          (beginning-of-defun-raw))
+      (when (semantic-documentation-comment-preceeding-tag tag)
+        (search-backward-regexp "/\\*")))
+    (point)))
+
 (defun srefactor--copy-tag ()
   "Take the current tag, and place it in the tag ring."
   (interactive)
@@ -201,13 +212,10 @@ Based on the type of list passed above, either use
   (let ((ft (semantic-obtain-foreign-tag)))
     (when ft
       (ring-insert senator-tag-ring ft)
-      (kill-ring-save (save-excursion
-                        (beginning-of-defun-raw)
-                        ;; (search-backward-regexp "/")
-                        (semantic-tag-set-bounds ft
-                                                 (point)
-                                                 (semantic-tag-end ft))
-                        (point))
+      (semantic-tag-set-bounds ft
+                               (srefactor--tag-start-with-comment ft)
+                               (semantic-tag-end ft))
+      (kill-ring-save (semantic-tag-start ft)
                       (semantic-tag-end ft))
       (when (called-interactively-p 'interactive)
         (message "Use C-y to yank text.  \
@@ -478,11 +486,11 @@ namespace.
               (with-current-buffer (semantic-tag-buffer refactor-tag)
                 (save-excursion
                   (goto-char (semantic-tag-start refactor-tag))
-                  (filter-buffer-substring (semantic-tag-start refactor-tag)
-                                           (semantic-tag-end refactor-tag)
-                                           t)
-                  (delete-blank-lines)))
-              (search-forward-regexp "$")
+                  (delete-region (semantic-tag-start refactor-tag)
+                                 (semantic-tag-end refactor-tag))
+                  (delete-blank-lines)
+                  )
+                )
               (if (and (or (srefactor--tag-struct-p dest-tag)
                            (srefactor--tag-struct-p
                             (srefactor--calculate-parent-tag dest-tag)))
@@ -491,6 +499,7 @@ namespace.
                   (progn
                     (insert (srefactor--function-to-function-pointer refactor-tag))
                     (insert ";"))
+                (newline 1)
                 (yank)
                 (indent-according-to-mode))
               (newline-and-indent))
