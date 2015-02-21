@@ -707,16 +707,21 @@ content changed."
         (unless (srefactor--tag-friend-p func-tag)
           (insert (srefactor--tag-parents-string func-tag)))
         (when (srefactor--tag-function-constructor func-tag)
-          (goto-char (line-end-position))
-          (insert ":")
           (let ((variables (srefactor--tag-filter #'semantic-tag-class
                                                   '(variable)
                                                   (semantic-tag-type-members parent))))
-            (mapc (lambda (v)
-                    (when (string-match "const" (srefactor--tag-type-string v))
-                      (insert (semantic-tag-name v))
-                      (insert "()")))
-                  variables)))))))
+            (setq variables
+                  (remove-if-not (lambda (v)
+                                   (string-match "const" (srefactor--tag-type-string v)))
+                                 variables))
+            (when variables
+              (goto-char (line-end-position))
+              (insert ":")
+              (mapc (lambda (v)
+                      (when (string-match "const" (srefactor--tag-type-string v))
+                        (insert (semantic-tag-name v))
+                        (insert "()")))
+                    variables))))))))
 
 (defun srefactor--insert-function-pointer (tag)
   "Insert function pointer definition for TAG."
