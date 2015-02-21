@@ -359,8 +359,11 @@ FILE-OPTION is a file destination associated with OPERATION."
   (back-to-indentation)
   (when srefactor-ui--current-active-tag-overlay
     (delete-overlay srefactor-ui--current-active-tag-overlay))
-  (let ((link (get-pos-property (point) 'button))
-        tag)
+  (let (link tag)
+    (save-excursion
+      (if (search-forward ":" (line-end-position) t)
+          (setq link (get-pos-property (point) 'button))
+        (setq link (get-pos-property (point) 'button))))
     (when (and link
                (listp (widget-value link))
                (semantic-tag-p (car (widget-value link))))
