@@ -369,12 +369,12 @@ FILE-OPTION is a file destination associated with OPERATION."
                (semantic-tag-p (car (widget-value link))))
       (with-selected-window srefactor-ui--current-active-window
         (setq tag (car (widget-value link)))
-        (when (car (widget-value link))tag
-              (semantic-go-to-tag tag)
-              (let ((o (make-overlay (semantic-tag-start tag)
-                                     (semantic-tag-end tag))))
-                (setq srefactor-ui--current-active-tag-overlay o)
-                (overlay-put o 'face 'region)))))))
+        (when (car (widget-value link))
+          (semantic-go-to-tag tag)
+          (let ((o (make-overlay (semantic-tag-start tag)
+                                 (semantic-tag-end tag))))
+            (setq srefactor-ui--current-active-tag-overlay o)
+            (overlay-put o 'face 'region)))))))
 
 (defun srefactor--refactor-tag (buffer refactor-tag func-type &optional ask-place-p)
   "Refactor a tag.
