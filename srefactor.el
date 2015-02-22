@@ -194,13 +194,14 @@ Based on the type of list passed above, either use
        (when (member (funcall ,predicate tag) ,tag-classes-or-names)
          (setq l (cons tag l))))))
 
-(defun srefactor--tag-start-with-comment (tag)
+(defun srefactor--c-tag-start-with-comment (tag)
   (save-excursion
     (goto-char (semantic-tag-start tag))
     (if (eq (semantic-tag-class tag) 'function)
         (if (semantic-documentation-comment-preceeding-tag tag)
             (search-backward-regexp "/\\*")
-          (beginning-of-defun-raw))
+          (goto-char (semantic-tag-end tag))
+          (c-beginning-of-statement-1))
       (when (semantic-documentation-comment-preceeding-tag tag)
         (search-backward-regexp "/\\*")))
     (point)))
@@ -213,7 +214,7 @@ Based on the type of list passed above, either use
     (when ft
       (ring-insert senator-tag-ring ft)
       (semantic-tag-set-bounds ft
-                               (srefactor--tag-start-with-comment ft)
+                               (srefactor--c-tag-start-with-comment ft)
                                (semantic-tag-end ft))
       (kill-ring-save (semantic-tag-start ft)
                       (semantic-tag-end ft))
