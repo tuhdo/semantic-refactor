@@ -96,6 +96,7 @@
 (require 'semantic/tag-ls)
 (require 'semantic/bovine/c)
 (require 'semantic/format)
+(require 'semantic/doc)
 (require 'srecode/semantic)
 (require 'subr-x)
 (require 'srefactor-ui)
