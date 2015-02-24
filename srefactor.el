@@ -1421,7 +1421,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
       (save-excursion
         (goto-char (semantic-tag-start tag))
         (and (srefactor--tag-auto-p tag)
-             (search-forward-regexp "=[ ]*\\[.*\\][ ]*(.*)[ ]*" (regexp-quote (semantic-tag-end tag)) t)))
+             (search-forward-regexp "=[ ]*\\[.*\\][ ]*(.*)[ ]*"  (semantic-tag-end tag) t)))
     (error nil)))
 
 (defun srefactor--tag-friend-p (tag)
