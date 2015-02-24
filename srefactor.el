@@ -947,14 +947,21 @@ TAG-TYPE is the return type such as int, long, float, double..."
   "Rename the name of a LOCAL-VAR-TAG in FUNCTION-TAG to NEW-NAME."
   (save-excursion
     (goto-char (semantic-tag-start function-tag))
-    (mapc (lambda (c)
-            (goto-char c)
-            (goto-char (line-beginning-position))
-            (search-forward-regexp (srefactor--local-var-regexp local-var-tag)
-                                   (semantic-tag-end function-tag)
-                                   t)
-            (replace-match new-name t t nil 1))
-          (srefactor--collect-tag-occurrences local-var-tag function-tag)))
+    (let* ((distance (- (length new-name)
+                        (length (semantic-tag-name local-var-tag))))
+           (var-list (srefactor--collect-tag-occurrences local-var-tag function-tag))
+           (var-list (loop for v in var-list
+                           for i from 0 upto (1- (length var-list))
+                           collect (if (consp v)
+                                       (cons (+ (car v) (* 14 i)) (cdr v))
+                                     (+ v (* distance i))))))
+      (mapc (lambda (c)
+              (goto-char c)
+              (search-forward-regexp (srefactor--local-var-regexp local-var-tag)
+                                     (semantic-tag-end function-tag)
+                                     t)
+              (replace-match new-name t t nil 1))
+            var-list)))
   (message (format "Renamed %s to %s" (semantic-tag-name local-var-tag) new-name)))
 
 ;;
