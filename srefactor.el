@@ -98,8 +98,25 @@
 (require 'semantic/format)
 (require 'semantic/doc)
 (require 'srecode/semantic)
-(require 'subr-x)
 (require 'srefactor-ui)
+
+(if (not (version< emacs-version "24.4"))
+    (require 'subr-x)
+  (defsubst string-empty-p (string)
+    "Check whether STRING is empty."
+    (string= string ""))
+
+  (defsubst string-trim-left (string)
+    "Remove leading whitespace from STRING."
+    (if (string-match "\\`[ \t\n\r]+" string)
+        (replace-match "" t t string)
+      string))
+
+  (defsubst string-trim-right (string)
+    "Remove trailing whitespace from STRING."
+    (if (string-match "[ \t\n\r]+\\'" string)
+        (replace-match "" t t string)
+      string)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User options
