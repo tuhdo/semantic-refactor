@@ -269,7 +269,8 @@ FILE-OPTION is a file destination associated with OPERATION."
                                                  (read-from-minibuffer prompt))
                     (srefactor--unhighlight-tag local-var))
                 (error nil))
-            (srefactor--unhighlight-tag local-var))
+            (srefactor--unhighlight-tag local-var)
+            (semantic-force-refresh))
           (srefactor--unhighlight-tag local-var)
           ))
        (t
@@ -948,7 +949,10 @@ TAG-TYPE is the return type such as int, long, float, double..."
     (goto-char (semantic-tag-start function-tag))
     (mapc (lambda (c)
             (goto-char c)
-            (search-forward-regexp (srefactor--local-var-regexp local-var-tag) (point-max) t)
+            (goto-char (line-beginning-position))
+            (search-forward-regexp (srefactor--local-var-regexp local-var-tag)
+                                   (semantic-tag-end function-tag)
+                                   t)
             (replace-match new-name t t nil 1))
           (srefactor--collect-tag-occurrences local-var-tag function-tag)))
   (message (format "Renamed %s to %s" (semantic-tag-name local-var-tag) new-name)))
@@ -1478,7 +1482,7 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
           ;; forward one character to move point inside the tag
           (forward-char 1)
           (when (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
-            (push pos positions))))))
+            (push (line-beginning-position) positions))))))
   )
 
 (defun srefactor--collect-var-positions (local-var-tag &optional beg end  with-content)
