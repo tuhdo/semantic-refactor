@@ -22,6 +22,8 @@ language syntax. relies on Semantic for analyzing source code and uses
 its results to perform smart code refactoring that based on code
 structure of the analyzed language, instead of plain text structure.
 
+**NOTE**: `semantic-refactor` only supports Emacs 24.4 or above at the moment.
+
 # Features<a id="sec-2" name="sec-2"></a>
 
 -   Context-sensitive menu offers appropriate refactoring actions
