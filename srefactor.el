@@ -754,7 +754,7 @@ content changed."
         (insert (srefactor--tag-function-string func-tag)))
       (unless (eq major-mode 'c-mode)
         (search-forward-regexp (regexp-quote func-tag-name) (point-max) t)
-        (forward-symbol -1)
+        (forward-sexp -1)
         (when (srefactor--tag-function-destructor func-tag)
           (forward-char -1))
         (unless (srefactor--tag-friend-p func-tag)
@@ -1229,9 +1229,9 @@ EXTRACT-TYPE can be 'function or 'macro."
 (defun srefactor--mark-symbol-at-point ()
   "Activate mark for a symbol at point."
   (interactive)
-  (forward-symbol -1)
+  (forward-sexp -1)
   (set-mark-command nil)
-  (forward-symbol 1)
+  (forward-sexp 1)
   (setq deactivate-mark nil))
 
 (defun srefactor--fetch-candidates ()
@@ -1536,7 +1536,7 @@ WITH-CONTENT, if t, returns the content associated with each line."
                                       t)
               (setq beg (point))
               (forward-char 1)
-              (forward-symbol 1)
+              (forward-sexp 1)
               (setq end (point))
 
               (let ((overlay (make-overlay beg end)))
