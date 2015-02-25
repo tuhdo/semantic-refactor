@@ -1546,7 +1546,6 @@ WITH-CONTENT, if t, returns the content associated with each line."
                                         (point-min))
                                       t)
               (setq beg (point))
-              (forward-char 1)
               (forward-sexp 1)
               (setq end (point))
 
