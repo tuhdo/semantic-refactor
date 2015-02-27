@@ -134,7 +134,7 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar srefactor-use-srecode-p nil
-  "Use experimental SRecode tag insertion mechanism.")
+  "Use experimental SRecode tag insertion ")
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Commands - only one currently
@@ -182,7 +182,7 @@ to perform."
       (add-to-list 'menu-item-list `("Rename local variable (Current file)"
                                      rename-local-var
                                      ("(Current file)"))))
-    (when (and (semantic-current-tag) (not (region-active-p)))
+    (when (srefactor--menu-add-move-p)
       (add-to-list 'menu-item-list `("Move (Current file)"
                                      move
                                      ,srefactor--file-options)))
@@ -1315,7 +1315,9 @@ tag and OPTIONS is a list of possible choices for each menu item.
          (not (semantic-tag-prototype-p tag))
          (and (not (srefactor--tag-function-constructor tag))
               (not (srefactor--tag-function-destructor tag)))
-         (not (region-active-p)))))
+         (not (region-active-p))
+         (semantic-equivalent-tag-p (srefactor--local-var-at-point)
+                                    (semantic-current-tag)))))
 
 (defun srefactor--menu-add-function-implementation-p (tag)
   "Check whether to add generate function implementation menu item for a TAG."
@@ -1338,7 +1340,9 @@ tag and OPTIONS is a list of possible choices for each menu item.
        (not (semantic-tag-get-attribute tag :pointer))
        (and (not (srefactor--tag-function-constructor tag))
             (not (srefactor--tag-function-destructor tag)))
-       (not (region-active-p))))
+       (not (region-active-p))
+       (semantic-equivalent-tag-p (srefactor--local-var-at-point)
+                                  (semantic-current-tag))))
 
 (defun srefactor--menu-add-getters-setters-p (tag)
   "Check whether to add generate getters and setters menu item for a TAG."
@@ -1351,6 +1355,13 @@ tag and OPTIONS is a list of possible choices for each menu item.
   (and (eq (semantic-tag-class tag) 'variable)
        (eq (semantic-tag-class (semantic-tag-calculate-parent tag)) 'type)
        (not (region-active-p))))
+
+(defun srefactor--menu-add-move-p ()
+  "Check whether to add move menu."
+  (and (semantic-current-tag)
+       (not (region-active-p))
+       (semantic-equivalent-tag-p (srefactor--local-var-at-point)
+                                  (semantic-current-tag))))
 
 (defun srefactor--local-var-at-point ()
   "Check whether text at point is a local variable."
