@@ -1458,6 +1458,24 @@ tag and OPTIONS is a list of possible choices for each menu item.
             (search-forward-regexp "friend" tag-end t))))
     (error nil)))
 
+(defun srefactor--unknown-symbol-at-point-p ()
+  (unless (and (semantic-ctxt-current-symbol)
+               (null (srefactor--local-var-at-point)))
+    t))
+
+(defun srefactor--introduce-variable-at-point ()
+  (save-excursion
+    ;;
+    (let ((var (save-excursion
+                 (c-end-of-statement)
+                 (semantic-ctxt-current-assignment)))
+          var-string)
+      (unless var
+        (setq var (semantic-ctxt-current-symbol)))
+      (setq var-string (read-from-minibuffer "New variable: " var))
+      (goto-char (semantic-tag-end (car (last (semantic-get-all-local-variables)))))
+      (newline-and-indent)
+      (insert (concat var-string ";")))))
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions - Utilities
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
