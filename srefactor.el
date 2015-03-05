@@ -1491,8 +1491,12 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
                                                                     (semantic-tag-end parent-tag)
                                                                   (point-max))
                                                                 nil))
-          (parent-start (semantic-tag-start parent-tag))
-          (parent-end (semantic-tag-end parent-tag))
+          (parent-start (if parent-tag
+                            (semantic-tag-start parent-tag)
+                          (point-min)))
+          (parent-end (if parent-tag
+                          (semantic-tag-end parent-tag)
+                        (point-max)))
           positions)
       (save-excursion
         (dolist (p matching-positions)
@@ -1521,30 +1525,23 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
             (push (line-beginning-position) positions))))))
   )
 
-(defun srefactor--collect-var-positions (local-var-tag &optional beg end  with-content)
+(defun srefactor--collect-var-positions (local-var-tag &optional beg end with-content)
   "Return all lines that LOCAL-VAR-TAG occurs in FUNCTION-TAG.
 If WITH-CONTENT is nil, returns a list of line numbers.  If
 WITH-CONTENT is t, returns a list of pairs, in which each element
 is a cons of a line and the content of that line."
   (save-excursion
     (goto-char beg)
-    (srefactor--collect-positions-regexp (srefactor--local-var-regexp local-var-tag)
-                                         (current-buffer)
-                                         end
-                                         with-content)))
+    (srefactor--collect-positions (lambda ()
+                                    (re-search-forward (srefactor--local-var-regexp local-var-tag) end t))
+                                  (current-buffer)
+                                  beg
+                                  with-content)))
 
-(defun srefactor--collect-positions-regexp (regexp buffer &optional bound with-content)
-  "Collect lines based on REGEXP in BUFFER.
-BOUND is a position to stop searching.
-WITH-CONTENT, if t, returns the content associated with each line."
-  (srefactor--collect-positions (lambda () (re-search-forward regexp bound t))
-                                buffer
-                                with-content))
-
-(defun srefactor--collect-positions (predicate buffer &optional with-content)
+(defun srefactor--collect-positions (predicate buffer &optional beg with-content)
   (with-current-buffer buffer
     (save-excursion
-      (goto-char (point-min))
+      (goto-char (if beg beg (point-min)))
       (let (lines)
         (while (funcall predicate)
           (push  (if with-content
