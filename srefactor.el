@@ -1366,11 +1366,11 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Check whether to add move menu."
   (and (semantic-current-tag)
        (not (region-active-p))
-       (semantic-equivalent-tag-p (srefactor--var-at-point)
+       (semantic-equivalent-tag-p (srefactor--tag-at-point)
                                   (semantic-current-tag))))
 
-(defun srefactor--var-at-point ()
-  "Check whether text at point is a local variable."
+(defun srefactor--tag-at-point ()
+  "Retrieve current tag at point."
   (let* ((ctxt (semantic-analyze-current-context (point)))
 	 (pf (when ctxt
 	       ;; The CTXT is an EIEIO object.  The below
@@ -1381,7 +1381,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
     pf))
 
 (defun srefactor--local-var-at-point ()
-  "Check whether text at point is a local variable."
+  "Retrieve current variable tag at piont."
   (let* ((ctxt (semantic-analyze-current-context (point)))
 	 (pf (when ctxt
 	       ;; The CTXT is an EIEIO object.  The below
@@ -1548,7 +1548,7 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
                                        t))
           ;; forward one character to move point inside the tag
           (forward-char 1)
-          (when (semantic-equivalent-tag-p tag (srefactor--var-at-point))
+          (when (semantic-equivalent-tag-p tag (srefactor--tag-at-point))
             (push (line-beginning-position) positions))))))
   )
 
