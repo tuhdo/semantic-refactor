@@ -270,6 +270,7 @@ FILE-OPTION is a file destination associated with OPERATION."
                     (srefactor--unhighlight-tag local-var))
                 (error nil))
             (srefactor--unhighlight-tag local-var)
+            (semantic-mode 1)
             (semantic-force-refresh))
           (srefactor--unhighlight-tag local-var)
           ))
@@ -1372,7 +1373,14 @@ tag and OPTIONS is a list of possible choices for each menu item.
 	       ;; tag associated with the current context.
 	       (semantic-analyze-interesting-tag ctxt)))
          )
-    pf))
+    (catch 'found
+      (mapc (lambda (var)
+              (when (or (semantic-equivalent-tag-p var pf)
+                        (string-equal (semantic-tag-name var)
+                                      (semantic-tag-name pf)))
+                (throw 'found pf)))
+            (semantic-get-all-local-variables))
+      nil)))
 
 (defun srefactor--activate-region (beg end)
   "Activate a region from BEG to END."
@@ -1459,8 +1467,9 @@ tag and OPTIONS is a list of possible choices for each menu item.
     (error nil)))
 
 (defun srefactor--unknown-symbol-at-point-p ()
+  "Check whether a symbol at point is an unknown variable."
   (unless (and (semantic-ctxt-current-symbol)
-               (null (srefactor--local-var-at-point)))
+               (srefactor--local-var-at-point))
     t))
 
 (defun srefactor--introduce-variable-at-point ()
