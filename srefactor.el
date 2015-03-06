@@ -150,6 +150,7 @@ to perform."
   (semantic-fetch-tags)
   (let (menu-item-list
         (srefactor--file-options (srefactor-ui--return-option-list 'file))
+        (local-var-tag (srefactor--menu-add-rename-local-p))
         (tag (srefactor--copy-tag))
         (menu (srefactor-ui-menu "menu")))
     (when (srefactor--menu-add-function-implementation-p tag)
@@ -178,7 +179,8 @@ to perform."
       (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
                                      gen-getter-setter
                                      ("(Current file)"))))
-    (when (srefactor--menu-add-rename-local-p)
+    (when local-var-tag
+      (setq tag local-var-tag)
       (add-to-list 'menu-item-list `("Rename local variable (Current file)"
                                      rename-local-var
                                      ("(Current file)"))))
@@ -1330,10 +1332,12 @@ tag and OPTIONS is a list of possible choices for each menu item.
 
 (defun srefactor--menu-add-rename-local-p ()
   "Check whether to add rename menu item."
-  (and (srefactor--local-var-at-point)
-       (eq (semantic-tag-class (semantic-current-tag)) 'function)
-       (not (semantic-tag-prototype-p (semantic-current-tag)))
-       (not (region-active-p))))
+  (let ((local-var (srefactor--local-var-at-point)))
+    (when (and local-var
+               (eq (semantic-tag-class (semantic-current-tag)) 'function)
+               (not (semantic-tag-prototype-p (semantic-current-tag)))
+               (not (region-active-p)))
+      local-var)))
 
 (defun srefactor--menu-add-function-pointer-p (tag)
   "Check whether to add generate function pointer menu item for a TAG."
@@ -1378,7 +1382,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
               (when (or (semantic-equivalent-tag-p var pf)
                         (string-equal (semantic-tag-name var)
                                       (semantic-tag-name pf)))
-                (throw 'found pf)))
+                (throw 'found var)))
             (semantic-get-all-local-variables))
       nil)))
 
