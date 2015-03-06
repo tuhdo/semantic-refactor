@@ -118,6 +118,8 @@
         (replace-match "" t t string)
       string)))
 
+(defvar srefactor--current-local-var nil
+  "Current local variable at point")
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User options
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -150,9 +152,9 @@ to perform."
   (semantic-fetch-tags)
   (let (menu-item-list
         (srefactor--file-options (srefactor-ui--return-option-list 'file))
-        (local-var-tag (srefactor--menu-add-rename-local-p))
         (tag (srefactor--copy-tag))
         (menu (srefactor-ui-menu "menu")))
+    (setq srefactor--current-local-var (srefactor--menu-add-rename-local-p))
     (when (srefactor--menu-add-function-implementation-p tag)
       (add-to-list 'menu-item-list `("Generate Function Implementation (Other file)"
                                      gen-func-impl
@@ -179,8 +181,8 @@ to perform."
       (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
                                      gen-getter-setter
                                      ("(Current file)"))))
-    (when local-var-tag
-      (setq tag local-var-tag)
+    (when srefactor--current-local-var
+      (setq tag srefactor--current-local-var)
       (add-to-list 'menu-item-list `("Rename local variable (Current file)"
                                      rename-local-var
                                      ("(Current file)"))))
@@ -1319,8 +1321,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
          (and (not (srefactor--tag-function-constructor tag))
               (not (srefactor--tag-function-destructor tag)))
          (not (region-active-p))
-         (semantic-equivalent-tag-p (srefactor--local-var-at-point)
-                                    (semantic-current-tag)))))
+         (null srefactor--current-local-var) )))
 
 (defun srefactor--menu-add-function-implementation-p (tag)
   "Check whether to add generate function implementation menu item for a TAG."
@@ -1328,7 +1329,8 @@ tag and OPTIONS is a list of possible choices for each menu item.
     (and (or (eq class 'type)
              (and (eq class 'function)
                   (semantic-tag-prototype-p tag)))
-         (not (region-active-p)))))
+         (not (region-active-p))
+         (null srefactor--current-local-var))))
 
 (defun srefactor--menu-add-rename-local-p ()
   "Check whether to add rename menu item."
@@ -1346,8 +1348,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
        (and (not (srefactor--tag-function-constructor tag))
             (not (srefactor--tag-function-destructor tag)))
        (not (region-active-p))
-       (semantic-equivalent-tag-p (srefactor--local-var-at-point)
-                                  (semantic-current-tag))))
+       (null srefactor--current-local-var)))
 
 (defun srefactor--menu-add-getters-setters-p (tag)
   "Check whether to add generate getters and setters menu item for a TAG."
@@ -1358,15 +1359,26 @@ tag and OPTIONS is a list of possible choices for each menu item.
 (defun srefactor--menu-add-getter-setter-p (tag)
   "Check whether to add generate getter and setter menu item for a TAG."
   (and (eq (semantic-tag-class tag) 'variable)
-       (eq (semantic-tag-class (semantic-tag-calculate-parent tag)) 'type)
+       (eq (semantic-tag-class (semantic-current-tag-parent)) 'type)
        (not (region-active-p))))
 
 (defun srefactor--menu-add-move-p ()
   "Check whether to add move menu."
   (and (semantic-current-tag)
        (not (region-active-p))
-       (semantic-equivalent-tag-p (srefactor--local-var-at-point)
+       (semantic-equivalent-tag-p (srefactor--var-at-point)
                                   (semantic-current-tag))))
+
+(defun srefactor--var-at-point ()
+  "Check whether text at point is a local variable."
+  (let* ((ctxt (semantic-analyze-current-context (point)))
+	 (pf (when ctxt
+	       ;; The CTXT is an EIEIO object.  The below
+	       ;; method will attempt to pick the most interesting
+	       ;; tag associated with the current context.
+	       (semantic-analyze-interesting-tag ctxt)))
+         )
+    pf))
 
 (defun srefactor--local-var-at-point ()
   "Check whether text at point is a local variable."
@@ -1377,14 +1389,16 @@ tag and OPTIONS is a list of possible choices for each menu item.
 	       ;; tag associated with the current context.
 	       (semantic-analyze-interesting-tag ctxt)))
          )
-    (catch 'found
-      (mapc (lambda (var)
-              (when (or (semantic-equivalent-tag-p var pf)
-                        (string-equal (semantic-tag-name var)
-                                      (semantic-tag-name pf)))
-                (throw 'found var)))
-            (semantic-get-all-local-variables))
-      nil)))
+    (condition-case nil
+        (catch 'found
+          (mapc (lambda (var)
+                  (when (or (semantic-equivalent-tag-p var pf)
+                            (string-equal (semantic-tag-name var)
+                                          (semantic-tag-name pf)))
+                    (throw 'found var)))
+                (semantic-get-all-local-variables))
+          nil)
+      (error nil))))
 
 (defun srefactor--activate-region (beg end)
   "Activate a region from BEG to END."
@@ -1534,7 +1548,7 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
                                        t))
           ;; forward one character to move point inside the tag
           (forward-char 1)
-          (when (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
+          (when (semantic-equivalent-tag-p tag (srefactor--var-at-point))
             (push (line-beginning-position) positions))))))
   )
 
