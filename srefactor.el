@@ -579,7 +579,8 @@ OTHER-FILE is the selected file from the menu."
   (if other-file
       (if (equal other-file (buffer-file-name (current-buffer)))
           (find-file other-file)
-        (find-file-other-window other-file))
+        (find-file-other-window other-file)
+        (current-buffer))
     ;; use ff-find-other-file if no file is chosen When no file is
     ;; chosen, it means that user selected (Other file) option, but
     ;; does not install Projectile so he cannot use its function to
