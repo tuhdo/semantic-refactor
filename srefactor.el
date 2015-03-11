@@ -149,7 +149,7 @@
 Each menu item added returns a token for what type of refactoring
 to perform."
   (interactive)
-  (semantic-fetch-tags)
+  (semantic-parse-changes-default)
   (let (menu-item-list
         (srefactor--file-options (srefactor-ui--return-option-list 'file))
         (tag (srefactor--copy-tag))
