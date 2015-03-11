@@ -1568,8 +1568,7 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
                                          (point-min))
                                        t))
           ;; forward one character to move point inside the tag
-          (forward-char 1)
-          (when (semantic-equivalent-tag-p tag (srefactor--tag-at-point))
+          (when (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
             (push (line-beginning-position) positions))))))
   )
 
