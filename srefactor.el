@@ -815,7 +815,7 @@ This means, the function is converted into a function pointer."
   (semantic-force-refresh)
   (push-mark (region-beginning))
   (let ((reg-diff (- (region-end) (region-beginning)))
-        (region (buffer-substring (region-beginning) (region-end)))
+        (region (buffer-substring-no-properties (region-beginning) (region-end)))
         (tag (semantic-current-tag))
         (local-vars (semantic-get-all-local-variables))
         l orig p1 p2 name has-error)
@@ -823,31 +823,30 @@ This means, the function is converted into a function pointer."
         (condition-case e
             (progn
               (setq orig (point))
+              (setq region (with-temp-buffer
+                             (let (p1 p2)
+                               (insert (concat "void" " " "new_function"))
+                               (insert "()")
+                               (insert " {")
+                               (newline 1)
+                               (setq p1 (point))
+                               (insert region)
+                               (setq p2 (point))
+                               (newline 1)
+                               (insert "}")
+                               (c-beginning-of-defun-1)
+                               (search-forward "(" (point-max) t)
+                               (dolist (v local-vars l)
+                                 (when (srefactor--var-in-region-p v p1 p2)
+                                   (push v l)))
+                               (insert (srefactor--tag-function-parameters-string l))
+                               (buffer-substring-no-properties (point-min) (point-max)))))
               (beginning-of-defun-raw)
               (recenter-top-bottom)
               (setq p1 (point))
-              (open-line 2)
-              (insert (concat "void " "new_function"))
-              (insert "()")
-              (insert " {")
-              (newline 1)
               (insert region)
-              (newline 1)
-              (insert "}")
+              (open-line 2)
               (setq p2 (point))
-              ;; must narrow to defun to check existences
-              ;; of local variables
-              (narrow-to-defun)
-              (c-beginning-of-defun)
-              (search-forward "(")
-              (dolist (v local-vars l)
-                (when (srefactor--var-in-region-p v (region-beginning) (region-end))
-                  (push v l)))
-              (insert (srefactor--tag-function-parameters-string l))
-              (save-excursion
-                (c-end-of-defun)
-                (setq p2 (point)))
-              (widen)
               (re-search-backward "new_function" nil t)
               (forward-char 1)
               (srefactor--mark-symbol-at-point)
@@ -860,12 +859,12 @@ This means, the function is converted into a function pointer."
                              (progn
                                (c-end-of-defun)
                                (point))))
-          (error (widen)
+          (error "malform"
                  (setq has-error t)
                  (message "%s" "The selected region is malformed."))))
-    (widen)
     (when has-error
-      (delete-region p1 p2)
+      (unless (and (null p1) (null p2))
+        (delete-region p1 p2))
       (kill-line 2)
       (goto-char orig)
       (pop-mark))
@@ -1188,23 +1187,44 @@ complicated language construct, Semantic cannot retrieve it."
 
 (defun srefactor--tag-type-string (tag)
   "Return a complete return type of a TAG as string."
-  (if (or (srefactor--tag-function-constructor tag)
-          (srefactor--tag-function-destructor tag)
-          (not (or (eq (semantic-tag-class tag) 'function)
-                   (eq (semantic-tag-class tag) 'variable))))
-      ""
-    (save-excursion
-      (let ((tag-string (with-current-buffer (semantic-tag-buffer tag)
-                          (buffer-substring-no-properties (semantic-tag-start tag)
-                                                          (semantic-tag-end tag))))
-            matched-string)
-        (string-match (concat "\\(friend\\)?\\([[:ascii:][:nonascii:]]*\\)"
-                              (regexp-quote (srefactor--tag-name tag)))
-                      tag-string)
-        (setq matched-string (match-string-no-properties 2 tag-string))
-        (string-trim-right (replace-regexp-in-string ")" "" (if matched-string
-                                                                matched-string
-                                                              "")))))))
+  (let* ((ptr-level (srefactor--tag-pointer tag))
+         (ref-level (srefactor--tag-reference tag))
+         (tag-type (semantic-tag-type tag))
+         (const-p (semantic-tag-variable-constant-p tag))
+         (template-specifier (when (semantic-tag-p tag-type)
+                               (semantic-c-tag-template-specifier tag-type))))
+    (cond
+     ((semantic-tag-function-constructor-p tag)
+      "")
+     (template-specifier
+      (replace-regexp-in-string ",>" ">"
+                                (concat (when (semantic-tag-variable-constant-p tag)
+                                          "const ")
+                                        (when (srefactor--tag-struct-p tag)
+                                          "struct ")
+                                        (car (semantic-tag-type tag))
+                                        "<"
+                                        (srefactor--tag-type-string-inner-template-list template-specifier)
+                                        ">"
+                                        (cond
+                                         (ptr-level
+                                          (make-string ptr-level ?\*))
+                                         (ref-level
+                                          (make-string ref-level ?\&))
+                                         (t ""))))
+      )
+     (t
+      (if (listp tag-type)
+          (concat (when const-p
+                    "const ")
+                  (when (srefactor--tag-struct-p tag)
+                    "struct ")
+                  (car tag-type)
+                  (when (srefactor--tag-reference tag)
+                    " &")
+                  (when (semantic-tag-get-attribute tag :operator-flag)
+                    " operator"))
+        tag-type)))))
 
 (defun srefactor--tag-type-string-inner-template-list (tmpl-spec-list)
   (mapconcat (lambda (tmpl)
