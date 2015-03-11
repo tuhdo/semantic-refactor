@@ -760,8 +760,9 @@ content changed."
           (insert (srefactor--tag-templates-declaration-string parent)))
         (insert (srefactor--tag-function-string func-tag)))
       (unless (eq major-mode 'c-mode)
-        (search-forward-regexp (regexp-quote func-tag-name) (point-max) t)
-        (forward-sexp -1)
+        (search-forward-regexp (regexp-quote func-tag-name) (line-end-position) t)
+        (search-backward-regexp (regexp-quote func-tag-name) (line-beginning-position) t)
+
         (when (srefactor--tag-function-destructor func-tag)
           (forward-char -1))
         (unless (srefactor--tag-friend-p func-tag)
@@ -1176,14 +1177,12 @@ complicated language construct, Semantic cannot retrieve it."
 (defun srefactor--tag-name (tag)
   "Return TAG name and handle edge cases."
   (let ((tag-name (semantic-tag-name tag)))
-    (if (not (string-empty-p tag-name))
-        tag-name
-      (with-current-buffer (semantic-tag-buffer tag)
-        (if (string-match "operator.*\\*"
-                          (buffer-substring-no-properties (semantic-tag-start tag)
-                                                          (semantic-tag-end tag)))
-            "*"
-          "")))))
+    (with-current-buffer (semantic-tag-buffer tag)
+      (if (not (string-empty-p tag-name))
+          (if (semantic-tag-get-attribute tag :operator-flag)
+              (concat "operator " tag-name)
+            tag-name)
+        ""))))
 
 (defun srefactor--tag-type-string (tag)
   "Return a complete return type of a TAG as string."
@@ -1221,9 +1220,7 @@ complicated language construct, Semantic cannot retrieve it."
                     "struct ")
                   (car tag-type)
                   (when (srefactor--tag-reference tag)
-                    " &")
-                  (when (semantic-tag-get-attribute tag :operator-flag)
-                    " operator"))
+                    " &"))
         tag-type)))))
 
 (defun srefactor--tag-type-string-inner-template-list (tmpl-spec-list)
