@@ -326,11 +326,8 @@ when the corresponding MENU-ITEM is selected."
         ;; Define a shortcut command.
         (defalias cmd
           `(lambda ()
-             (interactive "P")
-             (kill-buffer (current-buffer))
-             (delete-window (car (window-list)))
-             (select-window srefactor-ui--current-active-window)
-             (srefactor--refactor-based-on-tag-class (car (nth (- ,k 1)  (items srefactor-ui--current-active-menu))))))
+             (interactive)
+             (srefactor-ui--refactor-action (get-char-property (point) 'button))))
         ;; Bind it to a digit key.
         (define-key km (vector (+ k ?0)) cmd)))
     km)
