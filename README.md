@@ -13,7 +13,7 @@
 
 # What is Semantic Refactor?<a id="sec-1" name="sec-1"></a>
 
-Semantic Refactor is a refactoring tool based on Semantic parser
+Semantic Refactor is a C/C++ refactoring tool based on Semantic parser
 framework.
 
 [Semantic](https://www.gnu.org/software/emacs/manual/html_node/semantic/index.html#Top) is a package that provides a framework for writing parsers.
