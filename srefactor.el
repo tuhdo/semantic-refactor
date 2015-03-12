@@ -274,8 +274,7 @@ FILE-OPTION is a file destination associated with OPERATION."
                     (srefactor--unhighlight-tag local-var))
                 (error nil))
             (srefactor--unhighlight-tag local-var)
-            (semantic-mode 1)
-            (semantic-force-refresh))
+            (semantic-mode 1))
           (srefactor--unhighlight-tag local-var)
           ))
        (t
@@ -967,8 +966,8 @@ TAG-TYPE is the return type such as int, long, float, double..."
                                      (semantic-tag-end function-tag)
                                      t)
               (replace-match new-name t t nil 1))
-            var-list)))
-  (message (format "Renamed %s to %s" (semantic-tag-name local-var-tag) new-name)))
+            var-list)
+      (message (format "Renamed %d occurrences of %s to %s" (length var-list) (semantic-tag-name local-var-tag) new-name)))))
 
 ;;
 ;; GENERAL
@@ -1140,7 +1139,7 @@ The returned string is formatted as:
 
 (defun srefactor--local-var-regexp (tag)
   "Return regexp for seraching local variable TAG."
-  (format (concat "\\(\\_\<%s\\)[ ]*\\([^[:alnum:]"
+  (format (concat "\\(\\_\<%s\\)[ ]*\\([^[:alnum:]_"
                   (unless (srefactor--tag-lambda-p tag) "(")
                   "]\\)")
           (regexp-quote (semantic-tag-name tag))))
@@ -1528,14 +1527,15 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Collect all TAG occurrences.
 PARENT-TAG is the tag that contains TAG, such as a function or a class or a namespace."
   (save-excursion
-    (let ((matching-positions (srefactor--collect-var-positions tag
-                                                                (if parent-tag
-                                                                    (semantic-tag-start parent-tag)
-                                                                  (point-min))
-                                                                (if parent-tag
-                                                                    (semantic-tag-end parent-tag)
-                                                                  (point-max))
-                                                                nil))
+    (let ((matching-positions
+           (srefactor--collect-var-positions tag
+                                             (if parent-tag
+                                                 (semantic-tag-start parent-tag)
+                                               (point-min))
+                                             (if parent-tag
+                                                 (semantic-tag-end parent-tag)
+                                               (point-max))
+                                             nil))
           (parent-start (if parent-tag
                             (semantic-tag-start parent-tag)
                           (point-min)))
@@ -1545,28 +1545,14 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
           positions)
       (save-excursion
         (dolist (p matching-positions)
-          (when (< p parent-start)
+          (when (<= p parent-start)
             (delete p matching-positions))))
 
       (dolist (pos matching-positions positions)
         (goto-char pos)
-        (when (and
-               ;; search forward to see if it exists
-               (search-forward-regexp (srefactor--local-var-regexp tag)
-                                      (if parent-tag
-                                          parent-end
-                                        (point-max))
-                                      t)
-
-               ;; if so, go back to the beginning
-               (search-backward-regexp (srefactor--local-var-regexp tag)
-                                       (if parent-tag
-                                           parent-start
-                                         (point-min))
-                                       t))
-          ;; forward one character to move point inside the tag
-          (when (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
-            (push (line-beginning-position) positions))))))
+        (when (or (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
+                  (semantic-equivalent-tag-p tag (semantic-current-tag)))
+          (push pos positions)))))
   )
 
 (defun srefactor--collect-var-positions (local-var-tag &optional beg end with-content)
@@ -1575,25 +1561,17 @@ If WITH-CONTENT is nil, returns a list of line numbers.  If
 WITH-CONTENT is t, returns a list of pairs, in which each element
 is a cons of a line and the content of that line."
   (save-excursion
-    (goto-char beg)
-    (srefactor--collect-positions (lambda ()
-                                    (re-search-forward (srefactor--local-var-regexp local-var-tag) end t))
-                                  (current-buffer)
-                                  beg
-                                  with-content)))
-
-(defun srefactor--collect-positions (predicate buffer &optional beg with-content)
-  (with-current-buffer buffer
-    (save-excursion
-      (goto-char (if beg beg (point-min)))
-      (let (lines)
-        (while (funcall predicate)
-          (push  (if with-content
-                     (cons (line-beginning-position)
-                           (buffer-substring-no-properties (line-beginning-position)
+    (goto-char (if beg beg (point-min)))
+    (let ((local-var-regexp (srefactor--local-var-regexp local-var-tag))
+          p lines)
+      (while (re-search-forward local-var-regexp end t)
+        (setq p (match-beginning 0))
+        (push  (if with-content
+                   (cons p (buffer-substring-no-properties (point)
                                                            (line-end-position)))
-                   (line-beginning-position)) lines))
-        lines))))
+                 p)
+               lines))
+      lines)))
 
 (defun srefactor--highlight-tag (tag &optional scope-tag face)
   "Highlight TAG in SCOPE-TAG with FACE."
