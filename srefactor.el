@@ -1599,7 +1599,6 @@ is a cons of a line and the content of that line."
 
               (let ((overlay (make-overlay beg end)))
                 (overlay-put overlay 'srefactor-overlay t)
-                (overlay-put overlay 'srefactor-overlay-regexp "print_viable_colors")
                 (overlay-put overlay 'face 'match))))
           positions)))
 
