@@ -2,7 +2,7 @@
 ;;
 ;; Filename: srefactor.el
 ;; Description: A refactoring tool based on Semantic parser framework
-;; Author: Tu, Do Hoang <tuhdo1710@gmail.com
+;; Author: Tu, Do Hoang <tuhdo1710@gmail.com>
 ;; URL      : https://github.com/tuhdo/semantic-refactor
 ;; Maintainer: Tu, Do Hoang
 ;; Created: Wed Feb 11 21:25:51 2015 (+0700)
