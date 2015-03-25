@@ -180,17 +180,17 @@ to perform."
     (when (srefactor--menu-add-getters-setters-p tag)
       (add-to-list 'menu-item-list `("Generate Getters and Setters (Current file)"
                                      gen-getters-setters
-                                     ("(Current file)"))))
+                                     ,srefactor--file-options)))
     (when (srefactor--menu-add-getter-setter-p tag)
       (add-to-list 'menu-item-list `("Generate Setter (Current file)"
                                      gen-setter
-                                     ("(Current file)")))
+                                     ,srefactor--file-options))
       (add-to-list 'menu-item-list `("Generate Getter (Current file)"
                                      gen-getter
-                                     ("(Current file)")))
+                                     ,srefactor--file-options))
       (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
                                      gen-getter-setter
-                                     ("(Current file)"))))
+                                     ,srefactor--file-options)))
     (when srefactor--current-local-var
       (setq tag srefactor--current-local-var)
       (add-to-list 'menu-item-list `("Rename local variable (Current file)"
@@ -309,24 +309,11 @@ FILE-OPTION is a file destination associated with OPERATION."
      ((eq class 'variable)
       (cond
        ((eq operation 'gen-getter-setter)
-        (with-current-buffer (semantic-tag-buffer refactor-tag)
-          (srefactor--jump-or-insert-public-label (save-excursion
-                                                    (goto-char (semantic-tag-start refactor-tag))
-                                                    (semantic-current-tag-parent)))
-          (srefactor--insert-getter refactor-tag 1 1)
-          (srefactor--insert-setter refactor-tag 1 1)))
+        (srefactor--variable-insert-getter-setter t t refactor-tag file-option))
        ((eq operation 'gen-getter)
-        (with-current-buffer (semantic-tag-buffer refactor-tag)
-          (srefactor--jump-or-insert-public-label (save-excursion
-                                                    (goto-char (semantic-tag-start refactor-tag))
-                                                    (semantic-current-tag-parent))))
-        (srefactor--insert-getter refactor-tag 1 1))
+        (srefactor--variable-insert-getter-setter t nil refactor-tag file-option))
        ((eq operation 'gen-setter)
-        (with-current-buffer (semantic-tag-buffer refactor-tag)
-          (srefactor--jump-or-insert-public-label (save-excursion
-                                                    (goto-char (semantic-tag-start refactor-tag))
-                                                    (semantic-current-tag-parent))))
-        (srefactor--insert-setter refactor-tag 1 1))
+        (srefactor--variable-insert-getter-setter nil t refactor-tag file-option))
        ((eq operation 'move)
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -745,6 +732,19 @@ content changed."
             (newline 2)))
         (kill-whole-line))
       (recenter))))
+
+(defun srefactor--variable-insert-getter-setter (insert-getter-p insert-setter-p tag file-option)
+  "Insert getter if INSERT-GETTER-P is t, insert setter if INSERT-SETTER-P is t.
+TAG is the current variable at point.
+FILE-OPTION is the destination file user selects from contextual menu."
+  (let ((other-file (srefactor--select-file file-option)))
+    (with-current-buffer (srefactor--contextual-open-file other-file)
+      (unless (srefactor--jump-or-insert-public-label (save-excursion
+                                                        (goto-char (semantic-tag-start tag))
+                                                        (semantic-current-tag-parent)))
+        (goto-char (point-max)))
+      (srefactor--insert-getter tag 1 1)
+      (srefactor--insert-setter tag 1 1))))t
 
 ;;
 ;; FUNCTION
