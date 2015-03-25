@@ -617,13 +617,14 @@ OTHER-FILE is the selected file from the menu."
               (srefactor--variable-insert-getter-setter t t v buffer)))
           (recenter))))))
 
-(defun srefactor--insert-getter (tag &optional newline-before newline-after)
+(defun srefactor--insert-getter (tag &optional newline-before newline-after prototype-p)
   "Insert getter for TAG.
 Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
   (let ((tag-type (srefactor--tag-type-string tag))
         (tag-buffer (semantic-tag-buffer tag))
         (tag-parent-string "")
-        tag-name)
+        tag-name beg)
+    (setq beg (point))
     (unless (eq tag-buffer (current-buffer))
       (setq tag-parent-string (srefactor--tag-parents-string tag)))
     (when newline-before
@@ -643,18 +644,21 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
                         (capitalize tag-name)
                       tag-name)))
     (insert "() const")
-    (insert " {")
-    (srefactor--indent-and-newline 1)
-    (insert (concat "return"
-                    " "
-                    (semantic-tag-name tag) ";"))
-    (srefactor--indent-and-newline 1)
-    (insert "}")
-    (indent-according-to-mode)
-    (when newline-after
-      (newline newline-after))))
+    (if prototype-p
+        (insert ";")
+      (insert " {")
+      (srefactor--indent-and-newline 1)
+      (insert (concat "return"
+                      " "
+                      (semantic-tag-name tag) ";"))
+      (srefactor--indent-and-newline 1)
+      (insert "}")
+      (indent-according-to-mode)
+      (when newline-after
+        (newline newline-after)))
+    (indent-region beg (point))))
 
-(defun srefactor--insert-setter (tag &optional newline-before newline-after)
+(defun srefactor--insert-setter (tag newline-before newline-after &optional prototype-p)
   "Insert setter for TAG.
 Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
   (when newline-before
@@ -665,7 +669,8 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
         (tag-name (semantic-tag-name tag))
         (tag-type-string (srefactor--tag-type-string tag))
         (tag-buffer (semantic-tag-buffer tag))
-        tag-parent-string modified-tag-name)
+        tag-parent-string modified-tag-name beg)
+    (setq beg (point))
     (unless (eq tag-buffer (current-buffer))
       (setq tag-parent-string (srefactor--tag-parents-string tag)))
     (insert "void")
@@ -689,14 +694,17 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
                     " "
                     tag-name
                     ")"))
-    (insert " {")
-    (srefactor--indent-and-newline 1)
-    (insert (concat "this->" tag-name " = " tag-name ";"))
-    (srefactor--indent-and-newline 1)
-    (insert "}")
-    (indent-according-to-mode)
-    (when newline-after
-      (newline newline-after))))
+    (if prototype-p
+        (insert ";")
+      (insert " {")
+      (srefactor--indent-and-newline 1)
+      (insert (concat "this->" tag-name " = " tag-name ";"))
+      (srefactor--indent-and-newline 1)
+      (insert "}")
+      (indent-according-to-mode)
+      (when newline-after
+        (newline newline-after)))
+    (indent-region beg (point))))
 
 (defun srefactor--jump-or-insert-public-label (tag)
   "Check if TAG is a class or struct.
@@ -735,6 +743,13 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                                                       (goto-char (semantic-tag-start tag))
                                                       (semantic-current-tag-parent)))
       (goto-char (point-max)))
+    (unless (eq buffer (semantic-tag-buffer tag))
+      (with-current-buffer (semantic-tag-buffer tag)
+        (srefactor--jump-or-insert-public-label (save-excursion
+                                                  (goto-char (semantic-tag-start tag))
+                                                  (semantic-current-tag-parent)))
+        (when insert-getter-p (srefactor--insert-getter tag 1 1 t))
+        (when insert-setter-p (srefactor--insert-setter tag 1 1 t))))
     (when insert-getter-p (srefactor--insert-getter tag 1 1))
     (when insert-setter-p (srefactor--insert-setter tag 1 1))))
 
@@ -1632,7 +1647,7 @@ is a cons of a line and the content of that line."
   (remove-overlays))
 
 (defun srefactor--switch-to-window (file-path)
-  "Switch to window that contains FILE-PATH string"
+  "Switch to window that contains FILE-PATH string."
   (catch 'found
     (dolist (w (window-list))
       (when (equal file-path (buffer-file-name (window-buffer w)))
