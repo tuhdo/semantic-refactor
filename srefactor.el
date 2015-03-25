@@ -296,7 +296,7 @@ FILE-OPTION is a file destination associated with OPERATION."
      ((eq class 'type)
       (cond
        ((eq operation 'gen-getters-setters)
-        (srefactor-insert-class-getters-setters))
+        (srefactor-insert-class-getters-setters refactor-tag file-option))
        ((eq operation 'move)
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -604,13 +604,24 @@ OTHER-FILE is the selected file from the menu."
 ;;
 ;; CLASS
 ;;
-(defun srefactor-insert-class-getters-setters ()
-  "Select class at point and insert getters and setters if any.
-This is a convenient wrapper for srefactor--insert-class-getters-setters."
+(defun srefactor-insert-class-getters-setters (tag file-option)
+  "Insert getter-setter of a class TAG into file specified in FILE-OPTION."
   (semantic-fetch-tags-fast)
-  (let ((tag (semantic-current-tag)))
+  (let ((tag (semantic-current-tag))
+        (other-file (srefactor--select-file file-option)))
     (when (eq (semantic-tag-class tag) 'type)
-      (srefactor--insert-class-getters-setters tag))))
+      (when (eq (semantic-tag-class tag) 'type)
+        (let* ((members (srefactor--tag-filter 'semantic-tag-class
+                                               '(variable label)
+                                               (semantic-tag-type-members tag)))
+               (variables (srefactor--tag-filter 'semantic-tag-class '(variable) members))
+               (tag-start (semantic-tag-start tag)))
+          (save-excursion
+            (dolist (v variables)
+              (when (srefactor--tag-private-p v)
+                (srefactor--variable-insert-getter-setter t t v file-option)))
+            (kill-whole-line))
+          (recenter))))))
 
 (defun srefactor--insert-getter (tag &optional newline-before newline-after)
   "Insert getter for TAG.
@@ -711,28 +722,6 @@ Otherwise, insert one."
         (setq label-pos (point)))
       label-pos)))
 
-(defun srefactor--insert-class-getters-setters (tag)
-  "Insert getters and setters for class TAG.
-Buffer need to be refreshed before TAG is inserted, if the buffer
-content changed."
-  (when (eq (semantic-tag-class tag) 'type)
-    (let* ((members (srefactor--tag-filter 'semantic-tag-class
-                                           '(variable label)
-                                           (semantic-tag-type-members tag)))
-           (variables (srefactor--tag-filter 'semantic-tag-class '(variable) members))
-           (label-pos (srefactor--jump-or-insert-public-label tag))
-           (tag-start (semantic-tag-start tag)))
-      (newline 1)
-      (save-excursion
-        (dolist (v variables)
-          (when (srefactor--tag-private-p v)
-            (srefactor--insert-getter v)
-            (newline 2)
-            (srefactor--insert-setter v)
-            (newline 2)))
-        (kill-whole-line))
-      (recenter))))
-
 (defun srefactor--variable-insert-getter-setter (insert-getter-p insert-setter-p tag file-option)
   "Insert getter if INSERT-GETTER-P is t, insert setter if INSERT-SETTER-P is t.
 TAG is the current variable at point.
@@ -744,12 +733,11 @@ FILE-OPTION is the destination file user selects from contextual menu."
                                                         (semantic-current-tag-parent)))
         (goto-char (point-max)))
       (srefactor--insert-getter tag 1 1)
-      (srefactor--insert-setter tag 1 1))))t
+      (srefactor--insert-setter tag 1 1))))
 
 ;;
 ;; FUNCTION
 ;;
-
 (defun srefactor--insert-function-implementation (func-tag)
   "Insert function implementations for FUNC-TAG at point, a tag that is a function."
   (forward-line 0)
