@@ -132,6 +132,15 @@
   "Prefix for inserting getter."
   :group 'srefactor)
 
+(defcustom srefactor--getter-setter-removal-prefix ""
+  "Prefix for inserting getter."
+  :group 'srefactor)
+
+(defcustom srefactor--getter-setter-capitalize-p nil
+  "Prefix for inserting getter."
+  :group 'srefactor
+  :type 'boolean)
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Developer Options
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -612,14 +621,22 @@ This is a convenient wrapper for srefactor--insert-class-getters-setters."
 (defun srefactor--insert-getter (tag &optional newline-before newline-after)
   "Insert getter for TAG.
 Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
-  (let ((tag-type (srefactor--tag-type-string tag)))
+  (let ((tag-type (srefactor--tag-type-string tag))
+        tag-name)
     (when newline-before
       (newline newline-before))
     (when (or (listp (semantic-tag-type tag))
               (semantic-tag-get-attribute tag :pointer))
       (insert "const "))
     (insert tag-type)
-    (insert (concat " " srefactor--getter-prefix (semantic-tag-name tag)))
+    (setq tag-name (replace-regexp-in-string srefactor--getter-setter-removal-prefix
+                                             ""
+                                             (semantic-tag-name tag)))
+    (insert (concat " "
+                    srefactor--getter-prefix
+                    (if srefactor--getter-setter-capitalize-p
+                        (capitalize tag-name)
+                      tag-name)))
     (insert "() const")
     (insert " {")
     (srefactor--indent-and-newline 1)
@@ -638,11 +655,19 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
   (when newline-before
     (newline newline-before))
   (let ((tag-type (srefactor--tag-type-string tag))
-        (tag-name (semantic-tag-name tag))
         (tag-type (srefactor--tag-type-string tag))
-        (tag-pointer (srefactor--tag-pointer tag)))
+        (tag-pointer (srefactor--tag-pointer tag))
+        (tag-name (semantic-tag-name tag))
+        modified-tag-name)
     (insert "void")
-    (insert (concat " " srefactor--setter-prefix (semantic-tag-name tag)))
+    (setq modified-tag-name (replace-regexp-in-string srefactor--getter-setter-removal-prefix
+                                                      ""
+                                                      (semantic-tag-name tag)))
+    (insert (concat " "
+                    srefactor--setter-prefix
+                    (if srefactor--getter-setter-capitalize-p
+                        (capitalize modified-tag-name)
+                      modified-tag-name)))
     (insert (concat (insert "(")
                     (unless (semantic-tag-variable-constant-p tag)
                       "const ")
