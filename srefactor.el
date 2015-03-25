@@ -296,7 +296,8 @@ FILE-OPTION is a file destination associated with OPERATION."
      ((eq class 'type)
       (cond
        ((eq operation 'gen-getters-setters)
-        (srefactor-insert-class-getters-setters refactor-tag file-option))
+        (srefactor-insert-class-getters-setters refactor-tag file-option)
+        (message "Getter and setter generated."))
        ((eq operation 'move)
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -309,32 +310,24 @@ FILE-OPTION is a file destination associated with OPERATION."
      ((eq class 'variable)
       (cond
        ((eq operation 'gen-getter-setter)
-        (srefactor--variable-insert-getter-setter t t refactor-tag file-option))
+        (let ((buffer (srefactor--contextual-open-file (srefactor--select-file file-option))))
+          (srefactor--variable-insert-getter-setter t t refactor-tag buffer))
+        (message "Getter and setter generated."))
        ((eq operation 'gen-getter)
-        (srefactor--variable-insert-getter-setter t nil refactor-tag file-option))
+        (let ((buffer (srefactor--contextual-open-file (srefactor--select-file file-option))))
+          (srefactor--variable-insert-getter-setter t nil refactor-tag buffer))
+        (message "Getter generated."))
        ((eq operation 'gen-setter)
-        (srefactor--variable-insert-getter-setter nil t refactor-tag file-option))
+        (let ((buffer (srefactor--contextual-open-file (srefactor--select-file file-option))))
+          (srefactor--variable-insert-getter-setter nil t refactor-tag buffer))
+        (message "Setter generated."))
        ((eq operation 'move)
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
                                    refactor-tag
                                    operation
                                    t)))
-       (t
-        (with-current-buffer (semantic-tag-buffer refactor-tag)
-          (srefactor--jump-or-insert-public-label (save-excursion
-                                                    (goto-char (semantic-tag-start refactor-tag))
-                                                    (semantic-current-tag-parent))))
-        (save-excursion
-          (let ((p1 (point))
-                p2)
-            (insert (with-temp-buffer
-                      (setq major-mode 'c-mode)
-                      (srefactor--insert-getter refactor-tag 1 1)
-                      (srefactor--insert-setter refactor-tag 1 1)
-                      (buffer-substring-no-properties (point-min) (point-max))))
-            (setq p2 (point))
-            (indent-region p1 p2))))))
+       (t nil)))
      ((eq class 'package)
       (message "FIXME: 'package refactoring is not yet implemented."))
      ((eq class 'include)
@@ -580,10 +573,13 @@ instead.
 
 OTHER-FILE is the selected file from the menu."
   (if other-file
-      (if (equal other-file (buffer-file-name (current-buffer)))
-          (find-file other-file)
-        (find-file-other-window other-file)
+      (cond
+       ((srefactor--switch-to-window other-file)
         (current-buffer))
+       ((equal other-file (buffer-file-name (current-buffer)))
+        (find-file other-file))
+       (t (find-file-other-window other-file)
+          (current-buffer)))
     ;; use ff-find-other-file if no file is chosen When no file is
     ;; chosen, it means that user selected (Other file) option, but
     ;; does not install Projectile so he cannot use its function to
@@ -608,7 +604,7 @@ OTHER-FILE is the selected file from the menu."
   "Insert getter-setter of a class TAG into file specified in FILE-OPTION."
   (semantic-fetch-tags-fast)
   (let ((tag (semantic-current-tag))
-        (other-file (srefactor--select-file file-option)))
+        (buffer (srefactor--contextual-open-file (srefactor--select-file file-option))))
     (when (eq (semantic-tag-class tag) 'type)
       (when (eq (semantic-tag-class tag) 'type)
         (let* ((members (srefactor--tag-filter 'semantic-tag-class
@@ -616,18 +612,20 @@ OTHER-FILE is the selected file from the menu."
                                                (semantic-tag-type-members tag)))
                (variables (srefactor--tag-filter 'semantic-tag-class '(variable) members))
                (tag-start (semantic-tag-start tag)))
-          (save-excursion
-            (dolist (v variables)
-              (when (srefactor--tag-private-p v)
-                (srefactor--variable-insert-getter-setter t t v file-option)))
-            (kill-whole-line))
+          (dolist (v variables)
+            (when (srefactor--tag-private-p v)
+              (srefactor--variable-insert-getter-setter t t v buffer)))
           (recenter))))))
 
 (defun srefactor--insert-getter (tag &optional newline-before newline-after)
   "Insert getter for TAG.
 Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
   (let ((tag-type (srefactor--tag-type-string tag))
+        (tag-buffer (semantic-tag-buffer tag))
+        (tag-parent-string "")
         tag-name)
+    (unless (eq tag-buffer (current-buffer))
+      (setq tag-parent-string (srefactor--tag-parents-string tag)))
     (when newline-before
       (newline newline-before))
     (when (and (or (listp (semantic-tag-type tag))
@@ -639,6 +637,7 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
                                              ""
                                              (semantic-tag-name tag)))
     (insert (concat " "
+                    tag-parent-string
                     srefactor--getter-prefix
                     (if srefactor--getter-setter-capitalize-p
                         (capitalize tag-name)
@@ -664,12 +663,17 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
         (tag-type (srefactor--tag-type-string tag))
         (tag-pointer (srefactor--tag-pointer tag))
         (tag-name (semantic-tag-name tag))
-        modified-tag-name)
+        (tag-type-string (srefactor--tag-type-string tag))
+        (tag-buffer (semantic-tag-buffer tag))
+        tag-parent-string modified-tag-name)
+    (unless (eq tag-buffer (current-buffer))
+      (setq tag-parent-string (srefactor--tag-parents-string tag)))
     (insert "void")
     (setq modified-tag-name (replace-regexp-in-string srefactor--getter-setter-removal-prefix
                                                       ""
                                                       (semantic-tag-name tag)))
     (insert (concat " "
+                    tag-parent-string
                     srefactor--setter-prefix
                     (if srefactor--getter-setter-capitalize-p
                         (capitalize modified-tag-name)
@@ -722,18 +726,17 @@ Otherwise, insert one."
         (setq label-pos (point)))
       label-pos)))
 
-(defun srefactor--variable-insert-getter-setter (insert-getter-p insert-setter-p tag file-option)
+(defun srefactor--variable-insert-getter-setter (insert-getter-p insert-setter-p tag buffer)
   "Insert getter if INSERT-GETTER-P is t, insert setter if INSERT-SETTER-P is t.
 TAG is the current variable at point.
-FILE-OPTION is the destination file user selects from contextual menu."
-  (let ((other-file (srefactor--select-file file-option)))
-    (with-current-buffer (srefactor--contextual-open-file other-file)
-      (unless (srefactor--jump-or-insert-public-label (save-excursion
-                                                        (goto-char (semantic-tag-start tag))
-                                                        (semantic-current-tag-parent)))
-        (goto-char (point-max)))
-      (srefactor--insert-getter tag 1 1)
-      (srefactor--insert-setter tag 1 1))))
+BUFFER is the destination buffer from file user selects from contextual menu."
+  (with-current-buffer buffer
+    (unless (srefactor--jump-or-insert-public-label (save-excursion
+                                                      (goto-char (semantic-tag-start tag))
+                                                      (semantic-current-tag-parent)))
+      (goto-char (point-max)))
+    (when insert-getter-p (srefactor--insert-getter tag 1 1))
+    (when insert-setter-p (srefactor--insert-setter tag 1 1))))
 
 ;;
 ;; FUNCTION
@@ -1627,6 +1630,14 @@ is a cons of a line and the content of that line."
 (defun srefactor--unhighlight-tag (tag)
   "Unhighlight TAG."
   (remove-overlays))
+
+(defun srefactor--switch-to-window (file-path)
+  "Switch to window that contains FILE-PATH string"
+  (catch 'found
+    (dolist (w (window-list))
+      (when (equal file-path (buffer-file-name (window-buffer w)))
+        (select-window w)
+        (throw 'found "Found window.")))))
 
 (provide 'srefactor)
 
