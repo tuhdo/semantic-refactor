@@ -308,6 +308,13 @@ FILE-OPTION is a file destination associated with OPERATION."
                                     refactor-tag))))
      ((eq class 'variable)
       (cond
+       ((eq operation 'gen-getter-setter)
+        (with-current-buffer (semantic-tag-buffer refactor-tag)
+          (srefactor--jump-or-insert-public-label (save-excursion
+                                                    (goto-char (semantic-tag-start refactor-tag))
+                                                    (semantic-current-tag-parent)))
+          (srefactor--insert-getter refactor-tag 1 1)
+          (srefactor--insert-setter refactor-tag 1 1)))
        ((eq operation 'gen-getter)
         (with-current-buffer (semantic-tag-buffer refactor-tag)
           (srefactor--jump-or-insert-public-label (save-excursion
