@@ -632,8 +632,9 @@ Add NEWLINE-BEFORE and NEWLINE-AFTER if t."
         tag-name)
     (when newline-before
       (newline newline-before))
-    (when (or (listp (semantic-tag-type tag))
-              (semantic-tag-get-attribute tag :pointer))
+    (when (and (or (listp (semantic-tag-type tag))
+                   (semantic-tag-get-attribute tag :pointer))
+               (not (semantic-tag-get-attribute tag :constant-flag)))
       (insert "const "))
     (insert tag-type)
     (setq tag-name (replace-regexp-in-string srefactor--getter-setter-removal-prefix
