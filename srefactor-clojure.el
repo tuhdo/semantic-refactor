@@ -64,7 +64,7 @@
                 (buffer-substring-no-properties (point-min)
                                                 (point-max))))
       (when (and (eq format-type 'multi-line)
-                 (not (member first-token-name srefactor-symbol-stand-alone)))
+                 (not (member first-token-name srefactor-clojure-symbol-stand-alone)))
         (kill-whole-line)
         (forward-line -1)
         (delete-indentation)
