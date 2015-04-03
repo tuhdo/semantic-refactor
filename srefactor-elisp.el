@@ -66,9 +66,9 @@
                       (point)))
            (lexemes (semantic-emacs-lisp-lexer tag-start tag-end 1))
            (first-symbol (cadr lexemes))
-           (tag-name (buffer-substring-no-properties
-                      (semantic-lex-token-start first-symbol)
-                      (semantic-lex-token-end first-symbol)))
+           (first-symbol-name (buffer-substring-no-properties
+                               (semantic-lex-token-start first-symbol)
+                               (semantic-lex-token-end first-symbol)))
            (tmp-buf (generate-new-buffer "let-buf"))
            start end
            tag-str token)
@@ -87,13 +87,12 @@
             (insert tag-str)
             (cond
              ((or (eq token-type 'open-paren)
-                  (eq token-type 'close-paren))
+                  (eq token-type 'close-paren)
+                  (eq next-token-type 'close-paren))
               "")
-             ((and (eq format-type 'one-line)
-                   (not (or (eq token-type 'open-paren)
-                            (eq token-type 'close-paren))))
+             ((eq format-type 'one-line)
               (insert " "))
-             (t
+             ((eq format-type 'multi-line)
               (if (and (eq token-type 'symbol)
                        (string-match ":.*" tag-str))
                   (insert " ")
@@ -105,11 +104,10 @@
                 (buffer-substring-no-properties (point-min)
                                                 (point-max))))
       (when (eq format-type 'multi-line)
-        (unless (member tag-name srefactor-symbol-stand-alone)
+        (unless (member first-symbol-name srefactor-symbol-stand-alone)
           (save-excursion
             (goto-char (semantic-lex-token-end first-symbol))
-            (delete-indentation 1)))
-        (delete-indentation))
+            (delete-indentation 1))))
       (indent-region tag-start (point)))))
 
 (provide 'srefactor-elisp)
