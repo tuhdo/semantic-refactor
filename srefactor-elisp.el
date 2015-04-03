@@ -105,13 +105,14 @@
       (insert (with-current-buffer tmp-buf
                 (buffer-substring-no-properties (point-min)
                                                 (point-max))))
-      (indent-region tag-start tag-end)
       (delete-blank-lines)
       (delete-horizontal-space)
       (when (and (eq format-type 'multi-line)
                  (not (member (semantic-tag-name tag) srefactor-symbol-stand-alone)))
-        (goto-char start)
-        (forward-line 1)
-        (join-line)))))
+        (save-excursion
+          (goto-char start)
+          (forward-line 1)
+          (join-line)))
+      (indent-region tag-start (point)))))
 
 (provide 'srefactor-elisp)
