@@ -60,14 +60,15 @@
 
 (defun srefactor-one-or-multi-lines (format-type)
   (save-excursion
-    (let* ((tag (car (semantic-parse-region-default (point)
-                                                    (save-excursion
-                                                      (forward-sexp)
-                                                      (point)))))
-           (tag-start (semantic-tag-start tag))
-           (tag-end (semantic-tag-end tag))
+    (let* ((tag-start (point))
+           (tag-end (save-excursion
+                      (forward-sexp)
+                      (point)))
            (lexemes (semantic-emacs-lisp-lexer tag-start tag-end 1))
-           (first-token (car lexemes))
+           (first-symbol (cadr lexemes))
+           (tag-name (buffer-substring-no-properties
+                      (semantic-lex-token-start first-symbol)
+                      (semantic-lex-token-end first-symbol)))
            (tmp-buf (generate-new-buffer "let-buf"))
            start end
            tag-str token)
@@ -85,32 +86,30 @@
           (with-current-buffer tmp-buf
             (insert tag-str)
             (cond
+             ((or (eq token-type 'open-paren)
+                  (eq token-type 'close-paren))
+              "")
              ((and (eq format-type 'one-line)
                    (not (or (eq token-type 'open-paren)
                             (eq token-type 'close-paren))))
               (insert " "))
-             ((eq format-type 'multi-line)
+             (t
               (if (and (eq token-type 'symbol)
                        (string-match ":.*" tag-str))
                   (insert " ")
-                (insert "\n")))
-             (t)))))
+                (insert "\n")))))))
       (setq end (point))
       (kill-region start tag-end)
       (goto-char start)
       (insert (with-current-buffer tmp-buf
                 (buffer-substring-no-properties (point-min)
                                                 (point-max))))
-      (when (and (eq format-type 'multi-line)
-                 (not (member (semantic-tag-name tag) srefactor-symbol-stand-alone)))
-        (kill-whole-line)
-        (forward-line -1)
-        (delete-indentation)
-        (save-excursion
-          (goto-char start)
-          (delete-indentation 1)
-          (goto-char (line-end-position))
-          (delete-indentation 1)))
+      (when (eq format-type 'multi-line)
+        (unless (member tag-name srefactor-symbol-stand-alone)
+          (save-excursion
+            (goto-char (semantic-lex-token-end first-symbol))
+            (delete-indentation 1)))
+        (delete-indentation))
       (indent-region tag-start (point)))))
 
 (provide 'srefactor-elisp)
