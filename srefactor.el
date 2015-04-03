@@ -6,7 +6,7 @@
 ;; URL      : https://github.com/tuhdo/semantic-refactor
 ;; Maintainer: Tu, Do Hoang
 ;; Created: Wed Feb 11 21:25:51 2015 (+0700)
-;; Version: 0.1
+;; Version: 0.3
 ;; Package-Requires: ((emacs "24.4"))
 ;; Last-Updated: Wed Feb 11 21:25:51 2015 (+0700)
 ;;           By: Tu, Do Hoang
