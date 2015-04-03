@@ -51,12 +51,12 @@
 (defun srefactor-one-line ()
   (interactive)
   (when (looking-at "(")
-    (lispy-one-or-multi-lines 'one-line)))
+    (srefactor-one-or-multi-lines 'one-line)))
 
 (defun srefactor-multi-line ()
   (interactive)
   (when (looking-at "(")
-    (lispy-one-or-multi-lines 'multi-line)))
+    (srefactor-one-or-multi-lines 'multi-line)))
 
 (defun srefactor-one-or-multi-lines (format-type)
   (save-excursion
