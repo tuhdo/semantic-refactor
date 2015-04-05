@@ -40,26 +40,31 @@
 ;;
 ;;; Code:
 
-(defcustom srefactor-symbol-stand-alone '("progn"
-                                          "while"
-                                          "save-excursion"
-                                          "save-window-excursion"
-                                          "unwind-protect")
-  "A list of first symbols in a form that must stand alone on its
-  own line without any other symbol.")
+(defcustom srefactor-symbol-to-skip '(("progn" . 1)
+                                      ("while" . 1)
+                                      ("defun" . 2)
+                                      ("lambda" . 2)
+                                      ("if" . 1)
+                                      ("when" . 1)
+                                      ("unless" . 1)
+                                      ("with-current-buffer" . 1)
+                                      ("let" . 1)
+                                      ("let*" . 1))
+  "A list of pairs of a symbol and a number that denotes how many
+  sexp to be skipped before inserting the first newline. ")
 
 (defun srefactor-one-line ()
   (interactive)
-  (when (looking-at "(")
-    (srefactor-one-or-multi-lines 'one-line)))
+  (srefactor-one-or-multi-lines 'one-line))
 
 (defun srefactor-multi-line ()
   (interactive)
-  (when (looking-at "(")
-    (srefactor-one-or-multi-lines 'multi-line)))
+  (srefactor-one-or-multi-lines 'multi-line))
 
 (defun srefactor-one-or-multi-lines (format-type)
   (save-excursion
+    (unless (looking-at "(")
+      (backward-up-list))
     (let* ((tag-start (point))
            (tag-end (save-excursion
                       (forward-sexp)
@@ -70,23 +75,24 @@
                                (semantic-lex-token-start first-symbol)
                                (semantic-lex-token-end first-symbol)))
            (tmp-buf (generate-new-buffer "let-buf"))
-           start end
-           tag-str token)
+           start end token-str ignore-pair token ignore-num)
       (setq start (point))
       (while lexemes
         (setq token (pop lexemes))
-        (setq tag-str (if token
-                          (buffer-substring-no-properties
-                           (semantic-lex-token-start token)
-                           (semantic-lex-token-end token))
-                        ""))
+        (setq token-str (if token
+                            (buffer-substring-no-properties
+                             (semantic-lex-token-start token)
+                             (semantic-lex-token-end token))
+                          ""))
         (let* ((token-type (car token))
                (next-token (car lexemes))
                (next-token-type (car next-token)))
           (with-current-buffer tmp-buf
-            (insert tag-str)
+            (insert token-str)
             (cond
-             ((or (eq token-type 'open-paren)
+             ((or (and (eq token-type 'punctuation)
+                       (equal token-str "'"))
+                  (eq token-type 'open-paren)
                   (eq token-type 'close-paren)
                   (eq next-token-type 'close-paren))
               "")
@@ -94,7 +100,7 @@
               (insert " "))
              ((eq format-type 'multi-line)
               (if (and (eq token-type 'symbol)
-                       (string-match ":.*" tag-str))
+                       (string-match ":.*" token-str))
                   (insert " ")
                 (insert "\n")))))))
       (setq end (point))
@@ -104,10 +110,14 @@
                 (buffer-substring-no-properties (point-min)
                                                 (point-max))))
       (when (eq format-type 'multi-line)
-        (unless (member first-symbol-name srefactor-symbol-stand-alone)
+        (when (setq ignore-pair (assoc first-symbol-name srefactor-symbol-to-skip))
           (save-excursion
-            (goto-char (semantic-lex-token-end first-symbol))
-            (delete-indentation 1))))
+            (setq ignore-num (cdr ignore-pair))
+            (goto-char tag-start)
+            (while (> ignore-num 0)
+              (forward-line 1)
+              (delete-indentation)
+              (setq ignore-num (1- ignore-num))))))
       (indent-region tag-start (point)))))
 
 (provide 'srefactor-elisp)
