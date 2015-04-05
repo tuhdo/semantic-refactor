@@ -1,0 +1,8 @@
+
+* One line <--> Multiple lines
+
+In this demo, you will see that you can effortlessly transform current sexp
+whether the cursor is inside the sexp or at the beginning of its opening
+parenthesis, without moving it anywhere.  Let's see it in action:
+
+[[file:srefactor-elisp-oneline-multiline.gif][file:srefactor-elisp-oneline-multiline.gif]]
