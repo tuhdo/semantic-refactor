@@ -29,12 +29,12 @@
 ;;
 ;; This package provides the following features for Emacs Lisp:
 ;;
-;; - `srefactor-one-line': Transform all sub-sexpressions current sexpression at
+;; - `srefactor-elisp-one-line': Transform all sub-sexpressions current sexpression at
 ;; point into one line separated each one by a space.
 ;;
-;; - `srefactor-multi-line': Transform all sub-sexpressions current sexpression
+;; - `srefactor-elisp-multi-line': Transform all sub-sexpressions current sexpression
 ;; - at point into multiple lines separated. If the head symbol belongs to the
-;; - list `srefactor-symbol-to-skip', then the first N next symbol/sexpressions
+;; - list `srefactor-elisp-symbol-to-skip', then the first N next symbol/sexpressions
 ;; - (where N is the nummber associated with the head symbol as stated in the
 ;; - list) are skipped before a newline is inserted.
 ;;
@@ -57,31 +57,34 @@
 ;;
 ;;; Code:
 
-(defcustom srefactor-symbol-to-skip '(("progn" . 1)
-                                      ("while" . 1)
-                                      ("defun" . 2)
-                                      ("lambda" . 2)
-                                      ("defvar" . 2)
-                                      ("defcustom" . 3)
-                                      ("if" . 1)
-                                      ("when" . 1)
-                                      ("unless" . 1)
-                                      ("with-current-buffer" . 1)
-                                      ("let" . 1)
-                                      ("let*" . 1))
+(defcustom srefactor-elisp-symbol-to-skip '(("progn" . 0)
+                                            ("while" . 0)
+                                            ("if" . 0)
+                                            ("when" . 0)
+                                            ("unless" . 0)
+                                            ("with-current-buffer" . 0)
+                                            ("let" . 0)
+                                            ("let*" . 0)
+                                            ("defun" . 2)
+                                            ("lambda" . 2)
+                                            ("defvar" . 2)
+                                            ("defcustom" . 2)
+                                            ("setq" . 2)
+                                            ("setf" . 2)
+                                            )
   "A list of pairs of a symbol and a number that denotes how many
   sexp to be skipped before inserting the first newline. ")
 
-(defun srefactor-one-line ()
+(defun srefactor-elisp-one-line ()
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
   (interactive)
   (srefactor-one-or-multi-lines 'one-line))
 
-(defun srefactor-multi-line ()
+(defun srefactor-elisp-multi-line ()
   "Transform all sub-sexpressions current sexpression at point
 into multiple lines separated. If the head symbol belongs to the
-list `srefactor-symbol-to-skip', then the first N next
+list `srefactor-elisp-symbol-to-skip', then the first N next
 symbol/sexpressions (where N is the nummber associated with the
 head symbol as stated in the list) are skipped before a newline
 is inserted."
@@ -142,14 +145,16 @@ sub-sexpressions of the same level into multiple lines."
                                               (point-max))))
     (setq tag-end (point))
     (when (eq format-type 'multi-line)
-      (when (setq ignore-pair (assoc first-symbol-name srefactor-symbol-to-skip))
-        (save-excursion
-          (setq ignore-num (cdr ignore-pair))
-          (goto-char tag-start)
-          (while (> ignore-num 0)
-            (forward-line 1)
-            (delete-indentation)
-            (setq ignore-num (1- ignore-num))))))
+      (goto-char tag-start)
+      (if (setq ignore-pair (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
+          (save-excursion
+            (setq ignore-num (cdr ignore-pair))
+            (while (> ignore-num 0)
+              (forward-line 1)
+              (delete-indentation)
+              (setq ignore-num (1- ignore-num))))
+        (forward-line 1)
+        (delete-indentation)))
     (indent-region tag-start tag-end)
     (goto-char (+ tag-start (- orig-point tag-start)))))
 

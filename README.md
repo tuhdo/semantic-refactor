@@ -26,6 +26,8 @@ structure of the analyzed language, instead of plain text structure.
 
 # Features<a id="sec-2" name="sec-2"></a>
 
+## C/C++:
+
 -   Context-sensitive menu offers appropriate refactoring actions
 
 -   Generate class implementation (also handles nested class and class template)
@@ -44,25 +46,37 @@ structure of the analyzed language, instead of plain text structure.
 
 -   Extract function with proper type information
 
--   Local variable rename
+-   Precise local variable rename
 
 [More info and demos](srefactor-demos/demos.org)
+
+## Emacs Lisp:
+
+- Convert a sexpression into one line precisely
+
+- Convert a sexpression into multiple lines precisely
+
+[More info and demos](srefactor-demos/demos-elisp.org)
 
 # Installation<a id="sec-3" name="sec-3"></a>
 
 This package can be obtained from MELPA:
 
--   `M-x list-packages``
+-   `M-x list-packages`
 -   Move to `srefactor` and press <kbd>i</kbd>.
 -   Press <kbd>x</kbd> to install.
 -   Then, place this configuration in `~/.emacs.d/init.el` or `~/.emacs`:
 
 ```elisp
     (require 'srefactor)
+    (semantic-default-elisp-setup)
     (semantic-mode 1)
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
+    (define-key emacs-lisp-mode-map (kbd "M-RET o") 'srefactor-elisp-one-line)
+    (define-key emacs-lisp-mode-map (kbd "M-RET m") 'srefactor-elisp-multi-line)
 ```
+
 # Usage<a id="sec-4" name="sec-4"></a>
 
 To use this package, a user only needs to use this single command:
@@ -82,21 +96,3 @@ You can hide the help message in the menu with by customizing
 `srefactor-ui-menu-show-help` and set it to `nil`.
 
     (setq srefactor-ui-menu-show-help nil)
-
-# TODOS<a id="sec-5" name="sec-5"></a>
-
--   **DONE** Add local variable rename
--   Add function prototype/implementation generation from lambda
--   Insert function pointer if there is a lambda as local variable in
-    extracted region.
--   Convert function pointer parameter -> function
--   Macro extraction
-    -   Magic number extraction: replace a number with a macro and replace
-        all its occurrences with the macro.
-    -   Turn a region into a macro and parameterize string inside the
-        region into macro parameter. [Use case](https://github.com/torvalds/linux/blob/9a3c4145af32125c5ee39c0272662b47307a8323/drivers/edac/i7core_edac.c#L802).
--   Smart tag diff and sync between function declarations and function
-    implementations
--   Make use of SemanticDB and GNU Global to find correct definition for
-    function extraction
--   Create a tree that transparently display tags across buffers
