@@ -156,6 +156,7 @@ sub-sexpressions of the same level into multiple lines."
         (forward-line 1)
         (delete-indentation)))
     (indent-region tag-start tag-end)
+    (kill-buffer tmp-buf)
     (goto-char (+ tag-start (- orig-point tag-start)))))
 
 (provide 'srefactor-elisp)
