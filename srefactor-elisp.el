@@ -95,40 +95,55 @@
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
   (interactive)
-  (srefactor-one-or-multi-lines 'one-line))
+  (let ((starting-point (progn
+                          (unless (looking-at "(")
+                            (backward-up-list))
+                          (point)))
+        (end-point (srefactor-one-or-multi-lines 'one-line)))
+    (indent-region starting-point end-point)))
 
 (defun srefactor-elisp-multi-line ()
-  "Transform all sub-sexpressions current sexpression at point
-into multiple lines separated. If the head symbol belongs to the
+  "Transform all sub-sexpressions current sexpression at point into multiple lines separated. If the head symbol belongs to the
 list `srefactor-elisp-symbol-to-skip', then the first N next
 symbol/sexpressions (where N is the nummber associated with the
 head symbol as stated in the list) are skipped before a newline
 is inserted."
   (interactive)
-  (srefactor-one-or-multi-lines 'multi-line))
+  (let ((starting-point (progn
+                          (unless (looking-at "(")
+                            (backward-up-list))
+                          (point)))
+        (end-point (srefactor-one-or-multi-lines 'multi-line)))
+    (indent-region starting-point end-point)))
 
 (defun srefactor-one-or-multi-lines (format-type)
   "Turn the current sexpression into one line/multi-line depends
 on the value of FORMAT-TYPE. If FORMAT-TYPE is 'one-line,
 transforms all sub-sexpressions of the same level into one
 line. If FORMAT-TYPE is 'multi-line, transforms all
-sub-sexpressions of the same level into multiple lines."
-  (let* ((orig-point (point))
-         (tag-start (progn
-                      (unless (looking-at "(")
-                        (backward-up-list))
-                      (point)))
+sub-sexpressions of the same level into multiple lines.
+
+Return the position of last closing sexp."
+  (let* ((orig-point (point)) (tag-start (progn
+                                           (unless (looking-at "(")
+                                             (backward-up-list))
+                                           (point)))
          (tag-end (save-excursion
                     (forward-sexp)
                     (point)))
-         (lexemes (semantic-emacs-lisp-lexer tag-start tag-end 1))
+         (lexemes (semantic-emacs-lisp-lexer tag-start
+                                             tag-end
+                                             1))
          (first-symbol (cadr lexemes))
          (first-symbol-name (buffer-substring-no-properties
                              (semantic-lex-token-start first-symbol)
                              (semantic-lex-token-end first-symbol)))
          (second-token (caddr lexemes))
          (tmp-buf (generate-new-buffer (make-temp-name "")))
-         token-str ignore-pair token ignore-num)
+         token-str
+         ignore-pair
+         token
+         ignore-num)
     (unwind-protect
         (progn
           (while lexemes
@@ -138,31 +153,40 @@ sub-sexpressions of the same level into multiple lines."
                                  (semantic-lex-token-start token)
                                  (semantic-lex-token-end token))
                               ""))
-            (let* ((token-type (car token))
-                   (next-token (car lexemes))
-                   (next-token-type (car next-token)))
+            (let* ((token-type (car token)) (next-token (car lexemes))
+                   (next-token-type (car next-token))
+                   (next-token-str (if next-token
+                                       (buffer-substring-no-properties
+                                        (semantic-lex-token-start next-token)
+                                        (semantic-lex-token-end next-token))
+                                     "")))
               (with-current-buffer tmp-buf
                 (insert token-str)
                 (cond
+                 ((member (concat token-str next-token-str) '("1-" "1+"))
+                  (goto-char (semantic-lex-token-end next-token))
+                  (insert (concat next-token-str "\n\n"))
+                  (pop lexemes))
                  ((or (and (eq token-type 'punctuation)
                            (equal token-str "'"))
                       (eq token-type 'open-paren)
                       (eq token-type 'close-paren)
                       (eq next-token-type 'close-paren))
                   "")
-                 ((eq format-type 'one-line)
-                  (insert " "))
+                 ((eq format-type 'one-line) (insert " "))
                  ((eq format-type 'multi-line)
                   (if (and (eq token-type 'symbol)
                            (string-match ":.*" token-str))
                       (insert " ")
                     (insert "\n")))))))
           (goto-char tag-start)
-          (kill-region tag-start tag-end)
+          (kill-region tag-start
+                       tag-end)
           (save-excursion
             (insert (with-current-buffer tmp-buf
-                      (buffer-substring-no-properties (point-min)
-                                                      (point-max))))
+                      (buffer-substring-no-properties
+                       (point-min)
+                       (point-max))))
             (when (eq format-type 'multi-line)
               (goto-char tag-start)
               (cond
@@ -173,25 +197,30 @@ sub-sexpressions of the same level into multiple lines."
                     (forward-line 1)
                     (delete-indentation)
                     (setq ignore-num (1- ignore-num)))))
-               ((not (eq (car second-token) 'close-paren))
+               ((not (member (car second-token) '(close-paren 'open-paren 'string)))
                 (forward-line 1)
                 (delete-indentation))
                )))
           (goto-char tag-start)
           (forward-sexp)
           (setq tag-end (point))
-          (setq lexemes (semantic-emacs-lisp-lexer tag-start tag-end 1))
+          (setq lexemes (semantic-emacs-lisp-lexer tag-start
+                                                   tag-end
+                                                   1))
           (dolist (token (reverse lexemes))
-            (when (eq (car token) 'semantic-list)
+            (when (and (eq (car token) 'semantic-list)
+                       (> (- (semantic-lex-token-end token)
+                             (semantic-lex-token-end token))
+                          1))
               (goto-char (semantic-lex-token-start token))
               (srefactor-one-or-multi-lines format-type)))
           (goto-char tag-start)
           (forward-sexp)
           (setq tag-end (point))
-          ;; (delete-horizontal-space)
-          (goto-char (+ tag-start (- orig-point tag-start)))
-          (indent-region (point) tag-end)
-          )
+          (goto-char (+ tag-start
+                        (- orig-point
+                           tag-start)))
+          tag-end)
       (kill-buffer tmp-buf))))
 
 (provide 'srefactor-elisp)
