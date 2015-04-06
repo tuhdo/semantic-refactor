@@ -1,4 +1,21 @@
 
+* Format whole buffer
+
+[[file:srefactor-elisp-format-buffer.gif][file:srefactor-elisp-format-buffer.gif]]
+
+In the demo, the whole Emacs Lisp code is all messed up in a big ball of mud. It
+is unreadable. With the command srefactor-elisp-format-buffer, it can rearrange
+the code back into readable manner. If there are sexpressions that are split
+into multiple lines or all in one line, you can easily use the command
+`srefactor-elisp-one-line` or `srefactor-elisp-multi-line` to format such
+sexpressions to fit your need. In general, Srefactor try to be as smart about
+sexp as it could. For example, when it encounters a "defun" form, it skips the
+first three sexpressions (the "defun" keyword, the function name and argument
+list) and insert a newline after that, when splitting into multiple lines. A
+user can customize such behaviour for each symbol with the variable
+`srefactor-elisp-symbol-to-skip`.
+
+
 * One line <--> Multiple lines
 
 In this demo, you will see that you can effortlessly transform current sexp
