@@ -56,8 +56,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
-
+(require 'semantic/bovine/el)
 (defcustom srefactor-elisp-symbol-to-skip '(("progn" . 0)
+                                            ("save-excursion" . 0)
                                             ("with-current-buffer" . 0)
                                             ("let" . 0)
                                             ("let*" . 0)
@@ -117,6 +118,7 @@ sub-sexpressions of the same level into multiple lines."
          (first-symbol-name (buffer-substring-no-properties
                              (semantic-lex-token-start first-symbol)
                              (semantic-lex-token-end first-symbol)))
+         (second-token (caddr lexemes))
          (tmp-buf (generate-new-buffer (make-temp-name "")))
          token-str ignore-pair token ignore-num)
     (unwind-protect
@@ -155,15 +157,18 @@ sub-sexpressions of the same level into multiple lines."
                                                       (point-max))))
             (when (eq format-type 'multi-line)
               (goto-char tag-start)
-              (if (setq ignore-pair (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
-                  (save-excursion
-                    (setq ignore-num (cdr ignore-pair))
-                    (while (> ignore-num 0)
-                      (forward-line 1)
-                      (delete-indentation)
-                      (setq ignore-num (1- ignore-num))))
+              (cond
+               ((setq ignore-pair (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
+                (save-excursion
+                  (setq ignore-num (cdr ignore-pair))
+                  (while (> ignore-num 0)
+                    (forward-line 1)
+                    (delete-indentation)
+                    (setq ignore-num (1- ignore-num)))))
+               ((not (eq (car second-token) 'close-paren))
                 (forward-line 1)
-                (delete-indentation))))
+                (delete-indentation))
+               )))
           (goto-char tag-start)
           (forward-sexp)
           (setq tag-end (point))
@@ -175,9 +180,10 @@ sub-sexpressions of the same level into multiple lines."
           (goto-char tag-start)
           (forward-sexp)
           (setq tag-end (point))
+          ;; (delete-horizontal-space)
           (goto-char (+ tag-start (- orig-point tag-start)))
           (indent-region (point) tag-end)
-          (delete-horizontal-space))
+          )
       (kill-buffer tmp-buf))))
 
 (provide 'srefactor-elisp)
