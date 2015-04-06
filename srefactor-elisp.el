@@ -165,10 +165,7 @@ Return the position of last closing sexp."
               (with-current-buffer tmp-buf
                 (insert token-str)
                 (cond
-                 ((member (concat token-str next-token-str) '("1-" "1+"))
-                  (goto-char (semantic-lex-token-end next-token))
-                  (insert (concat next-token-str "\n\n"))
-                  (pop lexemes))
+
                  ((or (and (eq token-type 'punctuation)
                            (equal token-str "'"))
                       (eq token-type 'open-paren)
@@ -177,13 +174,18 @@ Return the position of last closing sexp."
                   "")
                  ((eq format-type 'one-line) (insert " "))
                  ((eq format-type 'multi-line)
-                  (if (and (eq token-type 'symbol)
-                           (string-match ":.*" token-str))
-                      (insert " ")
-                    (insert "\n")))))))
+                  (cond
+                   ((member (concat token-str next-token-str) '("1-" "1+"))
+                    (goto-char (semantic-lex-token-end next-token))
+                    (insert (concat next-token-str "\n\n"))
+                    (pop lexemes))
+                   ((and (eq token-type 'symbol)
+                         (string-match ":.*" token-str))
+                    (insert " "))
+                   (t (insert "\n"))
+                   ))))))
           (goto-char tag-start)
-          (kill-region tag-start
-                       tag-end)
+          (kill-region tag-start tag-end)
           (save-excursion
             (insert (with-current-buffer tmp-buf
                       (buffer-substring-no-properties
@@ -212,8 +214,8 @@ Return the position of last closing sexp."
           (dolist (token (reverse lexemes))
             (when (and (eq (car token) 'semantic-list)
                        (> (- (semantic-lex-token-end token)
-                             (semantic-lex-token-end token))
-                          1))
+                             (semantic-lex-token-start token))
+                          2))
               (goto-char (semantic-lex-token-start token))
               (srefactor-one-or-multi-lines format-type)))
           (goto-char tag-start)
