@@ -58,13 +58,13 @@
 ;;; Code:
 
 (defcustom srefactor-elisp-symbol-to-skip '(("progn" . 0)
-                                            ("while" . 0)
-                                            ("if" . 0)
-                                            ("when" . 0)
-                                            ("unless" . 0)
                                             ("with-current-buffer" . 0)
                                             ("let" . 0)
                                             ("let*" . 0)
+                                            ("if" . 1)
+                                            ("while" . 1)
+                                            ("when" . 1)
+                                            ("unless" . 1)
                                             ("defun" . 2)
                                             ("lambda" . 2)
                                             ("defvar" . 2)
