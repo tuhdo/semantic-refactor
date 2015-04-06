@@ -93,6 +93,25 @@
   "A list of pairs of a symbol and a number that denotes how many
   sexp to be skipped before inserting the first newline. ")
 
+(defun srefactor-elisp-format-buffer ()
+  "Format current buffer."
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (while (beginning-of-defun-raw)
+      (let ((starting-point (point))
+            (end-point (srefactor-one-or-multi-lines 'multi-line)))
+        (indent-region starting-point end-point)))))
+
+(defun srefactor-elisp-format-defun ()
+  "Format current defun point is in."
+  (interactive)
+  (let ((starting-point (save-excursion
+                          (beginning-of-defun-raw)
+                          (point)))
+        (end-point (srefactor-one-or-multi-lines 'multi-line)))
+    (indent-region starting-point end-point)))
+
 (defun srefactor-elisp-one-line ()
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
