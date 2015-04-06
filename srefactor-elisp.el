@@ -29,6 +29,8 @@
 ;;
 ;; This package provides the following features for Emacs Lisp:
 ;;
+;; - `srefactor-elisp-format-buffer': Format whole buffer.
+;; - `srefactor-elisp-format-defun': Format the current defun point is in.
 ;; - `srefactor-elisp-one-line': Transform all sub-sexpressions current sexpression at
 ;; point into one line separated each one by a space.
 ;;
@@ -72,6 +74,8 @@
                                             ("unless" . 1)
                                             ("or" . 1)
                                             ("and" . 1)
+                                            ("+" . 1)
+                                            ("-" . 1)
                                             ("kill-region" . 2)
                                             ("equal" . 2)
                                             ("concat" . 2)
@@ -93,7 +97,7 @@
                                             ("1" . 2)
                                             )
   "A list of pairs of a symbol and a number that denotes how many
-  sexp to be skipped before inserting the first newline. ")
+  sexp to skip before inserting the first newline. ")
 
 (defun srefactor-elisp-format-buffer ()
   "Format current buffer."
@@ -101,29 +105,45 @@
   (save-excursion
     (goto-char (point-max))
     (while (beginning-of-defun-raw)
-      (let ((starting-point (point))
-            (end-point (srefactor-one-or-multi-lines 'multi-line)))
-        (indent-region starting-point end-point)))))
+      (let* ((orig-point (point))
+             (beg (point))
+             (end (save-excursion
+                    (forward-sexp)
+                    (point)))
+        (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
+        (indent-region beg end-after)))))
 
 (defun srefactor-elisp-format-defun ()
   "Format current defun point is in."
   (interactive)
-  (let ((starting-point (save-excursion
+  (let* ((orig-point (point))
+         (beg (save-excursion
                           (beginning-of-defun-raw)
                           (point)))
-        (end-point (srefactor-one-or-multi-lines 'multi-line)))
-    (indent-region starting-point end-point)))
+         (end (save-excursion
+                (beginning-of-defun-raw)
+                (forward-sexp)
+                (point)))
+        (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
+    (indent-region beg end-after)))
 
 (defun srefactor-elisp-one-line ()
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
   (interactive)
-  (let ((starting-point (save-excursion
-                          (unless (looking-at "(")
-                            (backward-up-list))
-                          (point)))
-        (end-point (srefactor-one-or-multi-lines 'one-line)))
-    (indent-region starting-point end-point)))
+  (let* ((orig-point (point))
+         (beg (save-excursion
+                (unless (looking-at "(")
+                  (backward-up-list))
+                (point)))
+         (end (save-excursion
+                (forward-sexp)
+                (point)))
+         (end-after (srefactor-one-or-multi-lines beg
+                                                  end
+                                                  orig-point
+                                                  'one-line)))
+    (indent-region beg end-after)))
 
 (defun srefactor-elisp-multi-line ()
   "Transform all sub-sexpressions current sexpression at point
@@ -133,14 +153,18 @@ symbol/sexpressions (where N is the nummber associated with the
 head symbol as stated in the list) are skipped before a newline
 is inserted."
   (interactive)
-  (let ((starting-point (save-excursion
-                          (unless (looking-at "(")
-                            (backward-up-list))
-                          (point)))
-        (end-point (srefactor-one-or-multi-lines 'multi-line)))
-    (indent-region starting-point end-point)))
+  (let* ((orig-point (point))
+         (beg (save-excursion
+                (unless (looking-at "(")
+                  (backward-up-list))
+                (point)))
+        (end (save-excursion
+                    (forward-sexp)
+                    (point)))
+        (end-after  (srefactor-one-or-multi-lines beg end orig-point'multi-line)))
+    (indent-region beg end-after)))
 
-(defun srefactor-one-or-multi-lines (format-type)
+(defun srefactor-one-or-multi-lines (beg end orig-point format-type)
   "Turn the current sexpression into one line/multi-line depends
 on the value of FORMAT-TYPE. If FORMAT-TYPE is 'one-line,
 transforms all sub-sexpressions of the same level into one
@@ -148,16 +172,7 @@ line. If FORMAT-TYPE is 'multi-line, transforms all
 sub-sexpressions of the same level into multiple lines.
 
 Return the position of last closing sexp."
-  (let* ((orig-point (point)) (tag-start (progn
-                                           (unless (looking-at "(")
-                                             (backward-up-list))
-                                           (point)))
-         (tag-end (save-excursion
-                    (forward-sexp)
-                    (point)))
-         (lexemes (semantic-emacs-lisp-lexer tag-start
-                                             tag-end
-                                             1))
+  (let* ((lexemes (semantic-emacs-lisp-lexer beg end 1))
          (first-symbol (cadr lexemes))
          (first-symbol-name (buffer-substring-no-properties
                              (semantic-lex-token-start first-symbol)
@@ -206,15 +221,15 @@ Return the position of last closing sexp."
                     (insert " "))
                    (t (insert "\n"))
                    ))))))
-          (goto-char tag-start)
-          (kill-region tag-start tag-end)
+          (goto-char beg)
+          (kill-region beg end)
           (save-excursion
             (insert (with-current-buffer tmp-buf
                       (buffer-substring-no-properties
                        (point-min)
                        (point-max))))
             (when (eq format-type 'multi-line)
-              (goto-char tag-start)
+              (goto-char beg)
               (cond
                ((setq ignore-pair (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
                 (save-excursion
@@ -223,30 +238,30 @@ Return the position of last closing sexp."
                     (forward-line 1)
                     (delete-indentation)
                     (setq ignore-num (1- ignore-num)))))
-               ((not (member (car second-token) '(close-paren 'open-paren 'string semantic-list)))
+               ((not (member (car second-token) '(close-paren open-paren semantic-list)))
                 (forward-line 1)
                 (delete-indentation))
                )))
-          (goto-char tag-start)
+          (goto-char beg)
           (forward-sexp)
-          (setq tag-end (point))
-          (setq lexemes (semantic-emacs-lisp-lexer tag-start
-                                                   tag-end
+          (setq end (point))
+          (setq lexemes (semantic-emacs-lisp-lexer beg
+                                                   end
                                                    1))
           (dolist (token (reverse lexemes))
-            (when (and (eq (car token) 'semantic-list)
-                       (> (- (semantic-lex-token-end token)
-                             (semantic-lex-token-start token))
-                          2))
-              (goto-char (semantic-lex-token-start token))
-              (srefactor-one-or-multi-lines format-type)))
-          (goto-char tag-start)
+            (let ((tok-start (semantic-lex-token-start token))
+                  (tok-end (semantic-lex-token-end token)))
+              (when (and (eq (car token) 'semantic-list)
+                         (> (- tok-end tok-start) 2))
+                (goto-char (semantic-lex-token-start token))
+                (srefactor-one-or-multi-lines tok-start tok-end tok-start format-type))))
+          (goto-char beg)
           (forward-sexp)
-          (setq tag-end (point))
-          (goto-char (+ tag-start
+          (setq end (point))
+          (goto-char (+ beg
                         (- orig-point
-                           tag-start)))
-          tag-end)
+                           beg)))
+          end)
       (kill-buffer tmp-buf))))
 
 (provide 'srefactor-elisp)
