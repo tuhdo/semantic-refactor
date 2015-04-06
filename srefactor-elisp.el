@@ -70,7 +70,7 @@
                                             ("let*" . 1)
                                             ("if" . 1)
                                             ("while" . 1)
-                                            ("dolist")
+                                            ("dolist" . 1)
                                             ("when" . 1)
                                             ("unless" . 1)
                                             ("or" . 1)
