@@ -51,6 +51,10 @@ structure of the analyzed language, instead of plain text structure.
 
 ## Emacs Lisp:
 
+- Format whole buffer
+
+- Format a defun
+
 - Convert a sexpression into one line precisely
 
 - Convert a sexpression into multiple lines precisely
