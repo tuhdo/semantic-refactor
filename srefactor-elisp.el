@@ -124,7 +124,8 @@ into one line separated each one by a space."
     (indent-region starting-point end-point)))
 
 (defun srefactor-elisp-multi-line ()
-  "Transform all sub-sexpressions current sexpression at point into multiple lines separated. If the head symbol belongs to the
+  "Transform all sub-sexpressions current sexpression at point
+into multiple lines separated. If the head symbol belongs to the
 list `srefactor-elisp-symbol-to-skip', then the first N next
 symbol/sexpressions (where N is the nummber associated with the
 head symbol as stated in the list) are skipped before a newline
