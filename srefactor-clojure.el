@@ -72,6 +72,7 @@
           (save-excursion
             (goto-char (semantic-lex-token-end first-symbol))
             (delete-indentation 1))))
-      (indent-region tag-start (point)))))
+      (indent-region tag-start (point))
+      (kill-buffer tmp-buf))))
 
 (provide 'srefactor-clojure)
