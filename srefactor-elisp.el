@@ -97,7 +97,7 @@
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
   (interactive)
-  (let ((starting-point (progn
+  (let ((starting-point (save-excursion
                           (unless (looking-at "(")
                             (backward-up-list))
                           (point)))
@@ -111,7 +111,7 @@ symbol/sexpressions (where N is the nummber associated with the
 head symbol as stated in the list) are skipped before a newline
 is inserted."
   (interactive)
-  (let ((starting-point (progn
+  (let ((starting-point (save-excursion
                           (unless (looking-at "(")
                             (backward-up-list))
                           (point)))
