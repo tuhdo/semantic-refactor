@@ -65,6 +65,7 @@
                                             ("while" . 1)
                                             ("when" . 1)
                                             ("unless" . 1)
+                                            ("assoc" . 2)
                                             ("defun" . 2)
                                             ("lambda" . 2)
                                             ("defvar" . 2)
