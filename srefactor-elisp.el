@@ -70,6 +70,7 @@
                                             ("while" . 1)
                                             ("when" . 1)
                                             ("unless" . 1)
+                                            ("kill-region" . 2)
                                             ("equal" . 2)
                                             ("concat" . 2)
                                             ("member" . 2)
