@@ -56,6 +56,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
+(require 'semantic/bovine/el)
 
 (defcustom srefactor-elisp-symbol-to-skip '(("progn" . 0)
                                             ("with-current-buffer" . 0)
