@@ -113,7 +113,7 @@
              (end (save-excursion
                     (forward-sexp)
                     (point)))
-        (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
+             (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
         (indent-region beg end-after)))))
 
 (defun srefactor-elisp-format-defun ()
@@ -121,13 +121,13 @@
   (interactive)
   (let* ((orig-point (point))
          (beg (save-excursion
-                          (beginning-of-defun-raw)
-                          (point)))
-         (end (save-excursion
                 (beginning-of-defun-raw)
+                (point)))
+         (end (save-excursion
+                (goto-char beg)
                 (forward-sexp)
                 (point)))
-        (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
+         (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
     (indent-region beg end-after)))
 
 (defun srefactor-elisp-one-line ()
@@ -140,12 +140,10 @@ into one line separated each one by a space."
                   (backward-up-list))
                 (point)))
          (end (save-excursion
+                (goto-char beg)
                 (forward-sexp)
                 (point)))
-         (end-after (srefactor-one-or-multi-lines beg
-                                                  end
-                                                  orig-point
-                                                  'one-line)))
+         (end-after (srefactor-one-or-multi-lines beg end orig-point 'one-line)))
     (indent-region beg end-after)))
 
 (defun srefactor-elisp-multi-line ()
@@ -161,10 +159,11 @@ is inserted."
                 (unless (looking-at "(")
                   (backward-up-list))
                 (point)))
-        (end (save-excursion
-                    (forward-sexp)
-                    (point)))
-        (end-after  (srefactor-one-or-multi-lines beg end orig-point'multi-line)))
+         (end (save-excursion
+                (backward-up-list)
+                (forward-sexp)
+                (point)))
+         (end-after  (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
     (indent-region beg end-after)))
 
 (defun srefactor-one-or-multi-lines (beg end orig-point format-type)
