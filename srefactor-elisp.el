@@ -87,6 +87,8 @@
                                             ("eq" . 2)
                                             ("assoc" . 2)
                                             ("defun" . 2)
+                                            ("defalias" . 2)
+                                            ("defcustom" . 2)
                                             ("lambda" . 2)
                                             ("defvar" . 2)
                                             ("string-match" . 2)
@@ -98,8 +100,7 @@
                                             ("<=" . 2)
                                             (">=" . 2)
                                             ("1" . 2)
-                                            ("1" . 2)
-                                            )
+                                            ("1" . 2))
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
