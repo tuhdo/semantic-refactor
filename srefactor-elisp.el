@@ -303,7 +303,7 @@ Return the position of last closing sexp."
     (unwind-protect
         (progn
           (unless (assoc 'semantic-list lexemes)
-             (setq format-type 'one-line))
+            (setq format-type 'one-line))
           (while lexemes
             (setq token (pop lexemes))
             (setq token-str (if token
@@ -331,13 +331,14 @@ Return the position of last closing sexp."
                  ((or (eq token-type 'punctuation)
                       (eq token-type 'open-paren)
                       (eq token-type 'close-paren)
-                      (eq next-token-type 'close-paren)) "")
+                      (eq next-token-type 'close-paren))
+                  "")
                  ((equal token-str ".")
                   (insert (concat " " next-token-str))
                   (pop lexemes))
                  ((and (eq token-type 'symbol)
                        (eq orig-format-type 'multi-line)
-                         (string-match ":.*" token-str))
+                       (string-match ":.*" token-str))
                   (insert (concat " " next-token-str "\n"))
                   (pop lexemes))
                  ((eq format-type 'one-line)
@@ -360,9 +361,7 @@ Return the position of last closing sexp."
                   (while (> ignore-num 0)
                     (forward-line 1)
                     (delete-indentation)
-                    (setq ignore-num (1-
-
-                                      ignore-num)))))
+                    (setq ignore-num (1- ignore-num)))))
                ((not (member (car second-token) `(,(when newline-betwen-semantic-lists 'semantic-list)
                                                   close-paren
                                                   open-paren)))
