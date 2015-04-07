@@ -60,6 +60,10 @@
 ;;; Code:
 (require 'semantic/bovine/el)
 
+(defcustom srefactor-newline-threshold 30
+  "After a token is inserted, if the length of current
+  S-EXPRESSION is greater than this value, start inserting a newline.")
+
 (defcustom srefactor-elisp-symbol-to-skip '(("progn" . 0)
                                             ("cond" . 0)
                                             ("save-excursion" . 0)
@@ -268,7 +272,9 @@ Return the position of last closing sexp."
                   (insert (concat " " next-token-str))
                   (pop lexemes))
                  ((eq format-type 'one-line)
-                  (insert " "))
+                  (if (> (- (line-end-position) (line-beginning-position)) srefactor-newline-threshold)
+                      (insert "\n")
+                    (insert " ")))
                  ((eq format-type 'multi-line)
                   (cond
                    ((member (concat token-str next-token-str) '("1-" "1+"))
@@ -320,14 +326,7 @@ Return the position of last closing sexp."
                                                 tok-start
                                                 format-type
                                                 (assoc first-symbol-name srefactor-elisp-symbol-to-skip)
-                                                recursive-p)))))
-          (goto-char beg)
-          (forward-sexp)
-          (setq end (point))
-          (goto-char (+ beg
-                        (- orig-point
-                           beg)))
-          end)
+                                                recursive-p))))))
       (kill-buffer tmp-buf))))
 
 (provide 'srefactor-elisp)
