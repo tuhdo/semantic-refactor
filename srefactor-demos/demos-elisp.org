@@ -1,25 +1,42 @@
 
 * Format whole buffer
 
+Command: srefactor-elisp-format-buffer
+
 [[file:srefactor-elisp-format-buffer.gif][file:srefactor-elisp-format-buffer.gif]]
 
-In the demo, the whole Emacs Lisp code is all messed up in a big ball of mud. It
-is unreadable. With the command srefactor-elisp-format-buffer, it can rearrange
-the code back into readable manner. If there are sexpressions that are split
-into multiple lines or all in one line, you can easily use the command
-`srefactor-elisp-one-line` or `srefactor-elisp-multi-line` to format such
-sexpressions to fit your need. In general, Srefactor try to be as smart about
+In the demo, the whole Emacs Lisp code is all messed. It is totally
+gibberish. However, the command srefactor-elisp-format-buffer can rearrange the
+code back into readable manner. If there are s-expressions that are split into
+multiple lines or all in one line, you can easily use the command
+`srefactor-elisp-one-line` or srefactor-elisp-multi-line to format such
+s-expressions to fit your need. In general, Srefactor try to be as smart about
 sexp as it could. For example, when it encounters a "defun" form, it skips the
-first three sexpressions (the "defun" keyword, the function name and argument
+first three s-expressions (the "defun" keyword, the function name and argument
 list) and insert a newline after that, when splitting into multiple lines. A
 user can customize such behaviour for each symbol with the variable
-`srefactor-elisp-symbol-to-skip`.
+srefactor-elisp-symbol-to-skip.
 
+* Format current defun
+
+Command: srefactor-elisp-format-defun
+
+This command only formats the current function point is in.
 
 * One line <--> Multiple lines
 
-In this demo, you will see that you can effortlessly transform current sexp
-whether the cursor is inside the sexp or at the beginning of its opening
-parenthesis, without moving it anywhere.  Let's see it in action:
+Command: srefactor-elisp-one-line
+Command: srefactor-elisp-multi-line
+
+In this demo, you will see that you can effortlessly transform current
+s-expression whether the cursor is inside the s-expression or at the beginning
+of its opening parenthesis, without moving it anywhere.  Let's see it in action:
 
 [[file:srefactor-elisp-oneline-multiline.gif][file:srefactor-elisp-oneline-multiline.gif]]
+
+You can recursively turn a s-expression all of its inner s-expressions into one
+line with prefix argument.
+
+Multiline command actually works similar to srefactor-elisp-format-defun, except
+it formats current s-expression cursor is in.
+
