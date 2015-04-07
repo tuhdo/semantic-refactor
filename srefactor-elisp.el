@@ -288,7 +288,7 @@ Return the position of last closing sexp."
     (unwind-protect
         (progn
           (unless (assoc 'semantic-list lexemes)
-            (setq format-type 'one-line))
+             (setq format-type 'one-line))
           (while lexemes
             (setq token (pop lexemes))
             (setq token-str (if token
@@ -297,6 +297,8 @@ Return the position of last closing sexp."
                                  (semantic-lex-token-end token))
                               ""))
             (let* ((token-type (car token))
+                   (tok-start (semantic-lex-token-start token))
+                   (tok-end (semantic-lex-token-end token))
                    (next-token (car lexemes))
                    (next-token-type (car next-token))
                    (next-token-str (if next-token
@@ -308,8 +310,8 @@ Return the position of last closing sexp."
                 (insert token-str)
                 (cond
                  ((member (concat token-str next-token-str) '("1-" "1+"))
-                  (goto-char (semantic-lex-token-end next-token))
-                  (insert (concat next-token-str "\n\n"))
+                  (goto-char (semantic-lex-token-end token))
+                  (insert (concat next-token-str " "))
                   (pop lexemes))
                  ((or (eq token-type 'punctuation)
                       (eq token-type 'open-paren)
