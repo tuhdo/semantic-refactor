@@ -114,8 +114,22 @@
              (end (save-excursion
                     (forward-sexp)
                     (point)))
-             (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
-        (indent-region beg end-after)))
+             (tmp-buf (generate-new-buffer "tmp-buf"))
+             (content (buffer-substring-no-properties beg end)))
+        (unwind-protect
+            (progn
+              (setq content (with-current-buffer tmp-buf
+                              (emacs-lisp-mode)
+                              (semantic-lex-init)
+                              (insert content)
+                              (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line)
+                              (indent-region (point-min) (point-max))
+                              (buffer-substring-no-properties (point-min) (point-max))))
+              (goto-char beg)
+              (kill-region beg end)
+              (insert content)
+              (goto-char orig-point))
+          (kill-buffer tmp-buf))))
     (goto-char cur-pos)))
 
 (defun srefactor-elisp-format-defun ()
@@ -129,9 +143,22 @@
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
-         (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
-    (indent-region beg end-after)
-    (goto-char orig-point)))
+         (tmp-buf (generate-new-buffer "tmp-buf"))
+         (content (buffer-substring-no-properties beg end)))
+    (unwind-protect
+        (progn
+          (setq content (with-current-buffer tmp-buf
+                          (emacs-lisp-mode)
+                          (semantic-lex-init)
+                          (insert content)
+                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line)
+                          (indent-region (point-min) (point-max))
+                          (buffer-substring-no-properties (point-min) (point-max))))
+          (goto-char beg)
+          (kill-region beg end)
+          (insert content)
+          (goto-char orig-point))
+      (kill-buffer tmp-buf))))
 
 (defun srefactor-elisp-one-line ()
   "Transform all sub-sexpressions current sexpression at point
@@ -146,9 +173,22 @@ into one line separated each one by a space."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
-         (end-after (srefactor-one-or-multi-lines beg end orig-point 'one-line)))
-    (indent-region beg end-after)
-    (goto-char orig-point)))
+         (tmp-buf (generate-new-buffer "tmp-buf"))
+         (content (buffer-substring-no-properties beg end)))
+    (unwind-protect
+        (progn
+          (setq content (with-current-buffer tmp-buf
+                          (emacs-lisp-mode)
+                          (semantic-lex-init)
+                          (insert content)
+                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'one-line)
+                          (indent-region (point-min) (point-max))
+                          (buffer-substring-no-properties (point-min) (point-max))))
+          (goto-char beg)
+          (kill-region beg end)
+          (insert content)
+          (goto-char orig-point))
+      (kill-buffer tmp-buf))))
 
 (defun srefactor-elisp-multi-line ()
   "Transform all sub-sexpressions current sexpression at point
