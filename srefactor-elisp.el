@@ -267,7 +267,7 @@ Return the position of last closing sexp."
                                               tok-end
                                               tok-start
                                               format-type
-                                              (member first-symbol-name '("cond"))))))
+                                              (assoc first-symbol-name srefactor-elisp-symbol-to-skip)))))
           (goto-char beg)
           (forward-sexp)
           (setq end (point))
