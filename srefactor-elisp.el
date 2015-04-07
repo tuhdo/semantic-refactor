@@ -143,9 +143,19 @@
                               (emacs-lisp-mode)
                               (semantic-lex-init)
                               (insert content)
-                              (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line nil t)
-                              (indent-region (point-min) (point-max))
-                              (buffer-substring-no-properties (point-min) (point-max))))
+                              (srefactor-one-or-multi-lines
+                               (point-min)
+                               (point-max)
+                               (point-min)
+                               'multi-line
+                               nil
+                               t)
+                              (indent-region
+                               (point-min)
+                               (point-max))
+                              (buffer-substring-no-properties
+                               (point-min)
+                               (point-max))))
               (goto-char beg)
               (kill-region beg end)
               (insert content)
@@ -351,8 +361,7 @@ Return the position of last closing sexp."
               (let ((tok-start (semantic-lex-token-start token))
                     (tok-end (semantic-lex-token-end token)))
                 (when (and (eq (car token) 'semantic-list)
-                           (> (- tok-end tok-start)
-                              2))
+                           (> (- tok-end tok-start) 2))
                   (goto-char (semantic-lex-token-start token))
                   (srefactor-one-or-multi-lines tok-start
                                                 tok-end
