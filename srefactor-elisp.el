@@ -104,6 +104,11 @@
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
 
+(defalias 'srefactor-scheme-format-buffer 'srefactor-elisp-format-buffer)
+(defalias 'srefactor-scheme-format-defun'srefactor-elisp-format-defun)
+(defalias 'srefactor-scheme-multi-line 'srefactor-elisp-multi-line)
+(defalias 'srefactor-scheme-one-line 'srefactor-elisp-one-line)
+
 (defun srefactor-elisp-format-buffer ()
   "Format current buffer."
   (interactive)
