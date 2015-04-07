@@ -270,6 +270,7 @@ Return the position of last closing sexp."
                              (semantic-lex-token-end first-symbol)))
          (second-token (caddr lexemes))
          (tmp-buf (generate-new-buffer (make-temp-name "")))
+         (orig-format-type format-type)
          token-str
          ignore-pair
          token
@@ -303,20 +304,19 @@ Return the position of last closing sexp."
                  ((or (eq token-type 'punctuation)
                       (eq token-type 'open-paren)
                       (eq token-type 'close-paren)
-                      (eq next-token-type 'close-paren))
-                  "")
+                      (eq next-token-type 'close-paren)) "")
                  ((equal token-str ".")
                   (insert (concat " " next-token-str))
+                  (pop lexemes))
+                 ((and (eq token-type 'symbol)
+                       (eq orig-format-type 'multi-line)
+                         (string-match ":.*" token-str))
+                  (insert (concat " " next-token-str "\n"))
                   (pop lexemes))
                  ((eq format-type 'one-line)
                   (insert " "))
                  ((eq format-type 'multi-line)
-                  (cond
-                   ((and (eq token-type 'symbol)
-                         (string-match ":.*" token-str))
-                    (insert " "))
-                   (t
-                    (insert "\n"))))))))
+                  (insert "\n"))))))
           (goto-char beg)
           (kill-region beg end)
           (save-excursion
