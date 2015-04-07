@@ -146,6 +146,7 @@
             (progn
               (setq content (with-current-buffer tmp-buf
                               (emacs-lisp-mode)
+                              (semantic-default-elisp-setup)
                               (semantic-lex-init)
                               (insert content)
                               (srefactor-one-or-multi-lines
@@ -185,6 +186,7 @@
         (progn
           (setq content (with-current-buffer tmp-buf
                           (emacs-lisp-mode)
+                          (semantic-default-elisp-setup)
                           (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line nil t)
@@ -215,6 +217,7 @@ into one line separated each one by a space."
         (progn
           (setq content (with-current-buffer tmp-buf
                           (emacs-lisp-mode)
+                          (semantic-default-elisp-setup)
                           (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'one-line nil recursive-p)
@@ -250,6 +253,7 @@ is inserted."
           (setq content (with-current-buffer tmp-buf
                           (emacs-lisp-mode)
                           (semantic-lex-init)
+                          (semantic-default-elisp-setup)
                           (insert content)
                           (srefactor-one-or-multi-lines
                            (point-min)

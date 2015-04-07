@@ -73,7 +73,7 @@ This package can be obtained from MELPA:
 ```elisp
     (require 'srefactor)
     (semantic-default-elisp-setup)
-    (semantic-mode 1)
+    (semantic-mode 1) ;; optional if you only use Emacs Lisp
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key emacs-lisp-mode-map (kbd "M-RET o") 'srefactor-elisp-one-line)
@@ -81,6 +81,8 @@ This package can be obtained from MELPA:
     (define-key emacs-lisp-mode-map (kbd "M-RET d") 'srefactor-elisp-format-defun)
     (define-key emacs-lisp-mode-map (kbd "M-RET b") 'srefactor-elisp-format-buffer)
 ```
+
+**NOTICE**: If you only use Emacs Lisp formatting, you don't have to enable `semantic-mode`.
 
 # Usage<a id="sec-4" name="sec-4"></a>
 
