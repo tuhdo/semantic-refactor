@@ -210,8 +210,7 @@ Return the position of last closing sexp."
                 (insert token-str)
                 (cond
 
-                 ((or (and (eq token-type 'punctuation)
-                           (equal token-str "'"))
+                 ((or (eq token-type 'punctuation)
                       (eq token-type 'open-paren)
                       (eq token-type 'close-paren)
                       (eq next-token-type 'close-paren))
