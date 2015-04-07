@@ -129,7 +129,8 @@
                 (forward-sexp)
                 (point)))
          (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
-    (indent-region beg end-after)))
+    (indent-region beg end-after)
+    (goto-char orig-point)))
 
 (defun srefactor-elisp-one-line ()
   "Transform all sub-sexpressions current sexpression at point
@@ -167,7 +168,7 @@ is inserted."
          (end-after  (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
     (indent-region beg end-after)))
 
-(defun srefactor-one-or-multi-lines (beg end orig-point format-type)
+(defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists)
   "Turn the current sexpression into one line/multi-line depends
 on the value of FORMAT-TYPE. If FORMAT-TYPE is 'one-line,
 transforms all sub-sexpressions of the same level into one
@@ -241,7 +242,9 @@ Return the position of last closing sexp."
                     (forward-line 1)
                     (delete-indentation)
                     (setq ignore-num (1- ignore-num)))))
-               ((not (member (car second-token) '(close-paren open-paren semantic-list)))
+               ((not (member (car second-token) `(,(when newline-betwen-semantic-lists
+                                                     'semantic-list)
+                                                  close-paren open-paren)))
                 (forward-line 1)
                 (delete-indentation))
                )))
@@ -255,9 +258,14 @@ Return the position of last closing sexp."
             (let ((tok-start (semantic-lex-token-start token))
                   (tok-end (semantic-lex-token-end token)))
               (when (and (eq (car token) 'semantic-list)
+                         (>= count ignore-num)
                          (> (- tok-end tok-start) 2))
                 (goto-char (semantic-lex-token-start token))
-                (srefactor-one-or-multi-lines tok-start tok-end tok-start format-type))))
+                (srefactor-one-or-multi-lines tok-start
+                                              tok-end
+                                              tok-start
+                                              format-type
+                                              (member first-symbol-name '("cond"))))))
           (goto-char beg)
           (forward-sexp)
           (setq end (point))
