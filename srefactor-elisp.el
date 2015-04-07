@@ -79,6 +79,7 @@
                                             ("-" . 1)
                                             ("*" . 1)
                                             ("/" . 1)
+                                            ("goto-char" . 1)
                                             ("kill-region" . 2)
                                             ("equal" . 2)
                                             ("concat" . 2)
