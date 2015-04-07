@@ -85,7 +85,7 @@ This package can be obtained from MELPA:
     (define-key emacs-lisp-mode-map (kbd "M-RET b") 'srefactor-elisp-format-buffer)
 ```
 
-**NOTICE**: If you only use Emacs Lisp formatting, you don't have to enable `semantic-mode`.
+**NOTICE**: If you only use Emacs Lisp formating, you don't have to enable `semantic-mode`.
 
 # Usage<a id="sec-4" name="sec-4"></a>
 
