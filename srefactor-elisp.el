@@ -123,7 +123,7 @@
                               (emacs-lisp-mode)
                               (semantic-lex-init)
                               (insert content)
-                              (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line)
+                              (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line nil t)
                               (indent-region (point-min) (point-max))
                               (buffer-substring-no-properties (point-min) (point-max))))
               (goto-char beg)
@@ -152,7 +152,7 @@
                           (emacs-lisp-mode)
                           (semantic-lex-init)
                           (insert content)
-                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line)
+                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line nil t)
                           (indent-region (point-min) (point-max))
                           (buffer-substring-no-properties (point-min) (point-max))))
           (goto-char beg)
@@ -161,10 +161,10 @@
           (goto-char orig-point))
       (kill-buffer tmp-buf))))
 
-(defun srefactor-elisp-one-line ()
+(defun srefactor-elisp-one-line (recursive-p)
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
-  (interactive)
+  (interactive "P")
   (let* ((orig-point (point))
          (beg (save-excursion
                 (unless (looking-at "(")
@@ -182,7 +182,7 @@ into one line separated each one by a space."
                           (emacs-lisp-mode)
                           (semantic-lex-init)
                           (insert content)
-                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'one-line)
+                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'one-line nil recursive-p)
                           (indent-region (point-min) (point-max))
                           (buffer-substring-no-properties (point-min) (point-max))))
           (goto-char beg)
@@ -208,11 +208,11 @@ is inserted."
                 (backward-up-list)
                 (forward-sexp)
                 (point)))
-         (end-after  (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
+         (end-after  (srefactor-one-or-multi-lines beg end orig-point 'multi-line nil t)))
     (indent-region beg end-after)
     (goto-char orig-point)))
 
-(defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists)
+(defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
   "Turn the current sexpression into one line/multi-line depends
 on the value of FORMAT-TYPE. If FORMAT-TYPE is 'one-line,
 transforms all sub-sexpressions of the same level into one
@@ -291,23 +291,25 @@ Return the position of last closing sexp."
                 (forward-line 1)
                 (delete-indentation))
                )))
-          (goto-char beg)
-          (forward-sexp)
-          (setq end (point))
-          (setq lexemes (semantic-emacs-lisp-lexer beg
-                                                   end
-                                                   1))
-          (dolist (token (reverse lexemes))
-            (let ((tok-start (semantic-lex-token-start token))
-                  (tok-end (semantic-lex-token-end token)))
-              (when (and (eq (car token) 'semantic-list)
-                         (> (- tok-end tok-start) 2))
-                (goto-char (semantic-lex-token-start token))
-                (srefactor-one-or-multi-lines tok-start
-                                              tok-end
-                                              tok-start
-                                              format-type
-                                              (assoc first-symbol-name srefactor-elisp-symbol-to-skip)))))
+          (when recursive-p
+            (goto-char beg)
+            (forward-sexp)
+            (setq end (point))
+            (setq lexemes (semantic-emacs-lisp-lexer beg
+                                                     end
+                                                     1))
+            (dolist (token (reverse lexemes))
+              (let ((tok-start (semantic-lex-token-start token))
+                    (tok-end (semantic-lex-token-end token)))
+                (when (and (eq (car token) 'semantic-list)
+                           (> (- tok-end tok-start) 2))
+                  (goto-char (semantic-lex-token-start token))
+                  (srefactor-one-or-multi-lines tok-start
+                                                tok-end
+                                                tok-start
+                                                format-type
+                                                (assoc first-symbol-name srefactor-elisp-symbol-to-skip)
+                                                recursive-p)))))
           (goto-char beg)
           (forward-sexp)
           (setq end (point))
