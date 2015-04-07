@@ -251,7 +251,11 @@ Return the position of last closing sexp."
          ignore-num)
     (unwind-protect
         (progn
-          (unless (assoc 'semantic-list lexemes)
+          ;; if the sexp does not contain any semantic list or the semantic list
+          ;; is just an empty list, set it to one-line
+          (unless (or (<= (- end beg) srefactor-newline-threshold)
+                   (and (setq token (assoc 'semantic-list lexemes))
+                       (> (- (semantic-lex-token-end token) (semantic-lex-token-start token)) 2)))
             (setq format-type 'one-line))
           (while lexemes
             (setq token (pop lexemes))
@@ -270,7 +274,6 @@ Return the position of last closing sexp."
               (with-current-buffer tmp-buf
                 (insert token-str)
                 (cond
-
                  ((or (eq token-type 'punctuation)
                       (eq token-type 'open-paren)
                       (eq token-type 'close-paren)
