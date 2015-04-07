@@ -75,6 +75,8 @@
                                             ("if" . 1)
                                             ("while" . 1)
                                             ("dolist" . 1)
+                                            ("do" . 1)
+                                            ("dolist" . 1)
                                             ("when" . 1)
                                             ("unless" . 1)
                                             ("not" . 1)
@@ -210,7 +212,7 @@ into one line separated each one by a space."
       (kill-buffer tmp-buf))))
 
 (defun srefactor-elisp-multi-line ()
-  "Transform all sub-sexpressions current sexpression at point
+   "Transform all sub-sexpressions current sexpression at point
 into multiple lines separated. If the head symbol belongs to the
 list `srefactor-elisp-symbol-to-skip', then the first N next
 symbol/sexpressions (where N is the nummber associated with the
@@ -223,12 +225,25 @@ is inserted."
                   (backward-up-list))
                 (point)))
          (end (save-excursion
-                (backward-up-list)
+                (goto-char beg)
                 (forward-sexp)
                 (point)))
-         (end-after  (srefactor-one-or-multi-lines beg end orig-point 'multi-line nil t)))
-    (indent-region beg end-after)
-    (goto-char orig-point)))
+         (tmp-buf (generate-new-buffer "tmp-buf"))
+         (content (buffer-substring-no-properties beg end)))
+    (unwind-protect
+        (progn
+          (setq content (with-current-buffer tmp-buf
+                          (emacs-lisp-mode)
+                          (semantic-lex-init)
+                          (insert content)
+                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line nil t)
+                          (indent-region (point-min) (point-max))
+                          (buffer-substring-no-properties (point-min) (point-max))))
+          (goto-char beg)
+          (kill-region beg end)
+          (insert content)
+          (goto-char orig-point))
+      (kill-buffer tmp-buf))))
 
 (defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
   "Turn the current sexpression into one line/multi-line depends
@@ -253,9 +268,9 @@ Return the position of last closing sexp."
         (progn
           ;; if the sexp does not contain any semantic list or the semantic list
           ;; is just an empty list, set it to one-line
-          (unless (or (<= (- end beg) srefactor-newline-threshold)
-                   (and (setq token (assoc 'semantic-list lexemes))
-                       (> (- (semantic-lex-token-end token) (semantic-lex-token-start token)) 2)))
+          (when (or (<= (- end beg) srefactor-newline-threshold)
+                    (not (and (setq token (assoc 'semantic-list lexemes))
+                       (> (- (semantic-lex-token-end token) (semantic-lex-token-start token)) 2))))
             (setq format-type 'one-line))
           (while lexemes
             (setq token (pop lexemes))
