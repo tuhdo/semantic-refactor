@@ -261,6 +261,9 @@ Return the position of last closing sexp."
                       (eq token-type 'close-paren)
                       (eq next-token-type 'close-paren))
                   "")
+                 ((equal token-str ".")
+                  (insert (concat " " next-token-str))
+                  (pop lexemes))
                  ((eq format-type 'one-line) (insert " "))
                  ((eq format-type 'multi-line)
                   (cond
