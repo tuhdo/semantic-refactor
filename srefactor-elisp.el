@@ -239,6 +239,8 @@ Return the position of last closing sexp."
          ignore-num)
     (unwind-protect
         (progn
+          (unless (assoc 'semantic-list lexemes)
+            (setq format-type 'one-line))
           (while lexemes
             (setq token (pop lexemes))
             (setq token-str (if token
@@ -265,7 +267,8 @@ Return the position of last closing sexp."
                  ((equal token-str ".")
                   (insert (concat " " next-token-str))
                   (pop lexemes))
-                 ((eq format-type 'one-line) (insert " "))
+                 ((eq format-type 'one-line)
+                  (insert " "))
                  ((eq format-type 'multi-line)
                   (cond
                    ((member (concat token-str next-token-str) '("1-" "1+"))
@@ -275,8 +278,7 @@ Return the position of last closing sexp."
                    ((and (eq token-type 'symbol)
                          (string-match ":.*" token-str))
                     (insert " "))
-                   (t (insert "\n"))
-                   ))))))
+                   (t (insert "\n"))))))))
           (goto-char beg)
           (kill-region beg end)
           (save-excursion
