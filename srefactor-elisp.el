@@ -100,7 +100,8 @@
                                             ("1" . 2)
                                             )
   "A list of pairs of a symbol and a number that denotes how many
-  sexp to skip before inserting the first newline. ")
+  sexp to skip before inserting the first newline. "
+  :group 'srefactor)
 
 (defun srefactor-elisp-format-buffer ()
   "Format current buffer."

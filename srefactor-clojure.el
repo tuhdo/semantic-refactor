@@ -1,10 +1,12 @@
+(declare-function wisent-clojure-lexer "clojure" (start end &optional depth length))
 (defcustom srefactor-clojure-symbol-stand-alone '("progn"
                                                   "while"
                                                   "save-excursion"
                                                   "save-window-excursion"
                                                   "unwind-protect")
   "A list of first symbols in a form that must stand alone on its
-  own line without any other symbol.")
+  own line without any other symbol."
+  :group 'srefactor)
 
 (defun srefactor-clojure-one-line ()
   (interactive)
@@ -68,7 +70,7 @@
                 (buffer-substring-no-properties (point-min)
                                                 (point-max))))
       (when (eq format-type 'multi-line)
-        (unless (member first-symbol-name srefactor-symbol-stand-alone)
+        (unless (member first-symbol-name srefactor-clojure-symbol-stand-alone)
           (save-excursion
             (goto-char (semantic-lex-token-end first-symbol))
             (delete-indentation 1))))
