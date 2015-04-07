@@ -73,7 +73,7 @@ This package can be obtained from MELPA:
 ```elisp
     (require 'srefactor)
     (semantic-default-elisp-setup)
-    (semantic-mode 1) ;; optional if you only use Emacs Lisp
+    (semantic-mode 1) ;; OPTIONAL IF YOU ONLY USE EMACS LISP
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key emacs-lisp-mode-map (kbd "M-RET o") 'srefactor-elisp-one-line)
