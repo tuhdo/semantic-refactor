@@ -212,7 +212,7 @@ into one line separated each one by a space."
       (kill-buffer tmp-buf))))
 
 (defun srefactor-elisp-multi-line ()
-   "Transform all sub-sexpressions current sexpression at point
+  "Transform all sub-sexpressions current sexpression at point
 into multiple lines separated. If the head symbol belongs to the
 list `srefactor-elisp-symbol-to-skip', then the first N next
 symbol/sexpressions (where N is the nummber associated with the
@@ -229,23 +229,40 @@ is inserted."
                 (forward-sexp)
                 (point)))
          (tmp-buf (generate-new-buffer "tmp-buf"))
-         (content (buffer-substring-no-properties beg end)))
+         (content (buffer-substring-no-properties
+                   beg
+                   end)))
     (unwind-protect
         (progn
           (setq content (with-current-buffer tmp-buf
                           (emacs-lisp-mode)
                           (semantic-lex-init)
                           (insert content)
-                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line nil t)
-                          (indent-region (point-min) (point-max))
-                          (buffer-substring-no-properties (point-min) (point-max))))
+                          (srefactor-one-or-multi-lines
+                           (point-min)
+                           (point-max)
+                           (point-min)
+                           'multi-line
+                           nil
+                           t)
+                          (indent-region
+                           (point-min)
+                           (point-max))
+                          (buffer-substring-no-properties
+                           (point-min)
+                           (point-max))))
           (goto-char beg)
           (kill-region beg end)
           (insert content)
           (goto-char orig-point))
       (kill-buffer tmp-buf))))
 
-(defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
+(defun srefactor-one-or-multi-lines (beg end
+                                         orig-point
+                                         format-type
+                                         &optional
+                                         newline-betwen-semantic-lists
+                                         recursive-p)
   "Turn the current sexpression into one line/multi-line depends
 on the value of FORMAT-TYPE. If FORMAT-TYPE is 'one-line,
 transforms all sub-sexpressions of the same level into one
@@ -253,7 +270,9 @@ line. If FORMAT-TYPE is 'multi-line, transforms all
 sub-sexpressions of the same level into multiple lines.
 
 Return the position of last closing sexp."
-  (let* ((lexemes (semantic-emacs-lisp-lexer beg end 1))
+  (let* ((lexemes (semantic-emacs-lisp-lexer beg
+                                             end
+                                             1))
          (first-symbol (cadr lexemes))
          (first-symbol-name (buffer-substring-no-properties
                              (semantic-lex-token-start first-symbol)
@@ -266,11 +285,7 @@ Return the position of last closing sexp."
          ignore-num)
     (unwind-protect
         (progn
-          ;; if the sexp does not contain any semantic list or the semantic list
-          ;; is just an empty list, set it to one-line
-          (when (or (<= (- end beg) srefactor-newline-threshold)
-                    (not (and (setq token (assoc 'semantic-list lexemes))
-                       (> (- (semantic-lex-token-end token) (semantic-lex-token-start token)) 2))))
+          (when (<= (- end beg) srefactor-newline-threshold)
             (setq format-type 'one-line))
           (while lexemes
             (setq token (pop lexemes))
@@ -279,7 +294,8 @@ Return the position of last closing sexp."
                                  (semantic-lex-token-start token)
                                  (semantic-lex-token-end token))
                               ""))
-            (let* ((token-type (car token)) (next-token (car lexemes))
+            (let* ((token-type (car token))
+                   (next-token (car lexemes))
                    (next-token-type (car next-token))
                    (next-token-str (if next-token
                                        (buffer-substring-no-properties
@@ -294,19 +310,21 @@ Return the position of last closing sexp."
                       (eq token-type 'close-paren)
                       (eq next-token-type 'close-paren))
                   "")
+                 ((member (concat token-str next-token-str) '("1-" "1+"))
+                  (goto-char (semantic-lex-token-end next-token))
+                  (insert (concat next-token-str "\n\n"))
+                  (pop lexemes))
                  ((equal token-str ".")
                   (insert (concat " " next-token-str))
                   (pop lexemes))
                  ((eq format-type 'one-line)
-                  (if (> (- (line-end-position) (line-beginning-position)) srefactor-newline-threshold)
+                  (if (> (- (line-end-position)
+                            (line-beginning-position))
+                         srefactor-newline-threshold)
                       (insert "\n")
                     (insert " ")))
                  ((eq format-type 'multi-line)
                   (cond
-                   ((member (concat token-str next-token-str) '("1-" "1+"))
-                    (goto-char (semantic-lex-token-end next-token))
-                    (insert (concat next-token-str "\n\n"))
-                    (pop lexemes))
                    ((and (eq token-type 'symbol)
                          (string-match ":.*" token-str))
                     (insert " "))
@@ -330,10 +348,10 @@ Return the position of last closing sexp."
                     (setq ignore-num (1- ignore-num)))))
                ((not (member (car second-token) `(,(when newline-betwen-semantic-lists
                                                      'semantic-list)
-                                                  close-paren open-paren)))
+                                                  close-paren
+                                                  open-paren)))
                 (forward-line 1)
-                (delete-indentation))
-               )))
+                (delete-indentation)))))
           (when recursive-p
             (goto-char beg)
             (forward-sexp)
