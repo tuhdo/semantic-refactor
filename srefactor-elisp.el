@@ -106,7 +106,7 @@
 (defun srefactor-elisp-format-buffer ()
   "Format current buffer."
   (interactive)
-  (save-excursion
+  (let ((cur-pos (point)))
     (goto-char (point-max))
     (while (beginning-of-defun-raw)
       (let* ((orig-point (point))
@@ -115,7 +115,8 @@
                     (forward-sexp)
                     (point)))
              (end-after (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
-        (indent-region beg end-after)))))
+        (indent-region beg end-after)))
+    (goto-char cur-pos)))
 
 (defun srefactor-elisp-format-defun ()
   "Format current defun point is in."
@@ -146,7 +147,8 @@ into one line separated each one by a space."
                 (forward-sexp)
                 (point)))
          (end-after (srefactor-one-or-multi-lines beg end orig-point 'one-line)))
-    (indent-region beg end-after)))
+    (indent-region beg end-after)
+    (goto-char orig-point)))
 
 (defun srefactor-elisp-multi-line ()
   "Transform all sub-sexpressions current sexpression at point
@@ -166,7 +168,8 @@ is inserted."
                 (forward-sexp)
                 (point)))
          (end-after  (srefactor-one-or-multi-lines beg end orig-point 'multi-line)))
-    (indent-region beg end-after)))
+    (indent-region beg end-after)
+    (goto-char orig-point)))
 
 (defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists)
   "Turn the current sexpression into one line/multi-line depends
@@ -258,7 +261,6 @@ Return the position of last closing sexp."
             (let ((tok-start (semantic-lex-token-start token))
                   (tok-end (semantic-lex-token-end token)))
               (when (and (eq (car token) 'semantic-list)
-                         (>= count ignore-num)
                          (> (- tok-end tok-start) 2))
                 (goto-char (semantic-lex-token-start token))
                 (srefactor-one-or-multi-lines tok-start
