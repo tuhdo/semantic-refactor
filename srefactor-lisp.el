@@ -229,33 +229,29 @@ into one line separated each one by a space."
                 (forward-sexp)
                 (point)))
          (cur-major-mode major-mode)
-         (tmp-buf (generate-new-buffer "tmp-buf"))
          (content (buffer-substring-no-properties beg end)))
-    (unwind-protect
-        (progn
-          (setq content (with-current-buffer tmp-buf
-                          (semantic-default-elisp-setup)
-                          (when (eq cur-major-mode 'emacs-lisp-mode)
-                            (srefactor--appropriate-major-mode cur-major-mode))
-                          (semantic-lex-init)
-                          (insert content)
-                          (srefactor-one-or-multi-lines (point-min)
-                                                        (point-max)
-                                                        (point-min)
-                                                        'one-line
-                                                        nil
-                                                        recursive-p)
-                          (srefactor--appropriate-major-mode cur-major-mode)
-                          (indent-region (point-min)
-                                         (point-max))
-                          (buffer-substring-no-properties
-                           (point-min)
-                           (point-max))))
-          (goto-char beg)
-          (kill-region beg end)
-          (insert content)
-          (goto-char orig-point))
-      (kill-buffer tmp-buf))))
+    (progn
+      (setq content (with-temp-buffer
+                      (semantic-default-elisp-setup)
+                      (when (eq cur-major-mode 'emacs-lisp-mode)
+                        (srefactor--appropriate-major-mode cur-major-mode))
+                      (semantic-lex-init)
+                      (insert content)
+                      (srefactor-one-or-multi-lines (point-min)
+                                                    (point-max)
+                                                    (point-min)
+                                                    'one-line
+                                                    nil
+                                                    recursive-p)
+                      (srefactor--appropriate-major-mode cur-major-mode)
+                      (indent-region (point-min)
+                                     (point-max))
+                      (buffer-substring-no-properties
+                       (point-min)
+                       (point-max))))
+      (kill-region beg end)
+      (insert content)
+      (goto-char orig-point))))
 
 (defun srefactor-lisp-multi-line ()
   "Transform all sub-sexpressions current sexpression at point
