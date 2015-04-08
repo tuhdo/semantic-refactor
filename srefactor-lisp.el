@@ -271,11 +271,9 @@ is inserted."
                 (forward-sexp)
                 (point)))
          (cur-major-mode major-mode)
-         (tmp-buf (generate-new-buffer "tmp-buf"))
          (content (buffer-substring-no-properties beg end)))
-    (unwind-protect
-        (progn
-          (setq content (with-current-buffer tmp-buf
+    (progn
+          (setq content (with-temp-buffer
                           (semantic-default-elisp-setup)
                           (when (eq cur-major-mode 'emacs-lisp-mode)
                             (srefactor--appropriate-major-mode cur-major-mode))
@@ -293,11 +291,9 @@ is inserted."
                           (buffer-substring-no-properties
                            (point-min)
                            (point-max))))
-          (goto-char beg)
           (kill-region beg end)
           (insert content)
-          (goto-char orig-point))
-      (kill-buffer tmp-buf))))
+          (goto-char orig-point))))
 
 (defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
   "Turn the current sexpression into one line/multi-line depends
