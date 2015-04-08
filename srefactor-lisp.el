@@ -330,13 +330,16 @@ Return the position of last closing sexp."
                                  (semantic-lex-token-start token)
                                  (semantic-lex-token-end token))
                               ""))
+            (when (eq (semantic-lex-token-class token) 'punctuation)
+              (setq first-token (car lexemes))
+              (setq second-token (cadr lexemes)))
             (let* ((token-type (car token))
                    (tok-start (semantic-lex-token-start token))
                    (tok-end (semantic-lex-token-end token))
                    (next-token (car lexemes))
                    (next-token-type (car next-token))
                    (next-token-str (if next-token
-                                       (buffer-substring-no-properties;;
+                                       (buffer-substring-no-properties
                                         (semantic-lex-token-start next-token)
                                         (semantic-lex-token-end next-token))
                                      ""))
@@ -389,15 +392,15 @@ Return the position of last closing sexp."
               (setq ignore-num (or (cdr ignore-pair)
                                    (get (intern-soft first-token-name) 'lisp-indent-function)))
               (cond
-               (ignore-num
-                (save-excursion
-                  (while (> ignore-num 0)
-                    (forward-line 1)
-                    (delete-indentation)
-                    (setq ignore-num (1- ignore-num)))))
-               ((not (member (car second-token) `(,(when newline-betwen-semantic-lists 'semantic-list)
-                                                  close-paren
-                                                  open-paren)))
+               (ignore-num (save-excursion
+                             (while (> ignore-num 0)
+                               (forward-line 1)
+                               (delete-indentation)
+                               (setq ignore-num (1- ignore-num)))))
+               ((not (or (member (car second-token) `(,(when newline-betwen-semantic-lists 'semantic-list)
+                                                      close-paren
+                                                      open-paren))
+                         (eq (semantic-lex-token-class first-token) 'semantic-list)))
                 (forward-line 1)
                 (delete-indentation)))))
           (when recursive-p
@@ -405,19 +408,13 @@ Return the position of last closing sexp."
             (forward-sexp)
             (setq end (point))
             (setq lexemes (semantic-emacs-lisp-lexer beg end 1))
-            (dolist (token
-                     (reverse lexemes))
+            (dolist (token (reverse lexemes))
               (let ((tok-start (semantic-lex-token-start token))
                     (tok-end (semantic-lex-token-end token)))
                 (when (and (eq (car token) 'semantic-list)
                            (> (- tok-end tok-start) 2))
                   (goto-char (semantic-lex-token-start token))
-                  (srefactor-one-or-multi-lines tok-start
-                                                tok-end
-                                                tok-start
-                                                format-type
-                                                newline-betwen-semantic-lists
-                                                recursive-p))))))
+                  (srefactor-one-or-multi-lines tok-start tok-end tok-start format-type newline-betwen-semantic-lists recursive-p))))))
       (kill-buffer tmp-buf))))
 
 (provide 'srefactor-lisp)
