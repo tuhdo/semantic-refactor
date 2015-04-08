@@ -287,10 +287,10 @@ sub-sexpressions of the same level into multiple lines.
 
 Return the position of last closing sexp."
   (let* ((lexemes (semantic-emacs-lisp-lexer beg end 1))
-         (first-symbol (cadr lexemes))
-         (first-symbol-name (buffer-substring-no-properties
-                             (semantic-lex-token-start first-symbol)
-                             (semantic-lex-token-end first-symbol)))
+         (first-token (cadr lexemes))
+         (first-token-name (buffer-substring-no-properties
+                            (semantic-lex-token-start first-token)
+                            (semantic-lex-token-end first-token)))
          (second-token (caddr lexemes))
          (tmp-buf (generate-new-buffer (make-temp-name "")))
          (orig-format-type format-type)
@@ -302,6 +302,10 @@ Return the position of last closing sexp."
         (progn
           (unless (assoc 'semantic-list lexemes)
             (setq format-type 'one-line))
+          (if (or (eq (car first-token) 'semantic-list)
+                  (assoc first-token-name srefactor-elisp-symbol-to-skip))
+              (setq newline-betwen-semantic-lists t)
+            (setq newline-betwen-semantic-lists nil))
           (while lexemes
             (setq token (pop lexemes))
             (setq token-str (if token
@@ -352,9 +356,9 @@ Return the position of last closing sexp."
                        (point-max))))
             (when (eq format-type 'multi-line)
               (goto-char beg)
-              (setq ignore-pair (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
+              (setq ignore-pair (assoc first-token-name srefactor-elisp-symbol-to-skip))
               (setq ignore-num (or (cdr ignore-pair)
-                                   (get (intern first-symbol-name) 'lisp-indent-function)))
+                                   (get (intern first-token-name) 'lisp-indent-function)))
               (cond
                (ignore-num
                 (save-excursion
@@ -383,8 +387,7 @@ Return the position of last closing sexp."
                                                 tok-end
                                                 tok-start
                                                 format-type
-                                                (or (get (intern first-symbol-name) 'lisp-indent-function)
-                                                    (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
+                                                newline-betwen-semantic-lists
                                                 recursive-p))))))
       (kill-buffer tmp-buf))))
 
