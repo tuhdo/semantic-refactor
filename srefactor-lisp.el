@@ -344,8 +344,8 @@ Return the position of last closing sexp."
                    (next-next-token-type (car next-next-token))
                    (next-next-token-str (if next-next-token
                                             (buffer-substring-no-properties
-                                             (semantic-lex-token-start next-token)
-                                             (semantic-lex-token-end next-token))
+                                             (semantic-lex-token-start next-next-token)
+                                             (semantic-lex-token-end next-next-token))
                                           "")))
               (with-current-buffer tmp-buf
                 (insert token-str)
