@@ -166,6 +166,8 @@
             (progn
               (setq content (with-current-buffer tmp-buf
                               (semantic-default-elisp-setup)
+                              (when (eq cur-major-mode 'emacs-lisp-mode)
+                                (srefactor--appropriate-major-mode cur-major-mode))
                               (semantic-lex-init)
                               (insert content)
                               (srefactor-one-or-multi-lines (point-min)
@@ -205,6 +207,8 @@
         (progn
           (setq content (with-current-buffer tmp-buf
                           (semantic-default-elisp-setup)
+                          (when (eq cur-major-mode 'emacs-lisp-mode)
+                            (srefactor--appropriate-major-mode cur-major-mode))
                           (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min)
@@ -245,6 +249,8 @@ into one line separated each one by a space."
         (progn
           (setq content (with-current-buffer tmp-buf
                           (semantic-default-elisp-setup)
+                          (when (eq cur-major-mode 'emacs-lisp-mode)
+                            (srefactor--appropriate-major-mode cur-major-mode))
                           (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min)
@@ -288,8 +294,10 @@ is inserted."
     (unwind-protect
         (progn
           (setq content (with-current-buffer tmp-buf
-                          (semantic-lex-init)
                           (semantic-default-elisp-setup)
+                          (when (eq cur-major-mode 'emacs-lisp-mode)
+                            (srefactor--appropriate-major-mode cur-major-mode))
+                          (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min)
                                                         (point-max)
