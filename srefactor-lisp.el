@@ -388,7 +388,7 @@ Return the position of last closing sexp."
               (goto-char beg)
               (setq ignore-pair (assoc first-token-name srefactor-elisp-symbol-to-skip))
               (setq ignore-num (or (cdr ignore-pair)
-                                   (get (intern first-token-name) 'lisp-indent-function)))
+                                   (get (intern-soft first-token-name) 'lisp-indent-function)))
               (cond
                (ignore-num
                 (save-excursion
