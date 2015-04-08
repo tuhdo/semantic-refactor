@@ -98,6 +98,7 @@
                                             ("insert" . 1)
                                             ("car" . 1)
                                             ("cdr" . 1)
+                                            ("lambda" . 1)
                                             ("cons" . 2)
                                             ("kill-region" . 2)
                                             ("equal" . 2)
@@ -113,7 +114,6 @@
                                             ("defface" . 2)
                                             ("defalias" . 2)
                                             ("defcustom" . 2)
-                                            ("lambda" . 2)
                                             ("declare" . 2)
                                             ("defvar" . 2)
                                             ("string-match" . 2)
@@ -131,12 +131,7 @@
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
 
-(defalias 'srefactor-scheme-format-buffer 'srefactor-elisp-format-buffer)
-(defalias 'srefactor-scheme-format-defun'srefactor-elisp-format-defun)
-(defalias 'srefactor-scheme-multi-line 'srefactor-elisp-multi-line)
-(defalias 'srefactor-scheme-one-line 'srefactor-elisp-one-line)
-
-(defun srefactor-elisp-format-buffer ()
+(defun srefactor-lisp-format-buffer ()
   "Format current buffer."
   (interactive)
   (let ((cur-pos (point)))
@@ -176,7 +171,7 @@
           (kill-buffer tmp-buf))))
     (goto-char cur-pos)))
 
-(defun srefactor-elisp-format-defun ()
+(defun srefactor-lisp-format-defun ()
   "Format current defun point is in."
   (interactive)
   (let* ((orig-point (point))
@@ -205,7 +200,7 @@
           (goto-char orig-point))
       (kill-buffer tmp-buf))))
 
-(defun srefactor-elisp-one-line (recursive-p)
+(defun srefactor-lisp-one-line (recursive-p)
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
   (interactive "P")
@@ -236,7 +231,7 @@ into one line separated each one by a space."
           (goto-char orig-point))
       (kill-buffer tmp-buf))))
 
-(defun srefactor-elisp-multi-line ()
+(defun srefactor-lisp-multi-line ()
   "Transform all sub-sexpressions current sexpression at point
 into multiple lines separated. If the head symbol belongs to the
 list `srefactor-elisp-symbol-to-skip', then the first N next
@@ -388,4 +383,4 @@ Return the position of last closing sexp."
                                                 recursive-p))))))
       (kill-buffer tmp-buf))))
 
-(provide 'srefactor-elisp)
+(provide 'srefactor-lisp)

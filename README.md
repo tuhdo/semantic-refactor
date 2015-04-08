@@ -72,17 +72,18 @@ This package can be obtained from MELPA:
 
 ```elisp
     (require 'srefactor)
-    (semantic-default-elisp-setup)
+    (semantic-default-elisp-setup) ;; for Elisp and Common Lisp
+    (semantic-default-scheme-setup) ;; for Scheme
 
     ;; OPTIONAL: ADD IT ONLY IF YOU USE C/C++. 
     (semantic-mode 1) ;; -> this is optional for Emacs Lisp
     
     (define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
     (define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
-    (define-key emacs-lisp-mode-map (kbd "M-RET o") 'srefactor-elisp-one-line)
-    (define-key emacs-lisp-mode-map (kbd "M-RET m") 'srefactor-elisp-multi-line)
-    (define-key emacs-lisp-mode-map (kbd "M-RET d") 'srefactor-elisp-format-defun)
-    (define-key emacs-lisp-mode-map (kbd "M-RET b") 'srefactor-elisp-format-buffer)
+    (global-set-key (kbd "M-RET o") 'srefactor-lisp-one-line)
+    (global-set-key (kbd "M-RET m") 'srefactor-lisp-multi-line)
+    (global-set-key (kbd "M-RET d") 'srefactor-lisp-format-defun)
+    (global-set-key (kbd "M-RET b") 'srefactor-lisp-format-buffer)
 ```
 
 **NOTICE**: If you only use Emacs Lisp formatting, you don't have to enable `semantic-mode`.
