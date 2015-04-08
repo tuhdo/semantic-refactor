@@ -391,11 +391,12 @@ Return the position of last closing sexp."
               (setq ignore-num (or (cdr ignore-pair)
                                    (get (intern-soft first-token-name) 'lisp-indent-function)))
               (cond
-               (ignore-num (save-excursion
-                             (while (> ignore-num 0)
-                               (forward-line 1)
-                               (delete-indentation)
-                               (setq ignore-num (1- ignore-num)))))
+               (ignore-num
+                (save-excursion
+                  (while (> ignore-num 0)
+                    (forward-line 1)
+                    (delete-indentation)
+                    (setq ignore-num (1- ignore-num)))))
                ((not (or (member (car second-token) `(,(when newline-betwen-semantic-lists 'semantic-list)
                                                       close-paren
                                                       open-paren))
@@ -413,7 +414,12 @@ Return the position of last closing sexp."
                 (when (and (eq (car token) 'semantic-list)
                            (> (- tok-end tok-start) 2))
                   (goto-char (semantic-lex-token-start token))
-                  (srefactor-one-or-multi-lines tok-start tok-end tok-start format-type newline-betwen-semantic-lists recursive-p))))))
+                  (srefactor-one-or-multi-lines tok-start
+                                                tok-end
+                                                tok-start
+                                                format-type
+                                                (assoc first-token-name srefactor-elisp-symbol-to-skip)
+                                                recursive-p))))))
       (kill-buffer tmp-buf))))
 
 (provide 'srefactor-lisp)
