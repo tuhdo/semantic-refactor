@@ -64,21 +64,20 @@
   "After a token is inserted, if the length of current
   S-EXPRESSION is greater than this value, start inserting a newline.")
 
-(defcustom srefactor-elisp-symbol-to-skip '(("progn" . 0)
+(defcustom srefactor-elisp-symbol-to-skip '(;; ("progn" . 0)
                                             ("cond" . 0)
-                                            ("save-excursion" . 0)
+                                            ;; ("save-excursion" . 0)
                                             ("unwind-protect" . 0)
                                             ("buffer-substring-no-properties" . 0)
                                             ("condition-case " . 1)
                                             ("with-current-buffer" . 1)
-                                            ("let" . 1)
-                                            ("let*" . 1)
+                                            ;; ("let" . 1)
+                                            ;; ("let*" . 1)
                                             ("if" . 1)
-                                            ("while" . 1)
-                                            ("dolist" . 1)
+                                            ;; ("while" . 1)
+                                            ;; ("dolist" . 1)
                                             ("do" . 1)
-                                            ("dolist" . 1)
-                                            ("when" . 1)
+                                            ;; ("when" . 1)
                                             ("unless" . 1)
                                             ("not" . 1)
                                             ("null" . 1)
@@ -107,9 +106,9 @@
                                             ("eq?" . 2)
                                             ("eq" . 2)
                                             ("assoc" . 2)
-                                            ("defun" . 2)
+                                            ;; ("defun" . 2)
                                             ("defclass" . 2)
-                                            ("defmacro" . 2)
+                                            ;; ("defmacro" . 2)
                                             ("defsubst" . 2)
                                             ("defface" . 2)
                                             ("defalias" . 2)
@@ -126,7 +125,8 @@
                                             ("<=" . 2)
                                             (">=" . 2)
                                             ("1" . 2)
-                                            ("1" . 2))
+                                            ("1" . 2)
+                                            )
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
@@ -350,10 +350,12 @@ Return the position of last closing sexp."
                        (point-max))))
             (when (eq format-type 'multi-line)
               (goto-char beg)
+              (setq ignore-pair (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
+              (setq ignore-num (or (cdr ignore-pair)
+                                   (get (intern first-symbol-name) 'lisp-indent-function)))
               (cond
-               ((setq ignore-pair (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
+               (ignore-num
                 (save-excursion
-                  (setq ignore-num (cdr ignore-pair))
                   (while (> ignore-num 0)
                     (forward-line 1)
                     (delete-indentation)
@@ -379,7 +381,8 @@ Return the position of last closing sexp."
                                                 tok-end
                                                 tok-start
                                                 format-type
-                                                (assoc first-symbol-name srefactor-elisp-symbol-to-skip)
+                                                (or (get (intern first-symbol-name) 'lisp-indent-function)
+                                                    (assoc first-symbol-name srefactor-elisp-symbol-to-skip))
                                                 recursive-p))))))
       (kill-buffer tmp-buf))))
 
