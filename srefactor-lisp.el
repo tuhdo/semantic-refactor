@@ -1,6 +1,6 @@
-;;; srefactor.el --- A refactoring tool based on Semantic parser framework
+;;; Srefactor --- A refactoring tool based on Semantic parser framework
 ;;
-;; Filename: srefactor-elisp.el
+;; Filename: srefactor-lisp.el
 ;; Description: A refactoring tool based on Semantic parser framework
 ;; Author: Tu, Do Hoang <tuhdo1710@gmail.com>
 ;; URL      : https://github.com/tuhdo/semantic-refactor
