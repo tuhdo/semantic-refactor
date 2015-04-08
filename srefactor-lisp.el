@@ -215,47 +215,9 @@
       (insert content)
       (goto-char orig-point))))
 
-(defun srefactor-lisp-one-line (recursive-p)
+(defun srefactor-lisp-format-sexp ()
   "Transform all sub-sexpressions current sexpression at point
-into one line separated each one by a space."
-  (interactive "P")
-  (let* ((orig-point (point))
-         (beg (save-excursion
-                (unless (looking-at "(")
-                  (backward-up-list))
-                (point)))
-         (end (save-excursion
-                (goto-char beg)
-                (forward-sexp)
-                (point)))
-         (cur-major-mode major-mode)
-         (content (buffer-substring-no-properties beg end)))
-    (progn
-      (setq content (with-temp-buffer
-                      (semantic-default-elisp-setup)
-                      (when (eq cur-major-mode 'emacs-lisp-mode)
-                        (srefactor--appropriate-major-mode cur-major-mode))
-                      (semantic-lex-init)
-                      (insert content)
-                      (srefactor-one-or-multi-lines (point-min)
-                                                    (point-max)
-                                                    (point-min)
-                                                    'one-line
-                                                    nil
-                                                    recursive-p)
-                      (srefactor--appropriate-major-mode cur-major-mode)
-                      (indent-region (point-min)
-                                     (point-max))
-                      (buffer-substring-no-properties
-                       (point-min)
-                       (point-max))))
-      (kill-region beg end)
-      (insert content)
-      (goto-char orig-point))))
-
-(defun srefactor-lisp-multi-line ()
-  "Transform all sub-sexpressions current sexpression at point
-into multiple lines separated. If the head symbol belongs to the
+into multiple lines separatedly. If the head symbol belongs to the
 list `srefactor-elisp-symbol-to-skip', then the first N next
 symbol/sexpressions (where N is the nummber associated with the
 head symbol as stated in the list) are skipped before a newline
@@ -294,6 +256,44 @@ is inserted."
           (kill-region beg end)
           (insert content)
           (goto-char orig-point))))
+
+(defun srefactor-lisp-one-line (recursive-p)
+  "Transform all sub-sexpressions current sexpression at point
+into one line separated each one by a space."
+  (interactive "P")
+  (let* ((orig-point (point))
+         (beg (save-excursion
+                (unless (looking-at "(")
+                  (backward-up-list))
+                (point)))
+         (end (save-excursion
+                (goto-char beg)
+                (forward-sexp)
+                (point)))
+         (cur-major-mode major-mode)
+         (content (buffer-substring-no-properties beg end)))
+    (progn
+      (setq content (with-temp-buffer
+                      (semantic-default-elisp-setup)
+                      (when (eq cur-major-mode 'emacs-lisp-mode)
+                        (srefactor--appropriate-major-mode cur-major-mode))
+                      (semantic-lex-init)
+                      (insert content)
+                      (srefactor-one-or-multi-lines (point-min)
+                                                    (point-max)
+                                                    (point-min)
+                                                    'one-line
+                                                    nil
+                                                    recursive-p)
+                      (srefactor--appropriate-major-mode cur-major-mode)
+                      (indent-region (point-min)
+                                     (point-max))
+                      (buffer-substring-no-properties
+                       (point-min)
+                       (point-max))))
+      (kill-region beg end)
+      (insert content)
+      (goto-char orig-point))))
 
 (defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
   "Turn the current sexpression into one line/multi-line depends

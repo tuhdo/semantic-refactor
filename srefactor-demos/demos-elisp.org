@@ -30,7 +30,7 @@ This command only formats the current function point is in.
 * One line <--> Multiple lines
 
 Command: srefactor-lisp-one-line
-Command: srefactor-lisp-multi-line
+Command: srefactor-lisp-format-sexp
 
 In this demo, you will see that you can effortlessly transform current
 s-expression whether the cursor is inside the s-expression or at the beginning
@@ -41,6 +41,6 @@ of its opening parenthesis, without moving it anywhere.  Let's see it in action:
 You can recursively turn a s-expression all of its inner s-expressions into one
 line with prefix argument.
 
-Multiline command actually works similar to srefactor-lisp-format-defun, except
+Sexp formatting command actually works similar to srefactor-lisp-format-defun, except
 it formats current s-expression cursor is in.
 
