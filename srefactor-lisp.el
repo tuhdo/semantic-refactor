@@ -193,9 +193,17 @@
                           (semantic-default-elisp-setup)
                           (semantic-lex-init)
                           (insert content)
-                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'multi-line nil t)
-                          (indent-region (point-min) (point-max))
-                          (buffer-substring-no-properties (point-min) (point-max))))
+                          (srefactor-one-or-multi-lines (point-min)
+                                                        (point-max)
+                                                        (point-min)
+                                                        'multi-line
+                                                        nil
+                                                        t)
+                          (indent-region (point-min)
+                                         (point-max))
+                          (buffer-substring-no-properties
+                           (point-min)
+                           (point-max))))
           (goto-char beg)
           (kill-region beg end)
           (insert content)
@@ -224,9 +232,17 @@ into one line separated each one by a space."
                           (semantic-default-elisp-setup)
                           (semantic-lex-init)
                           (insert content)
-                          (srefactor-one-or-multi-lines (point-min) (point-max) (point-min) 'one-line nil recursive-p)
-                          (indent-region (point-min) (point-max))
-                          (buffer-substring-no-properties (point-min) (point-max))))
+                          (srefactor-one-or-multi-lines (point-min)
+                                                        (point-max)
+                                                        (point-min)
+                                                        'one-line
+                                                        nil
+                                                        recursive-p)
+                          (indent-region (point-min)
+                                         (point-max))
+                          (buffer-substring-no-properties
+                           (point-min)
+                           (point-max))))
           (goto-char beg)
           (kill-region beg end)
           (insert content)
@@ -259,16 +275,14 @@ is inserted."
                           (semantic-lex-init)
                           (semantic-default-elisp-setup)
                           (insert content)
-                          (srefactor-one-or-multi-lines
-                           (point-min)
-                           (point-max)
-                           (point-min)
-                           'multi-line
-                           nil
-                           t)
-                          (indent-region
-                           (point-min)
-                           (point-max))
+                          (srefactor-one-or-multi-lines (point-min)
+                                                        (point-max)
+                                                        (point-min)
+                                                        'multi-line
+                                                        nil
+                                                        t)
+                          (indent-region (point-min)
+                                         (point-max))
                           (buffer-substring-no-properties
                            (point-min)
                            (point-max))))
