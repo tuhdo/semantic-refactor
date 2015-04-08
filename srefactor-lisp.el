@@ -177,7 +177,7 @@
                                                           nil
                                                           t)
                             (goto-char beg)))
-                        (srefactor--appropriate-major-mode cur-major-mode)
+                        ;; (srefactor--appropriate-major-mode cur-major-mode)
                         (indent-region (point-min) (point-max))
                         (buffer-substring-no-properties (point-min) (point-max))))
     (kill-region (point-min) (point-max))
@@ -210,7 +210,7 @@
                                                     'multi-line
                                                     nil
                                                     t)
-                      (srefactor--appropriate-major-mode cur-major-mode)
+                      ;; (srefactor--appropriate-major-mode cur-major-mode)
                       (indent-region (point-min)
                                      (point-max))
                       (buffer-substring-no-properties (point-min) (point-max))))
@@ -249,7 +249,7 @@ is inserted."
                                                         'multi-line
                                                         nil
                                                         t)
-                          (srefactor--appropriate-major-mode cur-major-mode)
+                          ;; (srefactor--appropriate-major-mode cur-major-mode)
                           (indent-region (point-min)
                                          (point-max))
                           (buffer-substring-no-properties
@@ -286,7 +286,6 @@ into one line separated each one by a space."
                                                     'one-line
                                                     nil
                                                     recursive-p)
-                      (srefactor--appropriate-major-mode cur-major-mode)
                       (indent-region (point-min)
                                      (point-max))
                       (buffer-substring-no-properties
@@ -337,7 +336,7 @@ Return the position of last closing sexp."
                    (next-token (car lexemes))
                    (next-token-type (car next-token))
                    (next-token-str (if next-token
-                                       (buffer-substring-no-properties
+                                       (buffer-substring-no-properties;;
                                         (semantic-lex-token-start next-token)
                                         (semantic-lex-token-end next-token))
                                      ""))
