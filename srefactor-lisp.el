@@ -108,7 +108,7 @@
                                             ("get" . 2)
                                             ("assoc" . 2)
                                             ;; ("defun" . 2)
-                                            ("defn" . 2)
+                                            ("defn" . 1)
                                             ("defclass" . 2)
                                             ;; ("defmacro" . 2)
                                             ("defsubst" . 2)
@@ -133,6 +133,19 @@
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
 
+(defun srefactor--appropriate-major-mode (major-mode)
+  (cond
+   ((eq major-mode 'emacs-lisp-mode)
+    (emacs-lisp-mode))
+   ((eq major-mode 'scheme-mode)
+    (scheme-mode))
+   ((eq major-mode 'common-lisp-mode)
+    (common-lisp-mode))
+   ((and (fboundp 'clojure-mode)
+         (eq major-mode 'clojure-mode))
+    (clojure-mode))
+   (t (emacs-lisp-mode))))
+
 (defun srefactor-lisp-format-buffer ()
   "Format current buffer."
   (interactive)
@@ -144,25 +157,24 @@
              (end (save-excursion
                     (forward-sexp)
                     (point)))
+             (cur-major-mode major-mode)
              (tmp-buf (generate-new-buffer "tmp-buf"))
              (content (buffer-substring-no-properties beg end)))
         (unwind-protect
             (progn
               (setq content (with-current-buffer tmp-buf
-                              (emacs-lisp-mode)
                               (semantic-default-elisp-setup)
                               (semantic-lex-init)
                               (insert content)
-                              (srefactor-one-or-multi-lines
-                               (point-min)
-                               (point-max)
-                               (point-min)
-                               'multi-line
-                               nil
-                               t)
-                              (indent-region
-                               (point-min)
-                               (point-max))
+                              (srefactor-one-or-multi-lines (point-min)
+                                                            (point-max)
+                                                            (point-min)
+                                                            'multi-line
+                                                            nil
+                                                            t)
+                              (srefactor--appropriate-major-mode cur-major-mode)
+                              (indent-region (point-min)
+                                             (point-max))
                               (buffer-substring-no-properties
                                (point-min)
                                (point-max))))
@@ -184,12 +196,12 @@
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (cur-major-mode major-mode)
          (tmp-buf (generate-new-buffer "tmp-buf"))
          (content (buffer-substring-no-properties beg end)))
     (unwind-protect
         (progn
           (setq content (with-current-buffer tmp-buf
-                          (emacs-lisp-mode)
                           (semantic-default-elisp-setup)
                           (semantic-lex-init)
                           (insert content)
@@ -199,6 +211,7 @@
                                                         'multi-line
                                                         nil
                                                         t)
+                          (srefactor--appropriate-major-mode cur-major-mode)
                           (indent-region (point-min)
                                          (point-max))
                           (buffer-substring-no-properties
@@ -223,12 +236,12 @@ into one line separated each one by a space."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (cur-major-mode major-mode)
          (tmp-buf (generate-new-buffer "tmp-buf"))
          (content (buffer-substring-no-properties beg end)))
     (unwind-protect
         (progn
           (setq content (with-current-buffer tmp-buf
-                          (emacs-lisp-mode)
                           (semantic-default-elisp-setup)
                           (semantic-lex-init)
                           (insert content)
@@ -238,6 +251,7 @@ into one line separated each one by a space."
                                                         'one-line
                                                         nil
                                                         recursive-p)
+                          (srefactor--appropriate-major-mode cur-major-mode)
                           (indent-region (point-min)
                                          (point-max))
                           (buffer-substring-no-properties
@@ -266,12 +280,12 @@ is inserted."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (cur-major-mode major-mode)
          (tmp-buf (generate-new-buffer "tmp-buf"))
          (content (buffer-substring-no-properties beg end)))
     (unwind-protect
         (progn
           (setq content (with-current-buffer tmp-buf
-                          (emacs-lisp-mode)
                           (semantic-lex-init)
                           (semantic-default-elisp-setup)
                           (insert content)
@@ -281,6 +295,7 @@ is inserted."
                                                         'multi-line
                                                         nil
                                                         t)
+                          (srefactor--appropriate-major-mode cur-major-mode)
                           (indent-region (point-min)
                                          (point-max))
                           (buffer-substring-no-properties
@@ -336,7 +351,14 @@ Return the position of last closing sexp."
                                        (buffer-substring-no-properties
                                         (semantic-lex-token-start next-token)
                                         (semantic-lex-token-end next-token))
-                                     "")))
+                                     ""))
+                   (next-next-token (cadr lexemes))
+                   (next-next-token-type (car next-next-token))
+                   (next-next-token-str (if next-next-token
+                                            (buffer-substring-no-properties
+                                             (semantic-lex-token-start next-token)
+                                             (semantic-lex-token-end next-token))
+                                          "")))
               (with-current-buffer tmp-buf
                 (insert token-str)
                 (cond
@@ -355,7 +377,11 @@ Return the position of last closing sexp."
                  ((and (eq token-type 'symbol)
                        (eq orig-format-type 'multi-line)
                        (string-match ":.*" token-str))
-                  (insert (concat " " next-token-str "\n"))
+                  (insert (concat " " next-token-str))
+                  (if (not (eq next-next-token-type 'close-paren))
+                      (insert "\n")
+                    (insert next-next-token-str)
+                    (pop lexemes))
                   (pop lexemes))
                  ((eq format-type 'one-line)
                   (insert " "))
