@@ -321,8 +321,7 @@ Return the position of last closing sexp."
             (setq format-type 'one-line))
           (if (or (eq (car first-token) 'semantic-list)
                   (assoc first-token-name srefactor-elisp-symbol-to-skip))
-              (setq newline-betwen-semantic-lists t)
-            (setq newline-betwen-semantic-lists nil))
+              (setq newline-betwen-semantic-lists t))
           (while lexemes
             (setq token (pop lexemes))
             (setq token-str (if token
