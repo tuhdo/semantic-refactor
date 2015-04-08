@@ -49,7 +49,7 @@ structure of the analyzed language, instead of plain text structure.
 
 [More info and demos](srefactor-demos/demos.org)
 
-## Emacs Lisp:
+## Lisp:
 
 - Format whole buffer
 
@@ -86,7 +86,7 @@ This package can be obtained from MELPA:
     (global-set-key (kbd "M-RET b") 'srefactor-lisp-format-buffer)
 ```
 
-**NOTICE**: If you only use Emacs Lisp formatting, you don't have to enable `semantic-mode`.
+**NOTICE**: If you only use Lisp formatting, you don't have to enable `semantic-mode`.
 
 # Usage<a id="sec-4" name="sec-4"></a>
 
