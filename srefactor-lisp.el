@@ -60,9 +60,9 @@
 ;;; Code:
 (require 'semantic/bovine/el)
 
-(defcustom srefactor-newline-threshold 30
-  "After a token is inserted, if the length of current
-  S-EXPRESSION is greater than this value, start inserting a newline.")
+;; (defcustom srefactor-newline-threshold 30
+;;   "After a token is inserted, if the length of current
+;;   S-EXPRESSION is greater than this value, start inserting a newline.")
 
 (defcustom srefactor-elisp-symbol-to-skip '(;; ("progn" . 0)
                                             ("cond" . 0)
@@ -130,34 +130,38 @@
                                             ("=" . 2)
                                             ("1" . 2)
                                             ("1" . 2)
+                                            ("some" . 2)
+                                            ;; Clojure
+                                            (":require" . 1)
+                                            (":import" . 1)
                                             )
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
 
-(defun srefactor--appropriate-major-mode (major-mode)
-  (cond
-   ((eq major-mode 'emacs-lisp-mode)
-    (emacs-lisp-mode))
-   ((eq major-mode 'scheme-mode)
-    (scheme-mode))
-   ((eq major-mode 'common-lisp-mode)
-    (common-lisp-mode))
-   ((and (fboundp 'clojure-mode)
-         (eq major-mode 'clojure-mode))
-    (clojure-mode))
-   (t (emacs-lisp-mode))))
+;; (defun srefactor--appropriate-major-mode (major-mode)
+;;   (cond
+;;    ((eq major-mode 'emacs-lisp-mode)
+;;     (emacs-lisp-mode))
+;;    ((eq major-mode 'scheme-mode)
+;;     (scheme-mode))
+;;    ((eq major-mode 'common-lisp-mode)
+;;     (common-lisp-mode))
+;;    ((and (fboundp 'clojure-mode)
+;;          (eq major-mode 'clojure-mode))
+;;     (clojure-mode))
+;;    (t (emacs-lisp-mode))))
 
 (defun srefactor-lisp-format-buffer ()
   "Format current buffer."
   (interactive)
   (let ((cur-pos (point))
         (buf-content (buffer-substring-no-properties (point-min) (point-max)))
+        (tmp (generate-new-buffer "easdf"))
         (cur-major-mode major-mode))
-    (setq buf-content (with-temp-buffer
+    (setq buf-content (with-current-buffer tmp
                         (semantic-default-elisp-setup)
-                        (when (eq cur-major-mode 'emacs-lisp-mode)
-                          (srefactor--appropriate-major-mode cur-major-mode))
+                        (emacs-lisp-mode)
                         (semantic-lex-init)
                         (insert buf-content)
                         (goto-char (point-max))
@@ -197,8 +201,7 @@
     (progn
       (setq content (with-temp-buffer
                       (semantic-default-elisp-setup)
-                      (when (eq cur-major-mode 'emacs-lisp-mode)
-                        (srefactor--appropriate-major-mode cur-major-mode))
+                      (emacs-lisp-mode)
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -237,8 +240,7 @@ is inserted."
     (progn
           (setq content (with-temp-buffer
                           (semantic-default-elisp-setup)
-                          (when (eq cur-major-mode 'emacs-lisp-mode)
-                            (srefactor--appropriate-major-mode cur-major-mode))
+                          (emacs-lisp-mode)
                           (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min)
@@ -275,8 +277,7 @@ into one line separated each one by a space."
     (progn
       (setq content (with-temp-buffer
                       (semantic-default-elisp-setup)
-                      (when (eq cur-major-mode 'emacs-lisp-mode)
-                        (srefactor--appropriate-major-mode cur-major-mode))
+                      (emacs-lisp-mode)
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -363,6 +364,7 @@ Return the position of last closing sexp."
                   (insert (concat " " next-token-str))
                   (pop lexemes))
                  ((and (eq token-type 'symbol)
+                       (not (equal token-str first-token-name))
                        (eq orig-format-type 'multi-line)
                        (string-match ":.*" token-str))
                   (insert (concat " " next-token-str))
