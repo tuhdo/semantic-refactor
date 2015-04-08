@@ -262,8 +262,8 @@ is inserted."
 (defun srefactor-lisp-one-line (recursive-p)
   "Transform all sub-sexpressions current sexpression at point
 into one line separated each one by a space."
-  (interactive "P")
-  (let* ((orig-point (point))
+  (interactive "P") ;; asdf
+  (let* ((orig-point (point));; asdf
          (beg (save-excursion
                 (unless (looking-at "(")
                   (backward-up-list))
@@ -294,6 +294,21 @@ into one line separated each one by a space."
       (kill-region beg end)
       (insert content)
       (goto-char orig-point))))
+
+(defun srefactor-collect-comment (beg end)
+  (save-excursion
+    (goto-char beg)
+    (let ((line-end (line-end-position))
+          comment-tokens
+          tok
+          content)
+      (while (re-search-forward semantic-lex-comment-regex end t)
+        (setq p (1-(match-beginning 0))) (setq tok (condition-case nil (semantic-comment-lexer p (line-end-position))
+                                                     (error nil)))
+        (when tok
+          (push tok comment-tokens)
+          (setq a)))
+      comment-tokens)))
 
 (defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
   "Turn the current sexpression into one line/multi-line depends
@@ -354,7 +369,14 @@ Return the position of last closing sexp."
                 (cond
                  ((member (concat token-str next-token-str) '("1-" "1+"))
                   (goto-char (semantic-lex-token-end token))
-                  (insert (concat next-token-str " "))
+                  (insert next-token-str)
+                  (message "token-str: %s" token-str)
+                  (message "token-str: %s" next-token-str)
+                  (message "token-str: %s" next-next-token-str)
+                  (setq first-toen (semantic-lex-token 'symbol
+                                                       (semantic-lex-token-start token)
+                                                       (1+ (semantic-lex-token-start token))))
+                  (setq second-token next-next-token)
                   (pop lexemes))
                  ((or (eq token-type 'punctuation)
                       (eq token-type 'open-paren)
