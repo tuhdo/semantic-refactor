@@ -185,6 +185,7 @@
   (interactive)
   (let* ((orig-point (point))
          (beg (save-excursion
+                (forward-char 1)
                 (beginning-of-defun-raw)
                 (point)))
          (end (save-excursion
