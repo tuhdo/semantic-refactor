@@ -442,10 +442,11 @@ Return the position of last closing sexp."
                   (pop lexemes))
                  ((and (eq token-type 'symbol)
                        (not (equal token-str first-token-name))
-                       (eq orig-format-type 'multi-line)
+                       ;; (eq orig-format-type 'multi-line)
                        (string-match ":.*" token-str))
-                  (insert " ")
-                  (while (member next-token-type '(punctuation open-paren semantic-list))
+                  (insert " " next-token-str)
+                  (setq next-token (pop lexemes))
+                  (while (member next-token-type '(punctuation open-paren semantic-list close-paren))
                     (setq next-token (pop lexemes))
                     (setq next-token-type (semantic-lex-token-class next-token))
                     (setq next-token-str (with-current-buffer cur-buf
@@ -473,7 +474,8 @@ Return the position of last closing sexp."
             (setq lexemes (semantic-emacs-lisp-lexer beg end 1))
             (dolist (token (nreverse lexemes))
               (let ((tok-start (semantic-lex-token-start token))
-                    (tok-end (semantic-lex-token-end token)))
+                    (tok-end (semantic-lex-token-end token))
+                    tok-str)
                 (when (and (eq (car token) 'semantic-list)
                            (> (- tok-end tok-start) 2))
                   (goto-char (semantic-lex-token-start token))
@@ -481,7 +483,7 @@ Return the position of last closing sexp."
                                                 tok-end
                                                 tok-start
                                                 format-type
-                                                (assoc first-token-name srefactor-lisp-symbol-to-skip)
+                                                (assoc tok-str srefactor-lisp-symbol-to-skip)
                                                 recursive-p))))))
       (kill-buffer tmp-buf))))
 
