@@ -454,7 +454,6 @@ Return the position of last closing sexp."
                                             (semantic-lex-token-start next-token)
                                             (semantic-lex-token-end next-token))))
                     (insert next-token-str))
-                  (message "next-token-type: %s" next-token-type)
                   (when (not (eq (semantic-lex-token-class (car lexemes)) 'close-paren))
                     (insert "\n")))
                  ((eq format-type 'one-line)
