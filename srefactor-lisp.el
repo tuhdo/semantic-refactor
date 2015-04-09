@@ -304,6 +304,7 @@ into one line separated each one by a space."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (orig-skip-list srefactor-lisp-symbol-to-skip)
          (cur-indent-mode indent-tabs-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
