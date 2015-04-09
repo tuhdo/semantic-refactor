@@ -139,18 +139,18 @@
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
 
-;; (defun srefactor--appropriate-major-mode (major-mode)
-;;   (cond
-;;    ((eq major-mode 'emacs-lisp-mode)
-;;     (emacs-lisp-mode))
-;;    ((eq major-mode 'scheme-mode)
-;;     (scheme-mode))
-;;    ((eq major-mode 'common-lisp-mode)
-;;     (common-lisp-mode))
-;;    ((and (fboundp 'clojure-mode)
-;;          (eq major-mode 'clojure-mode))
-;;     (clojure-mode))
-;;    (t (emacs-lisp-mode))))
+(defun srefactor--appropriate-major-mode (major-mode)
+  (cond
+   ((eq major-mode 'emacs-lisp-mode)
+    (emacs-lisp-mode))
+   ((eq major-mode 'scheme-mode)
+    (scheme-mode))
+   ((eq major-mode 'common-lisp-mode)
+    (common-lisp-mode))
+   ((and (fboundp 'clojure-mode)
+         (eq major-mode 'clojure-mode))
+    (clojure-mode))
+   (t (emacs-lisp-mode))))
 
 (defun srefactor-lisp-format-buffer ()
   "Format current buffer."
@@ -177,7 +177,7 @@
                                                           nil
                                                           t)
                             (goto-char beg)))
-                        ;; (srefactor--appropriate-major-mode cur-major-mode)
+                        (srefactor--appropriate-major-mode cur-major-mode)
                         (indent-region (point-min) (point-max))
                         (buffer-substring-no-properties (point-min) (point-max))))
     (kill-region (point-min) (point-max))
@@ -210,7 +210,7 @@
                                                     'multi-line
                                                     nil
                                                     t)
-                      ;; (srefactor--appropriate-major-mode cur-major-mode)
+                      (srefactor--appropriate-major-mode cur-major-mode)
                       (indent-region (point-min)
                                      (point-max))
                       (buffer-substring-no-properties (point-min) (point-max))))
@@ -249,7 +249,7 @@ is inserted."
                                                         'multi-line
                                                         nil
                                                         t)
-                          ;; (srefactor--appropriate-major-mode cur-major-mode)
+                          (srefactor--appropriate-major-mode cur-major-mode)
                           (indent-region (point-min)
                                          (point-max))
                           (buffer-substring-no-properties
@@ -286,6 +286,7 @@ into one line separated each one by a space."
                                                     'one-line
                                                     nil
                                                     recursive-p)
+                      (srefactor--appropriate-major-mode cur-major-mode)
                       (indent-region (point-min)
                                      (point-max))
                       (buffer-substring-no-properties
