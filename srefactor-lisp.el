@@ -36,7 +36,7 @@
 ;;
 ;; - `srefactor-elisp-multi-line': Transform all sub-sexpressions current sexpression
 ;; - at point into multiple lines separated. If the head symbol belongs to the
-;; - list `srefactor-elisp-symbol-to-skip', then the first N next symbol/sexpressions
+;; - list `srefactor-lisp-symbol-to-skip', then the first N next symbol/sexpressions
 ;; - (where N is the nummber associated with the head symbol as stated in the
 ;; - list) are skipped before a newline is inserted.
 ;;
@@ -64,8 +64,7 @@
 ;;   "After a token is inserted, if the length of current
 ;;   S-EXPRESSION is greater than this value, start inserting a newline.")
 
-(defcustom srefactor-elisp-symbol-to-skip '(;; ("progn" . 0)
-                                            ("cond" . 0)
+(defcustom srefactor-lisp-symbol-to-skip '( ;; ("progn" . 0)("cond" . 0)
                                             ;; ("save-excursion" . 0)
                                             ("unwind-protect" . 0)
                                             ("condition-case " . 1)
@@ -129,15 +128,20 @@
                                             (">=" . 2)
                                             ("/=" . 2)
                                             ("=" . 2)
-                                            ("some" . 2)
-                                            ;; Clojure
-                                            ("defn" . 1)
-                                            (":require" . 1)
-                                            (":import" . 1)
-                                            )
+                                            ("some" . 2))
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting the first newline. "
-  :group 'srefactor)
+  :group 'srefactor
+  )
+
+(defcustom srefactor-clojure-symbol-to-skip '(("defn" . 1)
+                                              (":require" . 1)
+                                              (":import" . 1)
+                                              ("defmacro" . 1))
+  "A list of pairs of a symbol and a number that denotes how many
+  sexp to skip before inserting a newline. This will be merged
+  with `srefactor-lisp-symbol-to-skip'. Symbols in this list
+  overrides symbols in `srefactor-lisp-symbol-to-skip'.")
 
 (defun srefactor--appropriate-major-mode (major-mode)
   (cond
@@ -152,6 +156,14 @@
     (clojure-mode))
    (t (emacs-lisp-mode))))
 
+(defun srefactor--define-skip-list-for-mode (major-mode)
+  (cond ((and (fboundp 'clojure-mode)
+              (eq major-mode 'clojure-mode))
+         (remove-duplicates (append srefactor-lisp-symbol-to-skip
+                                    srefactor-clojure-symbol-to-skip)
+                            :test (lambda (a b) (equal (car a) (car b)))))
+        (t (emacs-lisp-mode))))
+
 (defun srefactor-lisp-format-buffer ()
   "Format current buffer."
   (interactive)
@@ -159,11 +171,14 @@
         (buf-content (buffer-substring-no-properties (point-min) (point-max)))
         (tmp (generate-new-buffer "easdf"))
         (cur-major-mode major-mode)
+        (orig-skip-list srefactor-lisp-symbol-to-skip)
         (cur-indent-mode indent-tabs-mode))
     (setq buf-content (with-current-buffer tmp
                         (semantic-default-elisp-setup)
                         (emacs-lisp-mode)
                         (setq indent-tabs-mode cur-indent-mode)
+                        (setq srefactor-lisp-symbol-to-skip
+                              (srefactor--define-skip-list-for-mode cur-major-mode))
                         (semantic-lex-init)
                         (insert buf-content)
                         (goto-char (point-max))
@@ -181,6 +196,7 @@
                             (goto-char beg)))
                         (srefactor--appropriate-major-mode cur-major-mode)
                         (indent-region (point-min) (point-max))
+                        (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                         (buffer-substring-no-properties (point-min) (point-max))))
     (kill-region (point-min) (point-max))
     (insert buf-content)
@@ -198,6 +214,7 @@
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (orig-skip-list srefactor-lisp-symbol-to-skip)
          (cur-indent-mode indent-tabs-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
@@ -206,6 +223,8 @@
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
+                      (setq srefactor-lisp-symbol-to-skip
+                              (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -215,6 +234,7 @@
                                                     nil
                                                     t)
                       (srefactor--appropriate-major-mode cur-major-mode)
+                      (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                       (indent-region (point-min)
                                      (point-max))
                       (buffer-substring-no-properties
@@ -227,7 +247,7 @@
 (defun srefactor-lisp-format-sexp ()
   "Transform all sub-sexpressions current sexpression at point
 into multiple lines separatedly. If the head symbol belongs to the
-list `srefactor-elisp-symbol-to-skip', then the first N next
+list `srefactor-lisp-symbol-to-skip', then the first N next
 symbol/sexpressions (where N is the nummber associated with the
 head symbol as stated in the list) are skipped before a newline
 is inserted."
@@ -241,6 +261,7 @@ is inserted."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (orig-skip-list srefactor-lisp-symbol-to-skip)
          (cur-indent-mode indent-tabs-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
@@ -249,6 +270,8 @@ is inserted."
                           (semantic-default-elisp-setup)
                           (emacs-lisp-mode)
                           (setq indent-tabs-mode cur-indent-mode)
+                          (setq srefactor-lisp-symbol-to-skip
+                              (srefactor--define-skip-list-for-mode cur-major-mode))
                           (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min)
@@ -258,6 +281,7 @@ is inserted."
                                                         nil
                                                         t)
                           (srefactor--appropriate-major-mode cur-major-mode)
+                          (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                           (indent-region (point-min)
                                          (point-max))
                           (buffer-substring-no-properties
@@ -288,6 +312,8 @@ into one line separated each one by a space."
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
+                      (setq srefactor-lisp-symbol-to-skip
+                              (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -297,6 +323,7 @@ into one line separated each one by a space."
                                                     nil
                                                     recursive-p)
                       (srefactor--appropriate-major-mode cur-major-mode)
+                      (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                       (indent-region (point-min)
                                      (point-max))
                       (buffer-substring-no-properties
@@ -331,7 +358,7 @@ Return the position of last closing sexp."
           (unless (assoc 'semantic-list lexemes)
             (setq format-type 'one-line))
           (if (or (eq (car first-token) 'semantic-list)
-                  (assoc first-token-name srefactor-elisp-symbol-to-skip))
+                  (assoc first-token-name srefactor-lisp-symbol-to-skip))
               (setq newline-betwen-semantic-lists t))
           (while lexemes
             (setq token (pop lexemes))
@@ -454,7 +481,7 @@ Return the position of last closing sexp."
                                                 tok-end
                                                 tok-start
                                                 format-type
-                                                (assoc first-token-name srefactor-elisp-symbol-to-skip)
+                                                (assoc first-token-name srefactor-lisp-symbol-to-skip)
                                                 recursive-p))))))
       (kill-buffer tmp-buf))))
 
@@ -463,7 +490,7 @@ Return the position of last closing sexp."
   (save-excursion
     (when (eq format-type 'multi-line)
       (goto-char beg)
-      (setq ignore-pair (assoc first-token-name srefactor-elisp-symbol-to-skip))
+      (setq ignore-pair (assoc first-token-name srefactor-lisp-symbol-to-skip))
       (setq ignore-num (or (cdr ignore-pair)
                            (get (intern-soft first-token-name) 'lisp-indent-function)))
       (cond
