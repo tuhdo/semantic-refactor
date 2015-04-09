@@ -136,6 +136,7 @@
   :group 'srefactor)
 
 (defcustom srefactor-clojure-symbol-to-skip '(("defn" . 1)
+                                              ("fn" . 1)
                                               (":require" . 1)
                                               (":import" . 1)
                                               ("defmacro" . 1))
@@ -376,9 +377,9 @@ Return the position of last closing sexp."
             (let* ((token-type (car token))
                    (tok-start (semantic-lex-token-start token))
                    (tok-end (semantic-lex-token-end token))
-                   (next-token (car lexemes))
+                   (next-token (semantic-lex-token-class lexemes))
                    (next-token-start (semantic-lex-token-start next-token))
-                   (next-token-type (car next-token))
+                   (next-token-type (semantic-lex-token-class next-token))
                    (next-token-str (if next-token
                                        (buffer-substring-no-properties
                                         (semantic-lex-token-start next-token)
