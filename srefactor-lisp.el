@@ -158,10 +158,12 @@
   (let ((cur-pos (point))
         (buf-content (buffer-substring-no-properties (point-min) (point-max)))
         (tmp (generate-new-buffer "easdf"))
-        (cur-major-mode major-mode))
+        (cur-major-mode major-mode)
+        (cur-indent-mode indent-tab-mode))
     (setq buf-content (with-current-buffer tmp
                         (semantic-default-elisp-setup)
                         (emacs-lisp-mode)
+                        (setq indent-tabs-mode cur-indent-mode)
                         (semantic-lex-init)
                         (insert buf-content)
                         (goto-char (point-max))
@@ -196,12 +198,14 @@
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (cur-indent-mode indent-tab-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
       (setq content (with-temp-buffer
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
+                      (setq indent-tabs-mode cur-indent-mode)
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -235,12 +239,14 @@ is inserted."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (cur-indent-mode indent-tab-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
           (setq content (with-temp-buffer
                           (semantic-default-elisp-setup)
                           (emacs-lisp-mode)
+                          (setq indent-tabs-mode cur-indent-mode)
                           (semantic-lex-init)
                           (insert content)
                           (srefactor-one-or-multi-lines (point-min)
@@ -272,12 +278,14 @@ into one line separated each one by a space."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
+         (cur-indent-mode indent-tab-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
       (setq content (with-temp-buffer
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
+                      (setq indent-tabs-mode cur-indent-mode)
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
