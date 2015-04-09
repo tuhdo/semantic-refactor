@@ -139,6 +139,7 @@
                                               ("fn" . 1)
                                               (":require" . 1)
                                               (":import" . 1)
+                                              ("catch" . 2)
                                               ("defmacro" . 1))
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting a newline. This will be merged
