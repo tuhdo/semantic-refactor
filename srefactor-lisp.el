@@ -217,7 +217,9 @@
                       (srefactor--appropriate-major-mode cur-major-mode)
                       (indent-region (point-min)
                                      (point-max))
-                      (buffer-substring-no-properties (point-min) (point-max))))
+                      (buffer-substring-no-properties
+                       (point-min)
+                       (point-max))))
       (kill-region beg end)
       (insert content)
       (goto-char orig-point))))
@@ -359,7 +361,11 @@ Return the position of last closing sexp."
                                              (semantic-lex-token-start next-next-token)
                                              (semantic-lex-token-end next-next-token))
                                           ""))
-                   comment-token comment-start comment-end comment-content
+                   (cur-buf (current-buffer))
+                   comment-token
+                   comment-start
+                   comment-end
+                   comment-content
                    next-token-real-line
                    tok-real-line
                    comment-real-line-start
@@ -384,7 +390,7 @@ Return the position of last closing sexp."
                     (insert "\n" comment-content))
                    (t))
                   (when (= next-token-real-line comment-real-line-end)
-                      (insert "\n")))
+                    (insert "\n")))
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
@@ -423,30 +429,11 @@ Return the position of last closing sexp."
                   (insert "\n"))))))
           (goto-char beg)
           (kill-region beg end)
-          (save-excursion
-            (insert (with-current-buffer tmp-buf
-                      (buffer-substring-no-properties
-                       (point-min)
-                       (point-max))))
-            (when (eq format-type 'multi-line)
-              (goto-char beg)
-              (setq ignore-pair (assoc first-token-name srefactor-elisp-symbol-to-skip))
-              (setq ignore-num (or (cdr ignore-pair)
-                                   (get (intern-soft first-token-name) 'lisp-indent-function)))
-              (cond
-               (ignore-num
-                (save-excursion
-                  (while (> ignore-num 0)
-                    (forward-line 1)
-                    (delete-indentation)
-                    (setq ignore-num (1- ignore-num)))))
-               ((not (or (member (car second-token) `(,(when newline-betwen-semantic-lists 'semantic-list)
-                                                      close-paren
-                                                      open-paren))
-                         (eq (semantic-lex-token-class first-token) 'semantic-list)))
-                (forward-line 1)
-                (delete-indentation)))))
-
+          (insert (with-current-buffer tmp-buf
+                    (buffer-substring-no-properties
+                     (point-min)
+                     (point-max))))
+          (srefactor--lex-merge-lines beg end)
           ;; descend into sub-sexpressions
           (when recursive-p
             (goto-char beg)
@@ -466,5 +453,27 @@ Return the position of last closing sexp."
                                                 (assoc first-token-name srefactor-elisp-symbol-to-skip)
                                                 recursive-p))))))
       (kill-buffer tmp-buf))))
+
+(defsubst srefactor--lex-merge-lines (beg end)
+  "Merge lines from BEG to END based on lexical analysis."
+  (save-excursion
+    (when (eq format-type 'multi-line)
+      (goto-char beg)
+      (setq ignore-pair (assoc first-token-name srefactor-elisp-symbol-to-skip))
+      (setq ignore-num (or (cdr ignore-pair)
+                           (get (intern-soft first-token-name) 'lisp-indent-function)))
+      (cond
+       (ignore-num
+        (save-excursion
+          (while (> ignore-num 0)
+            (forward-line 1)
+            (delete-indentation)
+            (setq ignore-num (1- ignore-num)))))
+       ((not (or (member (car second-token) `(,(when newline-betwen-semantic-lists 'semantic-list)
+                                              close-paren
+                                              open-paren))
+                 (eq (semantic-lex-token-class first-token) 'semantic-list)))
+        (forward-line 1)
+        (delete-indentation))))))
 
 (provide 'srefactor-lisp)
