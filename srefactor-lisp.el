@@ -443,7 +443,7 @@ Return the position of last closing sexp."
                   (pop lexemes))
                  ((and (eq token-type 'symbol)
                        (not (equal token-str first-token-name))
-                       ;; (eq orig-format-type 'multi-line)
+                       (eq orig-format-type 'multi-line)
                        (string-match ":.*" token-str))
                   (insert " " next-token-str)
                   (setq next-token (pop lexemes))
