@@ -159,7 +159,7 @@
         (buf-content (buffer-substring-no-properties (point-min) (point-max)))
         (tmp (generate-new-buffer "easdf"))
         (cur-major-mode major-mode)
-        (cur-indent-mode indent-tab-mode))
+        (cur-indent-mode indent-tabs-mode))
     (setq buf-content (with-current-buffer tmp
                         (semantic-default-elisp-setup)
                         (emacs-lisp-mode)
@@ -198,7 +198,7 @@
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
-         (cur-indent-mode indent-tab-mode)
+         (cur-indent-mode indent-tabs-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
@@ -239,7 +239,7 @@ is inserted."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
-         (cur-indent-mode indent-tab-mode)
+         (cur-indent-mode indent-tabs-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
@@ -278,7 +278,7 @@ into one line separated each one by a space."
                 (goto-char beg)
                 (forward-sexp)
                 (point)))
-         (cur-indent-mode indent-tab-mode)
+         (cur-indent-mode indent-tabs-mode)
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
