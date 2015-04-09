@@ -223,7 +223,7 @@
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
                       (setq srefactor-lisp-symbol-to-skip
-                              (srefactor--define-skip-list-for-mode cur-major-mode))
+                            (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -265,30 +265,30 @@ is inserted."
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
-          (setq content (with-temp-buffer
-                          (semantic-default-elisp-setup)
-                          (emacs-lisp-mode)
-                          (setq indent-tabs-mode cur-indent-mode)
-                          (setq srefactor-lisp-symbol-to-skip
-                              (srefactor--define-skip-list-for-mode cur-major-mode))
-                          (semantic-lex-init)
-                          (insert content)
-                          (srefactor-one-or-multi-lines (point-min)
-                                                        (point-max)
-                                                        (point-min)
-                                                        'multi-line
-                                                        nil
-                                                        t)
-                          (srefactor--appropriate-major-mode cur-major-mode)
-                          (setq srefactor-lisp-symbol-to-skip orig-skip-list)
-                          (indent-region (point-min)
-                                         (point-max))
-                          (buffer-substring-no-properties
-                           (point-min)
-                           (point-max))))
-          (kill-region beg end)
-          (insert content)
-          (goto-char orig-point))))
+      (setq content (with-temp-buffer
+                      (semantic-default-elisp-setup)
+                      (emacs-lisp-mode)
+                      (setq indent-tabs-mode cur-indent-mode)
+                      (setq srefactor-lisp-symbol-to-skip
+                            (srefactor--define-skip-list-for-mode cur-major-mode))
+                      (semantic-lex-init)
+                      (insert content)
+                      (srefactor-one-or-multi-lines (point-min)
+                                                    (point-max)
+                                                    (point-min)
+                                                    'multi-line
+                                                    nil
+                                                    t)
+                      (srefactor--appropriate-major-mode cur-major-mode)
+                      (setq srefactor-lisp-symbol-to-skip orig-skip-list)
+                      (indent-region (point-min)
+                                     (point-max))
+                      (buffer-substring-no-properties
+                       (point-min)
+                       (point-max))))
+      (kill-region beg end)
+      (insert content)
+      (goto-char orig-point))))
 
 (defun srefactor-lisp-one-line (recursive-p)
   "Transform all sub-sexpressions current sexpression at point
@@ -313,7 +313,7 @@ into one line separated each one by a space."
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
                       (setq srefactor-lisp-symbol-to-skip
-                              (srefactor--define-skip-list-for-mode cur-major-mode))
+                            (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
