@@ -169,11 +169,10 @@
   (interactive)
   (let ((cur-pos (point))
         (buf-content (buffer-substring-no-properties (point-min) (point-max)))
-        (tmp (generate-new-buffer "easdf"))
         (cur-major-mode major-mode)
         (orig-skip-list srefactor-lisp-symbol-to-skip)
         (cur-indent-mode indent-tabs-mode))
-    (setq buf-content (with-current-buffer tmp
+    (setq buf-content (with-temp-buffer
                         (semantic-default-elisp-setup)
                         (emacs-lisp-mode)
                         (setq indent-tabs-mode cur-indent-mode)
