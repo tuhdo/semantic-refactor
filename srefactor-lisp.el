@@ -257,7 +257,7 @@ is inserted."
   (interactive)
   (let* ((orig-point (point))
          (beg (save-excursion
-                (unless (looking-at "(")
+                (unless (looking-at "[({[]")
                   (backward-up-list))
                 (point)))
          (end (save-excursion
@@ -301,7 +301,7 @@ into one line separated each one by a space."
   (interactive "P")
   (let* ((orig-point (point))
          (beg (save-excursion
-                (unless (looking-at "(")
+                (unless (looking-at "[({[]")
                   (backward-up-list))
                 (point)))
          (end (save-excursion
