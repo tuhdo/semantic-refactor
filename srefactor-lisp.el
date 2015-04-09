@@ -238,26 +238,27 @@ is inserted."
          (cur-major-mode major-mode)
          (content (buffer-substring-no-properties beg end)))
     (progn
-          (setq content (with-temp-buffer
-                          (semantic-default-elisp-setup)
-                          (emacs-lisp-mode)
-                          (semantic-lex-init)
-                          (insert content)
-                          (srefactor-one-or-multi-lines (point-min)
-                                                        (point-max)
-                                                        (point-min)
-                                                        'multi-line
-                                                        nil
-                                                        t)
-                          ;; (srefactor--appropriate-major-mode cur-major-mode)
-                          (indent-region (point-min)
-                                         (point-max))
-                          (buffer-substring-no-properties
-                           (point-min)
-                           (point-max))))
-          (kill-region beg end)
-          (insert content)
-          (goto-char orig-point))))
+      (setq content (with-temp-buffer
+                      (semantic-default-elisp-setup)
+                      (emacs-lisp-mode)
+                      (semantic-lex-init)
+                      (insert content)
+                      (srefactor-one-or-multi-lines (point-min)
+                                                    (point-max)
+                                                    (point-min)
+                                                    'multi-line
+                                                    nil
+                                                    t)
+                      (buffer-substring-no-properties
+                       (point-min)
+                       (point-max))))
+      (kill-region beg end)
+      (insert content)
+      (goto-char beg)
+      (forward-sexp)
+      (setq end (point))
+      (indent-region beg end)
+      (goto-char orig-point))))
 
 (defun srefactor-lisp-one-line (recursive-p)
   "Transform all sub-sexpressions current sexpression at point
