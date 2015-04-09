@@ -176,8 +176,8 @@
                         (semantic-default-elisp-setup)
                         (emacs-lisp-mode)
                         (setq indent-tabs-mode cur-indent-mode)
-                        (setq srefactor-lisp-symbol-to-skip
-                              (srefactor--define-skip-list-for-mode cur-major-mode))
+                        ;; (setq srefactor-lisp-symbol-to-skip
+                        ;;       (srefactor--define-skip-list-for-mode cur-major-mode))
                         (semantic-lex-init)
                         (insert buf-content)
                         (goto-char (point-max))
@@ -222,8 +222,8 @@
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
-                      (setq srefactor-lisp-symbol-to-skip
-                            (srefactor--define-skip-list-for-mode cur-major-mode))
+                      ;; (setq srefactor-lisp-symbol-to-skip
+                      ;;       (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -269,8 +269,8 @@ is inserted."
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
-                      (setq srefactor-lisp-symbol-to-skip
-                            (srefactor--define-skip-list-for-mode cur-major-mode))
+                      ;; (setq srefactor-lisp-symbol-to-skip
+                      ;;       (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
@@ -312,8 +312,8 @@ into one line separated each one by a space."
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
-                      (setq srefactor-lisp-symbol-to-skip
-                            (srefactor--define-skip-list-for-mode cur-major-mode))
+                      ;; (setq srefactor-lisp-symbol-to-skip
+                      ;;       (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor-one-or-multi-lines (point-min)
