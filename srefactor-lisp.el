@@ -460,12 +460,15 @@ Return the position of last closing sexp."
                   (insert " "))
                  ((eq format-type 'multi-line)
                   (insert "\n"))))))
-          (goto-char beg)
-          (kill-region beg end)
-          (insert (with-current-buffer tmp-buf
-                    (buffer-substring-no-properties
-                     (point-min)
-                     (point-max))))
+          (save-excursion
+            (goto-char beg)
+            (kill-region beg end)
+            (insert (with-current-buffer tmp-buf
+                      (buffer-substring-no-properties
+                       (point-min)
+                       (point-max)))))
+          (forward-sexp)
+          (setq end (point))
           (srefactor--lex-merge-lines beg end)
           ;; descend into sub-sexpressions
           (when recursive-p
@@ -494,8 +497,7 @@ Return the position of last closing sexp."
     (when (eq format-type 'multi-line)
       (goto-char beg)
       (setq ignore-pair (assoc first-token-name srefactor-lisp-symbol-to-skip))
-      (setq ignore-num (or (cdr ignore-pair)
-                           (get (intern-soft first-token-name) 'lisp-indent-function)))
+      (setq ignore-num (cdr ignore-pair))
       (cond
        (ignore-num
         (save-excursion
