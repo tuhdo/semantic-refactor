@@ -336,6 +336,7 @@ Return the position of last closing sexp."
                    (tok-start (semantic-lex-token-start token))
                    (tok-end (semantic-lex-token-end token))
                    (next-token (car lexemes))
+                   (next-token-start (semantic-lex-token-start next-token))
                    (next-token-type (car next-token))
                    (next-token-str (if next-token
                                        (buffer-substring-no-properties
@@ -348,9 +349,33 @@ Return the position of last closing sexp."
                                             (buffer-substring-no-properties
                                              (semantic-lex-token-start next-next-token)
                                              (semantic-lex-token-end next-next-token))
-                                          "")))
+                                          ""))
+                   comment-token comment-start comment-end comment-content
+                   next-token-real-line
+                   tok-real-line
+                   comment-real-line-start
+                   comment-real-line-end)
+              (when (and tok-end next-token-start)
+                (setq comment-token (car (semantic-comment-lexer tok-end next-token-start)))
+                (when comment-token
+                  (setq comment-start (semantic-lex-token-start comment-token))
+                  (setq comment-end (semantic-lex-token-end comment-token))
+                  (setq comment-content (buffer-substring-no-properties comment-start comment-end))
+                  (setq token-real-line (line-number-at-pos tok-end))
+                  (setq next-token-real-line (line-number-at-pos next-token-start))
+                  (setq comment-real-line-start (line-number-at-pos comment-start))
+                  (setq comment-real-line-end (line-number-at-pos comment-end))))
               (with-current-buffer tmp-buf
                 (insert token-str)
+                (when comment-token
+                  (cond
+                   ((= token-real-line comment-real-line-start)
+                    (insert " " comment-content))
+                   ((not (= token-real-line comment-real-line-start))
+                    (insert "\n" comment-content))
+                   (t))
+                  (when (= next-token-real-line comment-real-line-end)
+                      (insert "\n")))
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
