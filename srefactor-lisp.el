@@ -405,8 +405,7 @@ Return the position of last closing sexp."
                   (insert " " next-token-str)
                   (pop lexemes))
                  ((eq token-type 'symbol)
-                  (srefactor--lisp-symbol-formatter)
-                  )
+                  (srefactor--lisp-symbol-formatter))
                  ((eq format-type 'one-line)
                   (insert " "))
                  ((eq format-type 'multi-line)
@@ -421,6 +420,7 @@ Return the position of last closing sexp."
           (forward-sexp)
           (setq end (point))
           (srefactor--lex-merge-lines beg end)
+
           ;; descend into sub-sexpressions
           (goto-char beg)
           (forward-sexp)
@@ -477,7 +477,7 @@ function `srefactor-one-or-multi-lines'"
    ((eq format-type 'multi-line)
     (insert "\n"))))
 
-(defun srefactor--lisp-comment-formatter (tok-end next-tok-start src-buf &optional dest-buf)
+(defsubst srefactor--lisp-comment-formatter (tok-end next-tok-start src-buf &optional dest-buf)
   "Collect comments between TOK-END and NEXT-TOK-START in SRC-BUF and insert into DEST-BUF.
 TOK-END is the end of current token in formatting.
 NEXT-TOK-START is the starat of next token to be analyzed.
