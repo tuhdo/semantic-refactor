@@ -454,7 +454,14 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 (defsubst srefactor--lisp-punctuation-formatter ()
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
-  "")
+  (let (token token-str)
+    (while (srefactor--lisp-token-in-punctuation-p (setq token (pop lexemes)))
+      (setq token-str (with-current-buffer cur-buf
+                        (buffer-substring-no-properties (semantic-lex-token-start token)
+                                                        (semantic-lex-token-end token))))
+      (insert token-str))
+    (when token
+      (push token lexemes))))
 
 (defsubst srefactor--lisp-symbol-formatter ()
   " Make use of dynamic scope of its parent
@@ -521,25 +528,29 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
            (t)))))))
 
 (defsubst srefactor--lisp-oneline-formatter ()
-  (insert " "))
+  (unless (srefactor--lisp-token-in-punctuation-p token)
+    (insert " ")))
 
 (defsubst srefactor--lisp-multiline-formatter ()
   (cond
+   ((eq token-type 'semantic-list)
+    (unless (srefactor--lisp-token-in-punctuation-p (car lexemes))
+      (insert "\n")))
    ((and (equal first-token-name token-str)
-         (member first-token-name srefactor-lisp-symbol-to-skip))
+         (srefactor--lisp-token-name-in-skip-list-p first-token-name))
     (insert " ")
     (when (and ignore-num
                (= ignore-num 0))
       (delete-char -1)
       (insert "\n")
-      (setq ignore-num (1- ignore-num)
-            )))
+      (setq ignore-num (1- ignore-num))))
    ((or (null ignore-num)
         (= ignore-num 0))
     (insert "\n"))
    (ignore-num
     (while (> ignore-num 0)
-      (insert " ")
+      (unless (srefactor--lisp-token-in-punctuation-p token)
+        (insert " "))
       (setq next-token (pop lexemes))
       (setq next-token-type (semantic-lex-token-class next-token))
       (setq next-token-str (with-current-buffer cur-buf
@@ -547,7 +558,7 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
                                                              (semantic-lex-token-end next-token))))
       (insert next-token-str)
       (setq ignore-num (1- ignore-num)))
-    (if (member next-token-type '(open-paren close-paren punctuation))
+    (if (srefactor--lisp-token-paren-p (car lexemes))
         (srefactor--lisp-punctuation-formatter)
       (insert "\n"))
     (setq ignore-num nil))))
