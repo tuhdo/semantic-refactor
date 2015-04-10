@@ -485,25 +485,30 @@ Return the position of last closing sexp."
           (setq end (point))
           (srefactor--lex-merge-lines beg end)
           ;; descend into sub-sexpressions
+          (goto-char beg)
+          (forward-sexp)
+          (setq end (point))
+          (setq lexemes (semantic-emacs-lisp-lexer beg end 1))
+          (nreverse lexemes)
           (when recursive-p
-            (goto-char beg)
-            (forward-sexp)
-            (setq end (point))
-            (setq lexemes (semantic-emacs-lisp-lexer beg end 1))
-            (dolist (token (nreverse lexemes))
-              (let ((tok-start (semantic-lex-token-start token))
-                    (tok-end (semantic-lex-token-end token))
-                    tok-str)
-                (when (and (eq (car token) 'semantic-list)
-                           (> (- tok-end tok-start) 2))
-                  (goto-char (semantic-lex-token-start token))
-                  (srefactor-one-or-multi-lines tok-start
-                                                tok-end
-                                                tok-start
-                                                format-type
-                                                (assoc tok-str srefactor-lisp-symbol-to-skip)
-                                                recursive-p))))))
+            (srefactor--lisp-visit-semantic-list-lex lexemes)))
       (kill-buffer tmp-buf))))
+
+(defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
+  "Visit and format all sub-sexpressions (semantic list) in LEXEMES."
+  (dolist (token lexemes)
+    (let ((tok-start (semantic-lex-token-start token))
+          (tok-end (semantic-lex-token-end token))
+          tok-str)
+      (when (and (eq (car token) 'semantic-list)
+                 (> (- tok-end tok-start) 2))
+        (goto-char (semantic-lex-token-start token))
+        (srefactor-one-or-multi-lines tok-start
+                                      tok-end
+                                      tok-start
+                                      format-type
+                                      (assoc tok-str srefactor-lisp-symbol-to-skip)
+                                      recursive-p)))))
 
 (defsubst srefactor--lex-merge-lines (beg end)
   "Merge lines from BEG to END based on lexical analysis."
