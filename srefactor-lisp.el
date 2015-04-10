@@ -388,13 +388,6 @@ Return the position of last closing sexp."
                                         (semantic-lex-token-start next-token)
                                         (semantic-lex-token-end next-token))
                                      ""))
-                   (next-next-token (cadr lexemes))
-                   (next-next-token-type (car next-next-token))
-                   (next-next-token-str (if next-next-token
-                                            (buffer-substring-no-properties
-                                             (semantic-lex-token-start next-next-token)
-                                             (semantic-lex-token-end next-next-token))
-                                          ""))
                    (cur-buf (current-buffer))
                    comment-token
                    comment-start
@@ -435,7 +428,7 @@ Return the position of last closing sexp."
                                      (semantic-lex-token-start token)
                                      (1+ (semantic-lex-token-end token))))
                   (setq first-token-name (concat token-str next-token-str))
-                  (setq second-token next-next-token)
+                  (setq second-token (cadr lexemes))
                   (when (eq (semantic-lex-token-class second-token) 'semantic-list)
                     (insert "\n"))
                   (pop lexemes))
