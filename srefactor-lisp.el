@@ -136,14 +136,17 @@
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
 
-(defcustom srefactor-clojure-symbol-to-skip '(("defn" . 1)
+(defcustom srefactor-clojure-symbol-to-skip '(
                                               ("fn" . 1)
                                               ("ns" . 1)
                                               (":require" . 1)
                                               (":import" . 1)
                                               ("struct-map" . 1)
+                                              ("defmacro" . 1)
+                                              ("binding" . 1)
+                                              ("with-bindings" . 1)
                                               ("catch" . 2)
-                                              ("defmacro" . 1))
+                                              ("defn" . 2))
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting a newline. This will be merged
   with `srefactor-lisp-symbol-to-skip'. Symbols in this list
@@ -403,7 +406,7 @@ Return the position of last closing sexp."
                       (eq token-type 'open-paren)
                       (eq token-type 'close-paren)
                       (eq next-token-type 'close-paren))
-                  "")
+                  (srefactor--lisp-punctuation-formatter))
                  ((equal token-str ".")
                   (insert " " next-token-str)
                   (pop lexemes))
@@ -413,8 +416,8 @@ Return the position of last closing sexp."
                   (srefactor--lisp-oneline-formatter))
                  ((eq format-type 'multi-line)
                   (srefactor--lisp-multiline-formatter))))))
+
           (save-excursion
-            (goto-char beg)
             (kill-region beg end)
             (insert (with-current-buffer tmp-buf
                       (buffer-substring-no-properties
@@ -428,14 +431,12 @@ Return the position of last closing sexp."
           (forward-sexp)
           (setq end (point))
           (setq lexemes (semantic-emacs-lisp-lexer beg end 1))
-          (nreverse lexemes)
-          (message "lexemes: %s" lexemes)
           (when recursive-p
-            (srefactor--lisp-visit-semantic-list-lex lexemes)))
+            (srefactor--lisp-visit-semantic-list-lex (nreverse lexemes))))
       (kill-buffer tmp-buf))))
 
 (defsubst srefactor--lisp-number-formatter ()
-  " Make use of dynamic scope of its parent
+  "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
   (goto-char (semantic-lex-token-end token))
   (insert next-token-str " ")
@@ -447,6 +448,11 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (when (eq (semantic-lex-token-class second-token) 'semantic-list)
     (insert "\n"))
   (pop lexemes))
+
+(defsubst srefactor--lisp-punctuation-formatter ()
+  "Make use of dynamic scope of its parent
+function `srefactor--lisp-format-one-or-multi-lines'"
+  "")
 
 (defsubst srefactor--lisp-symbol-formatter ()
   " Make use of dynamic scope of its parent
@@ -515,16 +521,19 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
 (defsubst srefactor--lisp-oneline-formatter ()
   (insert " "))
 
-(defun srefactor--lisp-multiline-formatter ()
+(defsubst srefactor--lisp-multiline-formatter ()
   (cond
-   ((equal first-token-name token-str)
+   ((and (equal first-token-name token-str)
+         (member first-token-name srefactor-lisp-symbol-to-skip))
     (insert " ")
-    (when ignore-num
-      (when (= ignore-num 0)
-        (delete-char -1)
-        (insert "\n"))
-      (setq ignore-num (1- ignore-num))))
-   ((or (null ignore-num)  (= ignore-num 0))
+    (when (and ignore-num
+               (= ignore-num 0))
+      (delete-char -1)
+      (insert "\n")
+      (setq ignore-num (1- ignore-num)
+            )))
+   ((or (null ignore-num)
+        (= ignore-num 0))
     (insert "\n"))
    (ignore-num
     (while (> ignore-num 0)
@@ -535,7 +544,11 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
                                                              (semantic-lex-token-end next-token))))
       (insert next-token-str)
       (setq ignore-num (1- ignore-num)))
-    (insert "\n")
+    ;; (message "next-token-type: %s" next-token-type)
+    ;; (message "next-token-str: %s" next-token-str)
+    (unless (member (semantic-lex-token-class (car lexemes))
+                    '(open-paren close-paren punctuation))
+      (insert "\n"))
     (setq ignore-num nil))))
 
 (defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
