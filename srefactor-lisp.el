@@ -145,6 +145,7 @@
                                               ("defmacro" . 1)
                                               ("binding" . 1)
                                               ("with-bindings" . 1)
+                                              ("doseq" . 1)
                                               ("catch" . 2)
                                               ("defn" . 2))
   "A list of pairs of a symbol and a number that denotes how many
@@ -539,15 +540,14 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
     (while (> ignore-num 0)
       (insert " ")
       (setq next-token (pop lexemes))
+      (setq next-token-type (semantic-lex-token-class next-token))
       (setq next-token-str (with-current-buffer cur-buf
                              (buffer-substring-no-properties (semantic-lex-token-start next-token)
                                                              (semantic-lex-token-end next-token))))
       (insert next-token-str)
       (setq ignore-num (1- ignore-num)))
-    ;; (message "next-token-type: %s" next-token-type)
-    ;; (message "next-token-str: %s" next-token-str)
-    (unless (member (semantic-lex-token-class (car lexemes))
-                    '(open-paren close-paren punctuation))
+    (if (member next-token-type '(open-paren close-paren punctuation))
+        (srefactor--lisp-punctuation-formatter)
       (insert "\n"))
     (setq ignore-num nil))))
 
