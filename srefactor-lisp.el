@@ -112,6 +112,7 @@
                                            ("assoc" . 2)
                                            ("defun" . 2)
                                            ("defclass" . 2)
+                                           ("defstruct" . 2)
                                            ("defmacro" . 2)
                                            ("defsubst" . 2)
                                            ("defface" . 2)
@@ -139,6 +140,7 @@
                                               ("fn" . 1)
                                               (":require" . 1)
                                               (":import" . 1)
+                                              ("struct-map" . 1)
                                               ("catch" . 2)
                                               ("defmacro" . 1))
   "A list of pairs of a symbol and a number that denotes how many
