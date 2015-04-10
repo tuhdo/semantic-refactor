@@ -382,7 +382,7 @@ Return the position of last closing sexp."
               (setq token (srefactor--lisp-forward-token))
               (with-current-buffer tmp-buf
                 (insert token-str)
-                (srefactor--lisp-comment-formatter)
+                ;; (srefactor--lisp-comment-formatter)
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
@@ -500,8 +500,10 @@ function `srefactor--lisp-format-one-or-multi-lines'"
         comment-real-line-start
         comment-real-line-end)
     (when (and tok-end next-token-start)
-      (setq comment-token (with-current-buffer cur-buf
-                            (car (semantic-comment-lexer tok-end next-token-start))))
+      (setq comment-token (with-current-buffer cur-buf   ;; asdf
+                            (condition-case nil
+                                (car (semantic-comment-lexer tok-end next-token-start))
+                              (error nil))))
       (when comment-token
         (setq comment-content (with-current-buffer cur-buf
                                 ;; set values inside the buffer to avoid global variable
@@ -530,25 +532,28 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 
 (defsubst srefactor--lisp-multiline-formatter ()
   (cond
+   (ignore-num (when (and (equal first-token-name token-str))
+                 (when (and ignore-num
+                            (= ignore-num 0))
+                   (setq ignore-num (1- ignore-num))))
+               (while (> ignore-num 0)
+                 (insert " ")
+                 (setq token (srefactor--lisp-forward-token))
+                 (insert token-str)
+                 (setq ignore-num (1- ignore-num)))
+               (if (srefactor--lisp-token-paren-p (car lexemes))
+                   (srefactor--lisp-punctuation-formatter)
+                 (insert "\n"))
+               (setq ignore-num nil))
+   ((and (equal first-token-name token-str)
+         (not (eq next-token-type 'semantic-list)))
+    (insert " "))
+   ((and (eq next-token-type 'semantic-list)
+         (eq token-type 'symbol))
+    (insert " "))
    ((eq token-type 'semantic-list)
-    (unless (srefactor--lisp-token-in-punctuation-p
-             (car lexemes))
+    (unless (srefactor--lisp-token-in-punctuation-p (car lexemes))
       (insert "\n")))
-   (ignore-num
-    (when (and (equal first-token-name token-str))
-      (when (and ignore-num
-                 (= ignore-num 0))
-        (setq ignore-num (1- ignore-num))))
-    (while (> ignore-num 0)
-      (insert " ")
-      (setq token (srefactor--lisp-forward-token))
-      (insert token-str)
-      (setq ignore-num (1- ignore-num)))
-    (if (srefactor--lisp-token-paren-p
-         (car lexemes))
-        (srefactor--lisp-punctuation-formatter)
-      (insert "\n"))
-    (setq ignore-num nil))
    ((or (null ignore-num)
         (= ignore-num 0))
     (insert "\n"))))
@@ -574,8 +579,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
         (srefactor--lisp-format-one-or-multi-lines tok-start
                                                    tok-end
                                                    tok-start
-                                                   format-type
-                                                   (assoc tok-str srefactor-lisp-symbol-to-skip)
+                                                   format-type (assoc tok-str srefactor-lisp-symbol-to-skip)
                                                    recursive-p)))))
 
 (provide 'srefactor-lisp)
