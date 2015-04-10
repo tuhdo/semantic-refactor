@@ -395,17 +395,7 @@ Return the position of last closing sexp."
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
-                  (goto-char (semantic-lex-token-end token))
-                  (insert next-token-str " ")
-                  (setq first-token (semantic-lex-token
-                                     'symbol
-                                     (semantic-lex-token-start token)
-                                     (1+ (semantic-lex-token-end token))))
-                  (setq first-token-name (concat token-str next-token-str))
-                  (setq second-token (cadr lexemes))
-                  (when (eq (semantic-lex-token-class second-token) 'semantic-list)
-                    (insert "\n"))
-                  (pop lexemes))
+                  (srefactor--lisp-number-formatter))
                  ((or (eq token-type 'punctuation)
                       (eq token-type 'open-paren)
                       (eq token-type 'close-paren)
@@ -415,27 +405,7 @@ Return the position of last closing sexp."
                   (insert " " next-token-str)
                   (pop lexemes))
                  ((eq token-type 'symbol)
-                  (cond
-                   ((eq format-type 'one-line)
-                    (insert " "))
-                   ((and (not (equal token-str first-token-name))
-                         (eq orig-format-type 'multi-line)
-                         (string-match ":.*" token-str))
-                    (insert " " next-token-str)
-                    (setq next-token (pop lexemes))
-                    (while (member next-token-type '(punctuation open-paren semantic-list))
-                      (setq next-token (pop lexemes))
-                      (setq next-token-type (semantic-lex-token-class next-token))
-                      (setq next-token-str (with-current-buffer cur-buf
-                                             (buffer-substring-no-properties (semantic-lex-token-start next-token)
-                                                                             (semantic-lex-token-end next-token))))
-                      (insert next-token-str))
-                    (when (not (eq (semantic-lex-token-class (car lexemes)) 'close-paren))
-                      (insert "\n")))
-                   ((equal token-str "~@")
-                    "")
-                   ((eq format-type 'multi-line)
-                    (insert "\n")))
+                  (srefactor--lisp-symbol-formatter)
                   )
                  ((eq format-type 'one-line)
                   (insert " "))
@@ -468,7 +438,46 @@ MAJOR-MODE is a symbol represents a major-mode."
   
   )
 
-(defsubst srefactor--lisp-comment-formatter (tok-end next-tok-start src-buf &optional dest-buf)
+(defsubst srefactor--lisp-number-formatter ()
+  " Make use of dynamic scope of its parent
+function `srefactor-one-or-multi-lines'"
+  (goto-char (semantic-lex-token-end token))
+  (insert next-token-str " ")
+  (setq first-token (semantic-lex-token 'symbol
+                                        (semantic-lex-token-start token)
+                                        (1+ (semantic-lex-token-end token))))
+  (setq first-token-name (concat token-str next-token-str))
+  (setq second-token (cadr lexemes))
+  (when (eq (semantic-lex-token-class second-token) 'semantic-list)
+    (insert "\n"))
+  (pop lexemes))
+
+(defsubst srefactor--lisp-symbol-formatter ()
+  " Make use of dynamic scope of its parent
+function `srefactor-one-or-multi-lines'"
+  (cond
+   ((eq format-type 'one-line)
+    (insert " "))
+   ((and (not (equal token-str first-token-name))
+         (eq orig-format-type 'multi-line)
+         (string-match ":.*" token-str))
+    (insert " " next-token-str)
+    (setq next-token (pop lexemes))
+    (while (member next-token-type '(punctuation open-paren semantic-list))
+      (setq next-token (pop lexemes))
+      (setq next-token-type (semantic-lex-token-class next-token))
+      (setq next-token-str (with-current-buffer cur-buf
+                             (buffer-substring-no-properties (semantic-lex-token-start next-token)
+                                                             (semantic-lex-token-end next-token))))
+      (insert next-token-str))
+    (when (not (eq (semantic-lex-token-class (car lexemes)) 'close-paren))
+      (insert "\n")))
+   ((equal token-str "~@")
+    "")
+   ((eq format-type 'multi-line)
+    (insert "\n"))))
+
+(defun srefactor--lisp-comment-formatter (tok-end next-tok-start src-buf &optional dest-buf)
   "Collect comments between TOK-END and NEXT-TOK-START in SRC-BUF and insert into DEST-BUF.
 TOK-END is the end of current token in formatting.
 NEXT-TOK-START is the starat of next token to be analyzed.
