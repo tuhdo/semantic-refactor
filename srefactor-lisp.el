@@ -552,6 +552,15 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
       (insert "\n"))
     (setq ignore-num nil))))
 
+(defsubst srefactor--lisp-token-name-in-skip-list-p (token-name)
+  (member token-name srefactor-lisp-symbol-to-skip))
+
+(defsubst srefactor--lisp-token-in-punctuation-p (token-type)
+  (member token-type '(open-paren close-paren punctuation)))
+
+(defsubst srefactor--lisp-token-paren-p (token)
+  (member (semantic-lex-token-class token) '(open-paren close-paren)))
+
 (defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
   "Visit and format all sub-sexpressions (semantic list) in LEXEMES."
   (dolist (token lexemes)
