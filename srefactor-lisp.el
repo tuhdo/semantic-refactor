@@ -124,6 +124,7 @@
                                            ("defcustom" . 2)
                                            ("setq" . 2)
                                            ("setq-default" . 2)
+                                           ("member" . 2)
                                            ("setf" . 2)
                                            (">" . 2)
                                            ("<" . 2)
