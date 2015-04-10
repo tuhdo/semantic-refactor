@@ -388,36 +388,10 @@ Return the position of last closing sexp."
                                         (semantic-lex-token-start next-token)
                                         (semantic-lex-token-end next-token))
                                      ""))
-                   (cur-buf (current-buffer))
-                   comment-token
-                   comment-start
-                   comment-end
-                   comment-content
-                   next-token-real-line
-                   tok-real-line
-                   comment-real-line-start
-                   comment-real-line-end)
-              (when (and tok-end next-token-start)
-                (setq comment-token (car (semantic-comment-lexer tok-end next-token-start)))
-                (when comment-token
-                  (setq comment-start (semantic-lex-token-start comment-token))
-                  (setq comment-end (semantic-lex-token-end comment-token))
-                  (setq comment-content (buffer-substring-no-properties comment-start comment-end))
-                  (setq token-real-line (line-number-at-pos tok-end))
-                  (setq next-token-real-line (line-number-at-pos next-token-start))
-                  (setq comment-real-line-start (line-number-at-pos comment-start))
-                  (setq comment-real-line-end (line-number-at-pos comment-end))))
+                   (cur-buf (current-buffer)))
               (with-current-buffer tmp-buf
                 (insert token-str)
-                (when comment-token
-                  (cond
-                   ((= token-real-line comment-real-line-start)
-                    (insert " " comment-content))
-                   ((not (= token-real-line comment-real-line-start))
-                    (insert "\n" comment-content))
-                   (t))
-                  (when (= next-token-real-line comment-real-line-end)
-                    (insert "\n")))
+                (srefactor--lisp-comment-formatter tok-end next-token-start cur-buf)
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
@@ -486,6 +460,48 @@ Return the position of last closing sexp."
           (when recursive-p
             (srefactor--lisp-visit-semantic-list-lex lexemes)))
       (kill-buffer tmp-buf))))
+
+(defsubst srefactor--lisp-format-dispatcher (form major-mode)
+  "Select a formatter based on FORM and MAJOR-MODE.
+FORM is the name of a form in string.
+MAJOR-MODE is a symbol represents a major-mode."
+  
+  )
+
+(defsubst srefactor--lisp-comment-formatter (tok-end next-tok-start src-buf &optional dest-buf)
+  "Collect comments between TOK-END and NEXT-TOK-START in SRC-BUF and insert into DEST-BUF.
+TOK-END is the end of current token in formatting.
+NEXT-TOK-START is the starat of next token to be analyzed.
+SRC-BUF is the buffer the token is in.
+DEST-BUF is the destination buffer to insert token in. If nil, use current buffer."
+  (let (comment-token
+        comment-start
+        comment-end
+        comment-content
+        next-token-real-line
+        tok-real-line
+        comment-real-line-start
+        comment-real-line-end)
+    (when (and tok-end next-token-start)
+      (setq comment-token (with-current-buffer src-buf
+                            (car (semantic-comment-lexer tok-end next-token-start))))
+      (when comment-token
+        (setq comment-start (semantic-lex-token-start comment-token))
+        (setq comment-end (semantic-lex-token-end comment-token))
+        (setq comment-content (with-current-buffer src-buf
+                                (buffer-substring-no-properties comment-start comment-end)))
+        (setq token-real-line (line-number-at-pos tok-end))
+        (setq next-token-real-line (line-number-at-pos next-token-start))
+        (setq comment-real-line-start (line-number-at-pos comment-start))
+        (setq comment-real-line-end (line-number-at-pos comment-end))
+        (with-current-buffer (if dest-buf dest-buf (current-buffer))
+          (cond
+           ((= token-real-line comment-real-line-start)
+            (insert " " comment-content))
+           ((not (= token-real-line comment-real-line-start))
+            (insert "\n" comment-content))
+           (t)))
+        ))))
 
 (defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
   "Visit and format all sub-sexpressions (semantic list) in LEXEMES."
