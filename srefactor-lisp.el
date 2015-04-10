@@ -449,6 +449,8 @@ Return the position of last closing sexp."
                   (pop lexemes))
                  ((eq token-type 'symbol)
                   (cond
+                   ((eq format-type 'one-line)
+                    (insert " "))
                    ((and (not (equal token-str first-token-name))
                          (eq orig-format-type 'multi-line)
                          (string-match ":.*" token-str))
@@ -465,8 +467,6 @@ Return the position of last closing sexp."
                       (insert "\n")))
                    ((equal token-str "~@")
                     "")
-                   ((eq format-type 'one-line)
-                    (insert " "))
                    ((eq format-type 'multi-line)
                     (insert "\n")))
                   )
