@@ -69,7 +69,7 @@
                                            ("save-excursion" . 0)
                                            ("unwind-protect" . 0)
                                            ("with-temp-buffer" . 0)
-                                           ("condition-case " . 1)
+                                           ("condition-case" . 1)
                                            ("with-current-buffer" . 1)
                                            ("let" . 1)
                                            ("let*" . 1)
@@ -382,7 +382,7 @@ Return the position of last closing sexp."
               (setq token (srefactor--lisp-forward-token))
               (with-current-buffer tmp-buf
                 (insert token-str)
-                ;; (srefactor--lisp-comment-formatter)
+                (srefactor--lisp-comment-formatter)
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
@@ -471,32 +471,26 @@ function `srefactor--lisp-format-one-or-multi-lines'"
     (srefactor--lisp-multiline-formatter))))
 
 (defsubst srefactor--lisp-forward-token ()
-  ;; dakishimete
   (setq token (pop lexemes))
   (when token
     (setq token-type (semantic-lex-token-class token))
+    (setq tok-start (semantic-lex-token-start token))
+    (setq tok-end (semantic-lex-token-end token))
     (setq token-str (with-current-buffer cur-buf
-                      (setq tok-start (semantic-lex-token-start token))
-                      (setq tok-end (semantic-lex-token-start token))
                       (buffer-substring-no-properties (semantic-lex-token-start token)
                                                       (semantic-lex-token-end token))))
     (setq next-token (car lexemes))
     (setq next-token-type (semantic-lex-token-class next-token))
+    (setq next-token-start (semantic-lex-token-start next-token))
+    (setq next-token-end (semantic-lex-token-end next-token))
     (setq next-token-str (if next-token
                              (with-current-buffer cur-buf
-                               (setq next-token-start (semantic-lex-token-start next-token))
-                               (setq next-token-end (semantic-lex-token-end next-token))
                                (buffer-substring-no-properties (semantic-lex-token-start next-token)
                                                                (semantic-lex-token-end next-token)))
                            ""))
     token))
 
 (defsubst srefactor--lisp-comment-formatter ()
-  "Collect comments between TOK-END and NEXT-TOK-START in SRC-BUF and insert into DEST-BUF.
-TOK-END is the end of current token in formatting.
-NEXT-TOK-START is the starat of next token to be analyzed.
-SRC-BUF is the buffer the token is in.
-DEST-BUF is the destination buffer to insert token in. If nil, use current buffer."
   (let (comment-token
         comment-start
         comment-end
@@ -515,10 +509,10 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
                                 (setq comment-end (semantic-lex-token-end comment-token))
                                 (buffer-substring-no-properties comment-start comment-end)))
         (setq token-real-line (line-number-at-pos tok-end))
-        (setq next-token-real-line (line-number-at-pos next-tok-start))
+        (setq next-token-real-line (line-number-at-pos next-token-start))
         (setq comment-real-line-start (line-number-at-pos comment-start))
         (setq comment-real-line-end (line-number-at-pos comment-end))
-        (with-current-buffer (if dest-buf dest-buf (current-buffer))
+        (with-current-buffer cur-buf
           (cond
            ;; if comment token is next to a string, chances are it is below the
            ;; docstring. Add a newlien in between.
