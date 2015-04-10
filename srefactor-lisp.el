@@ -458,8 +458,6 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   " Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
   (cond
-   ((eq format-type 'one-line)
-    (srefactor--lisp-oneline-formatter))
    ((and (not (equal token-str first-token-name))
          (eq orig-format-type 'multi-line)
          (string-match ":.*" token-str))
@@ -474,6 +472,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
       (insert next-token-str))
     (when (not (eq (semantic-lex-token-class (car lexemes)) 'close-paren))
       (insert "\n")))
+   ((eq format-type 'one-line)
+    (srefactor--lisp-oneline-formatter))
    ((equal token-str "~@")
     "")
    ((eq format-type 'multi-line)
