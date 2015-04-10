@@ -199,11 +199,11 @@
                                        (forward-sexp)
                                        (point))))
                             (srefactor--lisp-format-one-or-multi-lines beg
-                                                          end
-                                                          beg
-                                                          'multi-line
-                                                          nil
-                                                          t)
+                                                                       end
+                                                                       beg
+                                                                       'multi-line
+                                                                       nil
+                                                                       t)
                             (goto-char beg)))
                         (srefactor--appropriate-major-mode cur-major-mode)
                         (indent-region (point-min) (point-max))
@@ -239,11 +239,11 @@
                       (semantic-lex-init)
                       (insert content)
                       (srefactor--lisp-format-one-or-multi-lines (point-min)
-                                                    (point-max)
-                                                    (point-min)
-                                                    'multi-line
-                                                    nil
-                                                    t)
+                                                                 (point-max)
+                                                                 (point-min)
+                                                                 'multi-line
+                                                                 nil
+                                                                 t)
                       (srefactor--appropriate-major-mode cur-major-mode)
                       (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                       (indent-region (point-min)
@@ -285,11 +285,11 @@ is inserted."
                       (semantic-lex-init)
                       (insert content)
                       (srefactor--lisp-format-one-or-multi-lines (point-min)
-                                                    (point-max)
-                                                    (point-min)
-                                                    'multi-line
-                                                    nil
-                                                    t)
+                                                                 (point-max)
+                                                                 (point-min)
+                                                                 'multi-line
+                                                                 nil
+                                                                 t)
                       (srefactor--appropriate-major-mode cur-major-mode)
                       (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                       (buffer-substring-no-properties
@@ -330,11 +330,11 @@ into one line separated each one by a space."
                       (semantic-lex-init)
                       (insert content)
                       (srefactor--lisp-format-one-or-multi-lines (point-min)
-                                                    (point-max)
-                                                    (point-min)
-                                                    'one-line
-                                                    nil
-                                                    recursive-p)
+                                                                 (point-max)
+                                                                 (point-min)
+                                                                 'one-line
+                                                                 nil
+                                                                 recursive-p)
                       (srefactor--appropriate-major-mode cur-major-mode)
                       (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                       (indent-region (point-min)
@@ -362,6 +362,7 @@ Return the position of last closing sexp."
          (second-token (caddr lexemes))
          (tmp-buf (generate-new-buffer (make-temp-name "")))
          (orig-format-type format-type)
+         (cur-buf (current-buffer))
          token-str
          ignore-pair
          ignore-num
@@ -375,31 +376,13 @@ Return the position of last closing sexp."
               (setq newline-betwen-semantic-lists t))
           (setq ignore-pair (assoc first-token-name srefactor-lisp-symbol-to-skip))
           (setq ignore-num (cdr ignore-pair))
+
           (while lexemes
-            (setq token (pop lexemes))
-            (setq token-str (if token
-                                (buffer-substring-no-properties
-                                 (semantic-lex-token-start token)
-                                 (semantic-lex-token-end token))
-                              ""))
-            (when (eq (semantic-lex-token-class token) 'punctuation)
-              (setq first-token (car lexemes))
-              (setq second-token (cadr lexemes)))
-            (let* ((token-type (car token))
-                   (tok-start (semantic-lex-token-start token))
-                   (tok-end (semantic-lex-token-end token))
-                   (next-token (car lexemes))
-                   (next-token-start (semantic-lex-token-start next-token))
-                   (next-token-type (semantic-lex-token-class next-token))
-                   (next-token-str (if next-token
-                                       (buffer-substring-no-properties
-                                        (semantic-lex-token-start next-token)
-                                        (semantic-lex-token-end next-token))
-                                     ""))
-                   (cur-buf (current-buffer)))
+            (let* (token-type tok-start tok-end next-token next-token-start next-token-type next-token-str)
+              (setq token (srefactor--lisp-forward-token))
               (with-current-buffer tmp-buf
                 (insert token-str)
-                (srefactor--lisp-comment-formatter tok-end next-token-start cur-buf)
+                ;; (srefactor--lisp-comment-formatter)
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
@@ -411,14 +394,13 @@ Return the position of last closing sexp."
                   (srefactor--lisp-punctuation-formatter))
                  ((equal token-str ".")
                   (insert " " next-token-str)
-                  (pop lexemes))
+                  (srefactor--lisp-forward-token))
                  ((eq token-type 'symbol)
                   (srefactor--lisp-symbol-formatter))
                  ((eq format-type 'one-line)
                   (srefactor--lisp-oneline-formatter))
                  ((eq format-type 'multi-line)
                   (srefactor--lisp-multiline-formatter))))))
-
           (save-excursion
             (kill-region beg end)
             (insert (with-current-buffer tmp-buf
@@ -449,17 +431,21 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (setq second-token (cadr lexemes))
   (when (eq (semantic-lex-token-class second-token) 'semantic-list)
     (insert "\n"))
-  (pop lexemes))
+  (srefactor--lisp-forward-token))
 
 (defsubst srefactor--lisp-punctuation-formatter ()
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
+  (setq first-token (car lexemes))
+  (setq second-token (cadr lexemes))
   (let (token token-str)
-    (while (srefactor--lisp-token-in-punctuation-p (setq token (pop lexemes)))
+    (while (srefactor--lisp-token-in-punctuation-p (setq token (srefactor--lisp-forward-token)))
       (setq token-str (with-current-buffer cur-buf
                         (buffer-substring-no-properties (semantic-lex-token-start token)
                                                         (semantic-lex-token-end token))))
-      (insert token-str))
+      (insert token-str)
+      ;; (srefactor--lisp-comment-formatter)
+      )
     (when token
       (push token lexemes))))
 
@@ -471,13 +457,9 @@ function `srefactor--lisp-format-one-or-multi-lines'"
          (eq orig-format-type 'multi-line)
          (string-match ":.*" token-str))
     (insert " " next-token-str)
-    (setq next-token (pop lexemes))
+    (setq next-token (srefactor--lisp-forward-token))
     (while (member next-token-type '(punctuation open-paren semantic-list))
-      (setq next-token (pop lexemes))
-      (setq next-token-type (semantic-lex-token-class next-token))
-      (setq next-token-str (with-current-buffer cur-buf
-                             (buffer-substring-no-properties (semantic-lex-token-start next-token)
-                                                             (semantic-lex-token-end next-token))))
+      (setq next-token (srefactor--lisp-forward-token))
       (insert next-token-str))
     (when (not (eq (semantic-lex-token-class (car lexemes)) 'close-paren))
       (insert "\n")))
@@ -488,7 +470,28 @@ function `srefactor--lisp-format-one-or-multi-lines'"
    ((eq format-type 'multi-line)
     (srefactor--lisp-multiline-formatter))))
 
-(defsubst srefactor--lisp-comment-formatter (tok-end next-tok-start src-buf &optional dest-buf)
+(defsubst srefactor--lisp-forward-token ()
+  ;; dakishimete
+  (setq token (pop lexemes))
+  (when token
+    (setq token-type (semantic-lex-token-class token))
+    (setq token-str (with-current-buffer cur-buf
+                      (setq tok-start (semantic-lex-token-start token))
+                      (setq tok-end (semantic-lex-token-start token))
+                      (buffer-substring-no-properties (semantic-lex-token-start token)
+                                                      (semantic-lex-token-end token))))
+    (setq next-token (car lexemes))
+    (setq next-token-type (semantic-lex-token-class next-token))
+    (setq next-token-str (if next-token
+                             (with-current-buffer cur-buf
+                               (setq next-token-start (semantic-lex-token-start next-token))
+                               (setq next-token-end (semantic-lex-token-end next-token))
+                               (buffer-substring-no-properties (semantic-lex-token-start next-token)
+                                                               (semantic-lex-token-end next-token)))
+                           ""))
+    token))
+
+(defsubst srefactor--lisp-comment-formatter ()
   "Collect comments between TOK-END and NEXT-TOK-START in SRC-BUF and insert into DEST-BUF.
 TOK-END is the end of current token in formatting.
 NEXT-TOK-START is the starat of next token to be analyzed.
@@ -503,10 +506,10 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
         comment-real-line-start
         comment-real-line-end)
     (when (and tok-end next-token-start)
-      (setq comment-token (with-current-buffer src-buf
+      (setq comment-token (with-current-buffer cur-buf
                             (car (semantic-comment-lexer tok-end next-token-start))))
       (when comment-token
-        (setq comment-content (with-current-buffer src-buf
+        (setq comment-content (with-current-buffer cur-buf
                                 ;; set values inside the buffer to avoid global variable
                                 (setq comment-start (semantic-lex-token-start comment-token))
                                 (setq comment-end (semantic-lex-token-end comment-token))
@@ -544,12 +547,8 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
         (setq ignore-num (1- ignore-num))))
     (while (> ignore-num 0)
       (insert " ")
-      (setq next-token (pop lexemes))
-      (setq next-token-type (semantic-lex-token-class next-token))
-      (setq next-token-str (with-current-buffer cur-buf
-                             (buffer-substring-no-properties (semantic-lex-token-start next-token)
-                                                             (semantic-lex-token-end next-token))))
-      (insert next-token-str)
+      (setq token (srefactor--lisp-forward-token))
+      (insert token-str)
       (setq ignore-num (1- ignore-num)))
     (if (srefactor--lisp-token-paren-p
          (car lexemes))
@@ -579,10 +578,10 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
                  (> (- tok-end tok-start) 2))
         (goto-char (semantic-lex-token-start token))
         (srefactor--lisp-format-one-or-multi-lines tok-start
-                                      tok-end
-                                      tok-start
-                                      format-type
-                                      (assoc tok-str srefactor-lisp-symbol-to-skip)
-                                      recursive-p)))))
+                                                   tok-end
+                                                   tok-start
+                                                   format-type
+                                                   (assoc tok-str srefactor-lisp-symbol-to-skip)
+                                                   recursive-p)))))
 
 (provide 'srefactor-lisp)
