@@ -479,23 +479,28 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
         comment-end
         comment-content
         next-token-real-line
-        tok-real-line
+        token-real-line
         comment-real-line-start
         comment-real-line-end)
     (when (and tok-end next-token-start)
       (setq comment-token (with-current-buffer src-buf
                             (car (semantic-comment-lexer tok-end next-token-start))))
       (when comment-token
-        (setq comment-start (semantic-lex-token-start comment-token))
-        (setq comment-end (semantic-lex-token-end comment-token))
         (setq comment-content (with-current-buffer src-buf
+                                ;; set values inside the buffer to avoid global variable
+                                (setq comment-start (semantic-lex-token-start comment-token))
+                                (setq comment-end (semantic-lex-token-end comment-token))
                                 (buffer-substring-no-properties comment-start comment-end)))
         (setq token-real-line (line-number-at-pos tok-end))
-        (setq next-token-real-line (line-number-at-pos next-token-start))
+        (setq next-token-real-line (line-number-at-pos next-tok-start))
         (setq comment-real-line-start (line-number-at-pos comment-start))
         (setq comment-real-line-end (line-number-at-pos comment-end))
         (with-current-buffer (if dest-buf dest-buf (current-buffer))
           (cond
+           ;; if comment token is next to a string, chances are it is below the
+           ;; docstring. Add a newlien in between.
+           ((eq token-type 'string)
+            (insert "\n" comment-content))
            ((= token-real-line comment-real-line-start)
             (insert " " comment-content))
            ((not (= token-real-line comment-real-line-start))
