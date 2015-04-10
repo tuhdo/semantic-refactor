@@ -534,23 +534,16 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
 (defsubst srefactor--lisp-multiline-formatter ()
   (cond
    ((eq token-type 'semantic-list)
-    (unless (srefactor--lisp-token-in-punctuation-p (car lexemes))
+    (unless (srefactor--lisp-token-in-punctuation-p
+             (car lexemes))
       (insert "\n")))
-   ((and (equal first-token-name token-str)
-         (srefactor--lisp-token-name-in-skip-list-p first-token-name))
-    (insert " ")
-    (when (and ignore-num
-               (= ignore-num 0))
-      (delete-char -1)
-      (insert "\n")
-      (setq ignore-num (1- ignore-num))))
-   ((or (null ignore-num)
-        (= ignore-num 0))
-    (insert "\n"))
    (ignore-num
+    (when (and (equal first-token-name token-str))
+      (when (and ignore-num
+                 (= ignore-num 0))
+        (setq ignore-num (1- ignore-num))))
     (while (> ignore-num 0)
-      (unless (srefactor--lisp-token-in-punctuation-p token)
-        (insert " "))
+      (insert " ")
       (setq next-token (pop lexemes))
       (setq next-token-type (semantic-lex-token-class next-token))
       (setq next-token-str (with-current-buffer cur-buf
@@ -558,10 +551,14 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
                                                              (semantic-lex-token-end next-token))))
       (insert next-token-str)
       (setq ignore-num (1- ignore-num)))
-    (if (srefactor--lisp-token-paren-p (car lexemes))
+    (if (srefactor--lisp-token-paren-p
+         (car lexemes))
         (srefactor--lisp-punctuation-formatter)
       (insert "\n"))
-    (setq ignore-num nil))))
+    (setq ignore-num nil))
+   ((or (null ignore-num)
+        (= ignore-num 0))
+    (insert "\n"))))
 
 (defsubst srefactor--lisp-token-name-in-skip-list-p (token-name)
   (member token-name srefactor-lisp-symbol-to-skip))
