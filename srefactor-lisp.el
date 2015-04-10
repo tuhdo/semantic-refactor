@@ -138,6 +138,7 @@
 
 (defcustom srefactor-clojure-symbol-to-skip '(("defn" . 1)
                                               ("fn" . 1)
+                                              ("ns" . 1)
                                               (":require" . 1)
                                               (":import" . 1)
                                               ("struct-map" . 1)
@@ -192,7 +193,7 @@
                                 (end (save-excursion
                                        (forward-sexp)
                                        (point))))
-                            (srefactor-one-or-multi-lines beg
+                            (srefactor--lisp-format-one-or-multi-lines beg
                                                           end
                                                           beg
                                                           'multi-line
@@ -232,7 +233,7 @@
                             (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
-                      (srefactor-one-or-multi-lines (point-min)
+                      (srefactor--lisp-format-one-or-multi-lines (point-min)
                                                     (point-max)
                                                     (point-min)
                                                     'multi-line
@@ -278,7 +279,7 @@ is inserted."
                       (setq srefactor-lisp-symbol-to-skip (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
-                      (srefactor-one-or-multi-lines (point-min)
+                      (srefactor--lisp-format-one-or-multi-lines (point-min)
                                                     (point-max)
                                                     (point-min)
                                                     'multi-line
@@ -323,7 +324,7 @@ into one line separated each one by a space."
                             (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
-                      (srefactor-one-or-multi-lines (point-min)
+                      (srefactor--lisp-format-one-or-multi-lines (point-min)
                                                     (point-max)
                                                     (point-min)
                                                     'one-line
@@ -340,7 +341,7 @@ into one line separated each one by a space."
       (insert content)
       (goto-char orig-point))))
 
-(defun srefactor-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
+(defun srefactor--lisp-format-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
   "Turn the current sexpression into one line/multi-line depends
 on the value of FORMAT-TYPE. If FORMAT-TYPE is 'one-line,
 transforms all sub-sexpressions of the same level into one
@@ -411,9 +412,7 @@ Return the position of last closing sexp."
                  ((eq format-type 'one-line)
                   (srefactor--lisp-oneline-formatter))
                  ((eq format-type 'multi-line)
-                  (message "it's multiline")
-                  (srefactor--lisp-multiline-formatter)))
-                )))
+                  (srefactor--lisp-multiline-formatter))))))
           (save-excursion
             (goto-char beg)
             (kill-region beg end)
@@ -423,20 +422,21 @@ Return the position of last closing sexp."
                        (point-max)))))
           (forward-sexp)
           (setq end (point))
-          
+
           ;; descend into sub-sexpressions
           (goto-char beg)
           (forward-sexp)
           (setq end (point))
           (setq lexemes (semantic-emacs-lisp-lexer beg end 1))
           (nreverse lexemes)
+          (message "lexemes: %s" lexemes)
           (when recursive-p
             (srefactor--lisp-visit-semantic-list-lex lexemes)))
       (kill-buffer tmp-buf))))
 
 (defsubst srefactor--lisp-number-formatter ()
   " Make use of dynamic scope of its parent
-function `srefactor-one-or-multi-lines'"
+function `srefactor--lisp-format-one-or-multi-lines'"
   (goto-char (semantic-lex-token-end token))
   (insert next-token-str " ")
   (setq first-token (semantic-lex-token 'symbol
@@ -450,7 +450,7 @@ function `srefactor-one-or-multi-lines'"
 
 (defsubst srefactor--lisp-symbol-formatter ()
   " Make use of dynamic scope of its parent
-function `srefactor-one-or-multi-lines'"
+function `srefactor--lisp-format-one-or-multi-lines'"
   (cond
    ((eq format-type 'one-line)
     (srefactor--lisp-oneline-formatter))
@@ -471,7 +471,7 @@ function `srefactor-one-or-multi-lines'"
    ((equal token-str "~@")
     "")
    ((eq format-type 'multi-line)
-     (srefactor--lisp-multiline-formatter))))
+    (srefactor--lisp-multiline-formatter))))
 
 (defsubst srefactor--lisp-comment-formatter (tok-end next-tok-start src-buf &optional dest-buf)
   "Collect comments between TOK-END and NEXT-TOK-START in SRC-BUF and insert into DEST-BUF.
@@ -513,14 +513,20 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
            (t)))))))
 
 (defsubst srefactor--lisp-oneline-formatter ()
-  (message "enter srefactor--lisp-one-or-multiline-formatter")
-  (message "formate-type: %s" format-type)
   (insert " "))
 
 (defun srefactor--lisp-multiline-formatter ()
-  (if (or (null ignore-num)
-          (= ignore-num 0))
-      (insert "\n")
+  (cond
+   ((equal first-token-name token-str)
+    (insert " ")
+    (when ignore-num
+      (when (= ignore-num 0)
+        (delete-char -1)
+        (insert "\n"))
+      (setq ignore-num (1- ignore-num))))
+   ((or (null ignore-num)  (= ignore-num 0))
+    (insert "\n"))
+   (ignore-num
     (while (> ignore-num 0)
       (insert " ")
       (setq next-token (pop lexemes))
@@ -530,7 +536,7 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
       (insert next-token-str)
       (setq ignore-num (1- ignore-num)))
     (insert "\n")
-    (setq ignore-num nil)))
+    (setq ignore-num nil))))
 
 (defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
   "Visit and format all sub-sexpressions (semantic list) in LEXEMES."
@@ -541,7 +547,7 @@ DEST-BUF is the destination buffer to insert token in. If nil, use current buffe
       (when (and (eq (car token) 'semantic-list)
                  (> (- tok-end tok-start) 2))
         (goto-char (semantic-lex-token-start token))
-        (srefactor-one-or-multi-lines tok-start
+        (srefactor--lisp-format-one-or-multi-lines tok-start
                                       tok-end
                                       tok-start
                                       format-type
