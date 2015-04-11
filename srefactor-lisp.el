@@ -377,7 +377,7 @@ Return the position of last closing sexp."
 
           (while lexemes
             (let* (token-type tok-start tok-end next-token next-token-start next-token-type next-token-str)
-              (setq token (srefactor--lisp-forward-token))
+              (srefactor--lisp-forward-token)
               (with-current-buffer tmp-buf
                 (insert token-str)
                 ;; (srefactor--lisp-comment-formatter)
@@ -437,7 +437,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 
   (let ((orig-token token)
         token token-str)
-    (while (srefactor--lisp-token-in-punctuation-p (setq token (srefactor--lisp-forward-token)))
+    (while (srefactor--lisp-token-in-punctuation-p (srefactor--lisp-forward-token))
       (insert token-str)
       ;; (srefactor--lisp-comment-formatter)
       )
@@ -536,7 +536,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                           (= ignore-num 0))
                      (setq ignore-num (1- ignore-num))))
                (while (> ignore-num 0)
-                 (setq token (srefactor--lisp-forward-token))
+                  (srefactor--lisp-forward-token)
                  (insert token-str)
                  (if (srefactor--lisp-token-in-punctuation-p token)
                      (srefactor--lisp-forward-first-second-token)
