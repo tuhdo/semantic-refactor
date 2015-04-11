@@ -537,14 +537,18 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 (defsubst srefactor--lisp-multiline-formatter ()
   (cond
    (ignore-num (when (and (equal first-token-name token-str))
-                 (when (and ignore-num
-                            (= ignore-num 0))
-                   (setq ignore-num (1- ignore-num))))
-               (while (> ignore-num 0)
                  (insert " ")
+                 (when (and ignore-num
+                          (= ignore-num 0))
+                     (setq ignore-num (1- ignore-num))))
+               (while (> ignore-num 0)
                  (setq token (srefactor--lisp-forward-token))
                  (insert token-str)
-                 (setq ignore-num (1- ignore-num)))
+                 (if (srefactor--lisp-token-in-punctuation-p token)
+                     (srefactor--lisp-forward-first-second-token)
+                   (setq ignore-num (1- ignore-num))
+                   (insert " ")))
+               (delete-char -1)
                (if (srefactor--lisp-token-paren-p (car lexemes))
                    (srefactor--lisp-punctuation-formatter)
                  (insert "\n"))
