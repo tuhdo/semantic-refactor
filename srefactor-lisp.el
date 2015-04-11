@@ -513,7 +513,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                                 ;; set values inside the buffer to avoid global variable
                                 (setq comment-start (semantic-lex-token-start comment-token))
                                 (setq comment-end (semantic-lex-token-end comment-token))
-                                (buffer-substring-no-properties comment-start comment-end)))p
+                                (buffer-substring-no-properties comment-start comment-end)))
         (setq token-real-line (line-number-at-pos tok-end))
         (setq next-token-real-line (line-number-at-pos next-token-start))
         (setq comment-real-line-start (line-number-at-pos comment-start))
