@@ -438,9 +438,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (let ((orig-token token)
         token token-str)
     (while (srefactor--lisp-token-in-punctuation-p (setq token (srefactor--lisp-forward-token)))
-      (setq token-str (srefactor--lisp-token-text token))
       (insert token-str)
-
       ;; (srefactor--lisp-comment-formatter)
       )
     (when (eq first-token-name (srefactor--lisp-token-text orig-token))
