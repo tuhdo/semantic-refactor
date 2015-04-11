@@ -456,9 +456,9 @@ function `srefactor--lisp-format-one-or-multi-lines'"
     (insert " " next-token-str)
     (setq next-token (srefactor--lisp-forward-token))
     (while (member next-token-type '(punctuation open-paren semantic-list))
-      (setq next-token (srefactor--lisp-forward-token))
-      (insert next-token-str))
-    (when (not (eq (semantic-lex-token-class (car lexemes)) 'close-paren))
+      (srefactor--lisp-forward-token)
+      (insert token-str))
+    (when (not (srefactor--lisp-token-paren-p next-token))
       (insert "\n")))
    ((eq format-type 'one-line)
     (srefactor--lisp-oneline-formatter))
@@ -564,15 +564,17 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (member token-name srefactor-lisp-symbol-to-skip))
 
 (defsubst srefactor--lisp-token-in-punctuation-p (token)
-  (member (semantic-lex-token-class token) '(punctuation)))
+  (member (semantic-lex-token-class token) '(open-paren close-paren punctuation)))
 
 (defsubst srefactor--lisp-token-paren-p (token)
   (member (semantic-lex-token-class token) '(open-paren close-paren)))
 
 (defsubst srefactor--lisp-token-text (token)
-  (with-current-buffer cur-buf
-    (buffer-substring-no-properties (semantic-lex-token-start token)
-                                    (semantic-lex-token-end token))))
+  (if token
+      (with-current-buffer cur-buf
+        (buffer-substring-no-properties (semantic-lex-token-start token)
+                                        (semantic-lex-token-end token)))
+    ""))
 
 (defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
   "Visit and format all sub-sexpressions (semantic list) in LEXEMES."
