@@ -60,9 +60,11 @@
 ;;; Code:
 (require 'semantic/bovine/el)
 
-;; (defcustom srefactor-newline-threshold 30
-;;   "After a token is inserted, if the length of current
-;;   S-EXPRESSION is greater than this value, start inserting a newline.")
+(defcustom srefactor-newline-threshold 80
+  "If a token is about to be inserted, if the current posistion
+  exceeds this threshold characters, insert the token in the next
+  line isntead. Note that this does not account for indentation
+  but the total number of characters in a line.")
 
 (defcustom srefactor-lisp-symbol-to-skip '(("progn" . 0)
                                            ("cond" . 0)
@@ -137,8 +139,7 @@
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
 
-(defcustom srefactor-clojure-symbol-to-skip '(
-                                              ("fn" . 1)
+(defcustom srefactor-clojure-symbol-to-skip '(("fn" . 1)
                                               ("ns" . 1)
                                               (":require" . 1)
                                               (":import" . 1)
@@ -531,17 +532,21 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 
 (defsubst srefactor--lisp-oneline-formatter ()
   (unless (srefactor--lisp-token-in-punctuation-p token)
-    (insert " ")))
+    (let ((distance (- (point) (line-beginning-position))))
+      (if (or (eq orig-format-type 'one-line)
+              (<= distance srefactor-newline-threshold))
+          (insert " ")
+        (insert "\n")))))
 
 (defsubst srefactor--lisp-multiline-formatter ()
   (cond
    (ignore-num (when (and (equal first-token-name token-str))
                  (insert " ")
                  (when (and ignore-num
-                          (= ignore-num 0))
-                     (setq ignore-num (1- ignore-num))))
+                            (= ignore-num 0))
+                   (setq ignore-num (1- ignore-num))))
                (while (> ignore-num 0)
-                  (srefactor--lisp-forward-token)
+                 (srefactor--lisp-forward-token)
                  (insert token-str)
                  (if (srefactor--lisp-token-in-punctuation-p token)
                      (srefactor--lisp-forward-first-second-token)
