@@ -511,24 +511,23 @@ function `srefactor--lisp-format-one-or-multi-lines'"
       (when comment-token
         (setq comment-content (with-current-buffer cur-buf
                                 ;; set values inside the buffer to avoid global variable
-                                (setq comment-start (semantic-lex-token-start comment-token))
-                                (setq comment-end (semantic-lex-token-end comment-token))
-                                (buffer-substring-no-properties comment-start comment-end)))
-        (setq token-real-line (line-number-at-pos tok-end))
-        (setq next-token-real-line (line-number-at-pos next-token-start))
-        (setq comment-real-line-start (line-number-at-pos comment-start))
-        (setq comment-real-line-end (line-number-at-pos comment-end))
-        (with-current-buffer cur-buf
-          (cond
-           ;; if comment token is next to a string, chances are it is below the
-           ;; docstring. Add a newlien in between.
-           ((eq token-type 'string)
-            (insert "\n" comment-content))
-           ((= token-real-line comment-real-line-start)
-            (insert " " comment-content))
-           ((not (= token-real-line comment-real-line-start))
-            (insert "\n" comment-content))
-           (t)))))))
+                                (setq comment-token-start (semantic-lex-token-start comment-token))
+                                (setq comment-token-end (semantic-lex-token-end comment-token))
+                                (setq comment-real-line-start (line-number-at-pos comment-token-start))
+                                (setq comment-real-line-end (line-number-at-pos comment-token-end))
+                                (setq token-real-line (line-number-at-pos tok-end))
+                                (setq next-token-real-line (line-number-at-pos next-token-start))
+                                (buffer-substring-no-properties comment-token-start comment-token-end)))
+        (cond
+         ;; if comment token is next to a string, chances are it is below the
+         ;; docstring. Add a newlien in between.
+         ((eq token-type 'string)
+          (insert "\n" comment-content))
+         ((= token-real-line comment-real-line-start)
+          (insert " " comment-content))
+         ((not (= token-real-line comment-real-line-start))
+          (insert "\n" comment-content))
+         (t))))))
 
 (defsubst srefactor--lisp-oneline-formatter ()
   (unless (srefactor--lisp-token-in-punctuation-p token)
