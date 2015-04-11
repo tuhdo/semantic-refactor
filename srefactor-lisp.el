@@ -382,7 +382,7 @@ Return the position of last closing sexp."
               (srefactor--lisp-forward-token)
               (with-current-buffer tmp-buf
                 (insert token-str)
-                ;; (srefactor--lisp-comment-formatter)
+                (srefactor--lisp-comment-formatter)
                 (cond
                  ((and (eq token-type 'number)
                        (member next-token-str '("+" "-" "*" "/")))
@@ -394,6 +394,7 @@ Return the position of last closing sexp."
                   (srefactor--lisp-punctuation-formatter))
                  ((equal token-str ".")
                   (insert " " next-token-str)
+                  (srefactor--lisp-comment-formatter)
                   (srefactor--lisp-forward-token))
                  ((eq token-type 'symbol)
                   (srefactor--lisp-symbol-formatter))
@@ -423,7 +424,9 @@ Return the position of last closing sexp."
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
   (goto-char (semantic-lex-token-end token))
-  (insert next-token-str " ")
+  (insert next-token-str)
+  (srefactor--lisp-comment-formatter)
+  (insert " ")
   (setq first-token (semantic-lex-token 'symbol
                                         (semantic-lex-token-start token)
                                         (1+ (semantic-lex-token-end token))))
@@ -441,7 +444,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
         token token-str)
     (while (srefactor--lisp-token-in-punctuation-p (srefactor--lisp-forward-token))
       (insert token-str)
-      ;; (srefactor--lisp-comment-formatter)
+      (srefactor--lisp-comment-formatter)
       )
     (when (eq first-token-name (srefactor--lisp-token-text orig-token))
       (srefactor--lisp-forward-first-second-token))
@@ -458,10 +461,12 @@ function `srefactor--lisp-format-one-or-multi-lines'"
     (insert " ")
     (while (member token-type '(punctuation open-paren semantic-list))
       (insert token-str)
+      (srefactor--lisp-comment-formatter)
       (srefactor--lisp-forward-token))
     (cond
      ((or (equal next-token-str "}") (equal next-token-str "]"))
       (insert next-token-str "\n" " ")
+      (srefactor--lisp-comment-formatter)
       (srefactor--lisp-forward-token))
      ((not  (srefactor--lisp-token-in-punctuation-p next-token))
       (insert "\n"))
@@ -495,14 +500,11 @@ function `srefactor--lisp-format-one-or-multi-lines'"
     token))
 
 (defsubst srefactor--lisp-comment-formatter ()
-  (let (comment-token
-        comment-start
-        comment-end
-        comment-content
-        next-token-real-line
-        token-real-line
-        comment-real-line-start
-        comment-real-line-end)
+  (let (comment-token comment-token-start
+                      comment-token-end comment-content
+                      next-token-real-line
+                      token-real-line comment-real-line-start
+                      comment-real-line-end)
     (when (and tok-end next-token-start)
       (setq comment-token (with-current-buffer cur-buf   ;; asdf
                             (condition-case nil
@@ -547,6 +549,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                (while (> ignore-num 0)
                  (srefactor--lisp-forward-token)
                  (insert token-str)
+                 (srefactor--lisp-comment-formatter)
                  (if (srefactor--lisp-token-in-punctuation-p token)
                      (srefactor--lisp-forward-first-second-token)
                    (setq ignore-num (1- ignore-num))
