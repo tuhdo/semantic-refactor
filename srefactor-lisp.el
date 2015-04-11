@@ -470,6 +470,11 @@ function `srefactor--lisp-format-one-or-multi-lines'"
    ((eq format-type 'multi-line)
     (srefactor--lisp-multiline-formatter))))
 
+(defsubst srefactor--lisp-forward-first-second-token ()
+  (setq first-token token)
+  (setq first-token-name (srefactor--lisp-token-text first-token))
+  (setq second-token (car lexemes)))
+
 (defsubst srefactor--lisp-forward-token ()
   (setq token (pop lexemes))
   (when token
@@ -561,11 +566,16 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 (defsubst srefactor--lisp-token-name-in-skip-list-p (token-name)
   (member token-name srefactor-lisp-symbol-to-skip))
 
-(defsubst srefactor--lisp-token-in-punctuation-p (token-type)
-  (member token-type '(open-paren close-paren punctuation)))
+(defsubst srefactor--lisp-token-in-punctuation-p (token)
+  (member (semantic-lex-token-class token) '(punctuation)))
 
 (defsubst srefactor--lisp-token-paren-p (token)
   (member (semantic-lex-token-class token) '(open-paren close-paren)))
+
+(defsubst srefactor--lisp-token-text (token)
+  (with-current-buffer cur-buf
+    (buffer-substring-no-properties (semantic-lex-token-start token)
+                                    (semantic-lex-token-end token))))
 
 (defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
   "Visit and format all sub-sexpressions (semantic list) in LEXEMES."
@@ -581,5 +591,12 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                                                    tok-start
                                                    format-type (assoc tok-str srefactor-lisp-symbol-to-skip)
                                                    recursive-p)))))
+
+(defun srefactor--lisp-debug-messages ()
+  (message "token: %s" token)
+  (message "token-type: %s" token-type)
+  (message "token-str: %s" token-str)
+  (when ignore-num
+    (message "ignore-num: %s" ignore-num)))
 
 (provide 'srefactor-lisp)
