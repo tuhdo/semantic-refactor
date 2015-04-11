@@ -355,14 +355,12 @@ sub-sexpressions of the same level into multiple lines.
 
 Return the position of last closing sexp."
   (let* ((lexemes (semantic-emacs-lisp-lexer beg end 1))
+         (cur-buf (current-buffer))
          (first-token (cadr lexemes))
-         (first-token-name (buffer-substring-no-properties
-                            (semantic-lex-token-start first-token)
-                            (semantic-lex-token-end first-token)))
+         (first-token-name (srefactor--lisp-token-text first-token))
          (second-token (caddr lexemes))
          (tmp-buf (generate-new-buffer (make-temp-name "")))
          (orig-format-type format-type)
-         (cur-buf (current-buffer))
          token-str
          ignore-pair
          ignore-num
@@ -436,16 +434,17 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 (defsubst srefactor--lisp-punctuation-formatter ()
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
-  (setq first-token (car lexemes))
-  (setq second-token (cadr lexemes))
-  (let (token token-str)
+
+  (let ((orig-token token)
+        token token-str)
     (while (srefactor--lisp-token-in-punctuation-p (setq token (srefactor--lisp-forward-token)))
-      (setq token-str (with-current-buffer cur-buf
-                        (buffer-substring-no-properties (semantic-lex-token-start token)
-                                                        (semantic-lex-token-end token))))
+      (setq token-str (srefactor--lisp-token-text token))
       (insert token-str)
+
       ;; (srefactor--lisp-comment-formatter)
       )
+    (when (eq first-token-name (srefactor--lisp-token-text orig-token))
+      (srefactor--lisp-forward-first-second-token))
     (when token
       (push token lexemes))))
 
