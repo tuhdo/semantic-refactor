@@ -7,7 +7,7 @@
 ;; Maintainer: Tu, Do Hoang
 ;; Created: Wed Feb 11 21:25:51 2015 (+0700)
 ;; Version: 0.3
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Requires: ((emacs "24.3+"))
 ;; Last-Updated: Wed Feb 11 21:25:51 2015 (+0700)
 ;;           By: Tu, Do Hoang
 ;;     Update #: 1
@@ -29,16 +29,16 @@
 ;;
 ;; This package provides the following features for Emacs Lisp:
 ;;
-;; - `srefactor-elisp-format-buffer': Format whole buffer.
-;; - `srefactor-elisp-format-defun': Format the current defun point is in.
-;; - `srefactor-elisp-one-line': Transform all sub-sexpressions current sexpression at
+;; - `srefactor-lisp-format-buffer': Format whole buffer.
+;; - `srefactor-lisp-format-defun': Format the current defun point is in.
+;; - `srefactor-lisp-one-line': Transform all sub-sexpressions current sexpression at
 ;; point into one line separated each one by a space.
 ;;
-;; - `srefactor-elisp-multi-line': Transform all sub-sexpressions current sexpression
-;; - at point into multiple lines separated. If the head symbol belongs to the
-;; - list `srefactor-lisp-symbol-to-skip', then the first N next symbol/sexpressions
-;; - (where N is the nummber associated with the head symbol as stated in the
-;; - list) are skipped before a newline is inserted.
+;; - `srefactor-lisp-format-sexp': Transform all sub-sexpressions current sexpression
+;; at point into multiple lines separated. If the head symbol belongs to the
+;; list `srefactor-lisp-symbol-to-skip', then the first N next symbol/sexpressions
+;; (where N is the nummber associated with the head symbol as stated in the
+;;  list) are skipped before a newline is inserted.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
