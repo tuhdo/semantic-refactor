@@ -480,17 +480,13 @@ function `srefactor--lisp-format-one-or-multi-lines'"
     (setq token-type (semantic-lex-token-class token))
     (setq tok-start (semantic-lex-token-start token))
     (setq tok-end (semantic-lex-token-end token))
-    (setq token-str (with-current-buffer cur-buf
-                      (buffer-substring-no-properties (semantic-lex-token-start token)
-                                                      (semantic-lex-token-end token))))
+    (setq token-str (srefactor--lisp-token-text token))
     (setq next-token (car lexemes))
     (setq next-token-type (semantic-lex-token-class next-token))
     (setq next-token-start (semantic-lex-token-start next-token))
     (setq next-token-end (semantic-lex-token-end next-token))
     (setq next-token-str (if next-token
-                             (with-current-buffer cur-buf
-                               (buffer-substring-no-properties (semantic-lex-token-start next-token)
-                                                               (semantic-lex-token-end next-token)))
+                             (srefactor--lisp-token-text next-token)
                            ""))
     token))
 
@@ -513,7 +509,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                                 ;; set values inside the buffer to avoid global variable
                                 (setq comment-start (semantic-lex-token-start comment-token))
                                 (setq comment-end (semantic-lex-token-end comment-token))
-                                (buffer-substring-no-properties comment-start comment-end)))
+                                (buffer-substring-no-properties comment-start comment-end)))p
         (setq token-real-line (line-number-at-pos tok-end))
         (setq next-token-real-line (line-number-at-pos next-token-start))
         (setq comment-real-line-start (line-number-at-pos comment-start))
