@@ -601,11 +601,25 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                                                    format-type (assoc tok-str srefactor-lisp-symbol-to-skip)
                                                    recursive-p)))))
 
+(defun srefactor--lisp-comment-debug-messages ()
+  (message "comment-token: %s" comment-token)
+  (message "comment-start: %s" comment-token-start)
+  (message "comment-end: %s" comment-token-end)
+  (message "comment-content: %s" comment-content)
+  (message "comment-content: %s" comment-content)
+  (message "token-real-line: %s" token-real-line)
+  (message "next-token-real-line: %s" next-token-real-line)
+  (message "comment-real-line-start: %s" comment-real-line-start)
+  (message "comment-real-line-end %s" comment-real-line-end))
+
 (defun srefactor--lisp-debug-messages ()
   (message "token: %s" token)
   (message "token-type: %s" token-type)
   (message "token-str: %s" token-str)
   (when ignore-num
-    (message "ignore-num: %s" ignore-num)))
+    (message "ignore-num: %s" ignore-num))
+  (message "next-token: %s" next-token)
+  (message "next-token-type: %s" next-token-type)
+  (message "next-token-str: %s" next-token-str))
 
 (provide 'srefactor-lisp)
