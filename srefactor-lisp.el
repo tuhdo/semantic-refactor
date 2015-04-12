@@ -60,7 +60,7 @@
 ;;; Code:
 (require 'semantic/bovine/el)
 
-(defcustom srefactor-newline-threshold 80
+(defcustom srefactor-newline-threshold 50
   "If a token is about to be inserted, if the current posistion
   exceeds this threshold characters, insert the token in the next
   line isntead. Note that this does not account for indentation
@@ -563,7 +563,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
          (not (eq next-token-type 'semantic-list)))
     (insert " "))
    ((and (eq next-token-type 'semantic-list)
-         (eq token-type 'symbol))
+         (eq token-type 'symbol)
+         (equal first-token-name token-str))
     (insert " "))
    ((eq token-type 'semantic-list)
     (unless (srefactor--lisp-token-in-punctuation-p next-token)
@@ -601,7 +602,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
         (srefactor--lisp-format-one-or-multi-lines tok-start
                                                    tok-end
                                                    tok-start
-                                                   format-type (assoc tok-str srefactor-lisp-symbol-to-skip)
+                                                   format-type
+                                                   (assoc tok-str srefactor-lisp-symbol-to-skip)
                                                    recursive-p)))))
 
 (defun srefactor--lisp-comment-debug-messages ()
