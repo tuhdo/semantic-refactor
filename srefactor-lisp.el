@@ -60,7 +60,7 @@
 ;;; Code:
 (require 'semantic/bovine/el)
 
-(defcustom srefactor-newline-threshold 50
+(defcustom srefactor-newline-threshold 40
   "If a token is about to be inserted, if the current posistion
   exceeds this threshold characters, insert the token in the next
   line isntead. Note that this does not account for indentation
