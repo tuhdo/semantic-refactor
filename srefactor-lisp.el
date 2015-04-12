@@ -422,12 +422,9 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (insert " ")
   (setq first-token (semantic-lex-token 'symbol
                                         (semantic-lex-token-start token)
-                                        (1+ 
-                                         (semantic-lex-token-end token))))
+                                        (1+ (semantic-lex-token-end token))))
   (setq first-token-name (concat token-str next-token-str))
   (setq second-token (cadr lexemes))
-  (when (eq (semantic-lex-token-class second-token) 'semantic-list)
-    (insert "\n"))
   (srefactor--lisp-forward-token))
 
 (defsubst srefactor--lisp-punctuation-formatter ()
