@@ -348,7 +348,8 @@ into one line separated each one by a space."
       (insert content)
       (goto-char orig-point))))
 
-(defun srefactor--lisp-format-one-or-multi-lines (beg end orig-point format-type &optional newline-betwen-semantic-lists recursive-p)
+(defun srefactor--lisp-format-one-or-multi-lines (beg end orig-point format-type &optional
+                                                      newline-betwen-semantic-lists recursive-p)
   "Turn the current sexpression into one line/multi-line depends
 on the value of FORMAT-TYPE. If FORMAT-TYPE is 'one-line,
 transforms all sub-sexpressions of the same level into one
@@ -376,9 +377,9 @@ Return the position of last closing sexp."
               (setq newline-betwen-semantic-lists t))
           (setq ignore-pair (assoc first-token-name srefactor-lisp-symbol-to-skip))
           (setq ignore-num (cdr ignore-pair))
-
           (while lexemes
-            (let* (token-type tok-start tok-end next-token next-token-start next-token-type next-token-str)
+            (let* (token-type tok-start tok-end next-token next-token-start
+                              next-token-type next-token-str)
               (srefactor--lisp-forward-token)
               (with-current-buffer tmp-buf
                 (insert token-str)
@@ -405,12 +406,10 @@ Return the position of last closing sexp."
           (save-excursion
             (kill-region beg end)
             (insert (with-current-buffer tmp-buf
-                      (buffer-substring-no-properties
-                       (point-min)
-                       (point-max)))))
+                      (buffer-substring-no-properties (point-min)
+                                                      (point-max)))))
           (forward-sexp)
           (setq end (point))
-
           ;; descend into sub-sexpressions
           (goto-char beg)
           (forward-sexp)
