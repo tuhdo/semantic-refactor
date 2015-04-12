@@ -58,7 +58,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
+(with-no-warnings
+  (require 'cl))
+(require 'eieio)
 (require 'semantic/bovine/el)
+
+(cl-defstruct (srefactor-lex-template (:constructor srefactor--lex-template))
+  (major-mode nil :read-only t)
+  form)
+
+;; TODO: Add a function for creating and inserting into global template table
+(srefactor--lex-template :major-mode 'emacs-lisp-mode
+                         :form (let ((:s :s))
+                                 :s))
 
 (defcustom srefactor-newline-threshold 40
   "If a token is about to be inserted, if the current posistion
