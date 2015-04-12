@@ -85,6 +85,7 @@
                                            ("not" . 1)
                                            ("null" . 1)
                                            ("null?" . 1)
+                                           ("concat" . 1)
                                            ("or" . 1)
                                            ("and" . 1)
                                            ("catch" . 1)
@@ -103,10 +104,10 @@
                                            ("lambda" . 1)
                                            ("1+" . 1)
                                            ("1-" . 1)
+                                           ("defmethod" . 1)
                                            ("cons" . 2)
                                            ("kill-region" . 2)
                                            ("equal" . 2)
-                                           ("concat" . 2)
                                            ("member" . 2)
                                            ("eq?" . 2)
                                            ("eq" . 2)
@@ -122,6 +123,7 @@
                                            ("defcustom" . 2)
                                            ("declare" . 2)
                                            ("defvar" . 2)
+                                           ("defconst" . 2)
                                            ("string-match" . 2)
                                            ("defcustom" . 2)
                                            ("setq" . 2)
@@ -173,16 +175,18 @@
   (cond
    ((and (fboundp 'clojure-mode)
          (eq major-mode 'clojure-mode))
-    (remove-duplicates (append srefactor-lisp-symbol-to-skip
-                               srefactor-clojure-symbol-to-skip)
-                       :test (lambda (a b) (equal (car a) (car b)))))
+    (remove-duplicates (append srefactor-lisp-symbol-to-skip srefactor-clojure-symbol-to-skip)
+                       :test 
+                       (lambda (a b)
+                         (equal (car a) (car b)))))
    (t srefactor-lisp-symbol-to-skip)))
 
 (defun srefactor-lisp-format-buffer ()
   "Format current buffer."
   (interactive)
   (let ((cur-pos (point))
-        (buf-content (buffer-substring-no-properties (point-min) (point-max)))
+        (buf-content (buffer-substring-no-properties (point-min)
+                                                     (point-max)))
         (cur-major-mode major-mode)
         (orig-skip-list srefactor-lisp-symbol-to-skip)
         (cur-indent-mode indent-tabs-mode))
@@ -190,8 +194,7 @@
                         (semantic-default-elisp-setup)
                         (emacs-lisp-mode)
                         (setq indent-tabs-mode cur-indent-mode)
-                        (setq srefactor-lisp-symbol-to-skip
-                              (srefactor--define-skip-list-for-mode cur-major-mode))
+                        (setq srefactor-lisp-symbol-to-skip (srefactor--define-skip-list-for-mode cur-major-mode))
                         (semantic-lex-init)
                         (insert buf-content)
                         (goto-char (point-max))
@@ -200,17 +203,15 @@
                                 (end (save-excursion
                                        (forward-sexp)
                                        (point))))
-                            (srefactor--lisp-format-one-or-multi-lines beg
-                                                                       end
-                                                                       beg
-                                                                       'multi-line
-                                                                       nil
-                                                                       t)
+                            (srefactor--lisp-format-one-or-multi-lines
+                             beg end beg 'multi-line nil t)
                             (goto-char beg)))
                         (srefactor--appropriate-major-mode cur-major-mode)
-                        (indent-region (point-min) (point-max))
+                        (indent-region (point-min)
+                                       (point-max))
                         (setq srefactor-lisp-symbol-to-skip orig-skip-list)
-                        (buffer-substring-no-properties (point-min) (point-max))))
+                        (buffer-substring-no-properties (point-min)
+                                                        (point-max))))
     (kill-region (point-min) (point-max))
     (insert buf-content)
     (goto-char cur-pos)))
@@ -236,23 +237,20 @@
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
-                      (setq srefactor-lisp-symbol-to-skip
-                            (srefactor--define-skip-list-for-mode cur-major-mode))
+                      (setq srefactor-lisp-symbol-to-skip (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor--lisp-format-one-or-multi-lines (point-min)
                                                                  (point-max)
-                                                                 (point-min)
-                                                                 'multi-line
+                                                                 (point-min)'multi-line
                                                                  nil
                                                                  t)
                       (srefactor--appropriate-major-mode cur-major-mode)
                       (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                       (indent-region (point-min)
                                      (point-max))
-                      (buffer-substring-no-properties
-                       (point-min)
-                       (point-max))))
+                      (buffer-substring-no-properties (point-min)
+                                                      (point-max))))
       (kill-region beg end)
       (insert content)
       (goto-char orig-point))))
@@ -288,15 +286,13 @@ is inserted."
                       (insert content)
                       (srefactor--lisp-format-one-or-multi-lines (point-min)
                                                                  (point-max)
-                                                                 (point-min)
-                                                                 'multi-line
+                                                                 (point-min)'multi-line
                                                                  nil
                                                                  t)
                       (srefactor--appropriate-major-mode cur-major-mode)
                       (setq srefactor-lisp-symbol-to-skip orig-skip-list)
-                      (buffer-substring-no-properties
-                       (point-min)
-                       (point-max))))
+                      (buffer-substring-no-properties (point-min)
+                                                      (point-max))))
       (kill-region beg end)
       (insert content)
       (goto-char beg)
@@ -327,23 +323,20 @@ into one line separated each one by a space."
                       (semantic-default-elisp-setup)
                       (emacs-lisp-mode)
                       (setq indent-tabs-mode cur-indent-mode)
-                      (setq srefactor-lisp-symbol-to-skip
-                            (srefactor--define-skip-list-for-mode cur-major-mode))
+                      (setq srefactor-lisp-symbol-to-skip (srefactor--define-skip-list-for-mode cur-major-mode))
                       (semantic-lex-init)
                       (insert content)
                       (srefactor--lisp-format-one-or-multi-lines (point-min)
                                                                  (point-max)
-                                                                 (point-min)
-                                                                 'one-line
+                                                                 (point-min)'one-line
                                                                  nil
                                                                  recursive-p)
                       (srefactor--appropriate-major-mode cur-major-mode)
                       (setq srefactor-lisp-symbol-to-skip orig-skip-list)
                       (indent-region (point-min)
                                      (point-max))
-                      (buffer-substring-no-properties
-                       (point-min)
-                       (point-max))))
+                      (buffer-substring-no-properties (point-min)
+                                                      (point-max))))
       (kill-region beg end)
       (insert content)
       (goto-char orig-point))))
@@ -428,7 +421,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (insert " ")
   (setq first-token (semantic-lex-token 'symbol
                                         (semantic-lex-token-start token)
-                                        (1+ (semantic-lex-token-end token))))
+                                        (1+ 
+                                         (semantic-lex-token-end token))))
   (setq first-token-name (concat token-str next-token-str))
   (setq second-token (cadr lexemes))
   (when (eq (semantic-lex-token-class second-token) 'semantic-list)
@@ -438,13 +432,11 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 (defsubst srefactor--lisp-punctuation-formatter ()
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
-
-  (let ((orig-token token)
-        token token-str)
+  (let ((orig-token token) token
+        token-str)
     (while (srefactor--lisp-token-in-punctuation-p (srefactor--lisp-forward-token))
       (insert token-str)
-      (srefactor--lisp-comment-formatter)
-      )
+      (srefactor--lisp-comment-formatter))
     (when (eq first-token-name (srefactor--lisp-token-text orig-token))
       (srefactor--lisp-forward-first-second-token))
     (when token
@@ -463,17 +455,17 @@ function `srefactor--lisp-format-one-or-multi-lines'"
       (srefactor--lisp-comment-formatter)
       (srefactor--lisp-forward-token))
     (cond
-     ((or (equal next-token-str "}") (equal next-token-str "]"))
+     ((or (equal next-token-str "}")
+          (equal next-token-str "]"))
       (insert next-token-str "\n" " ")
       (srefactor--lisp-comment-formatter)
       (srefactor--lisp-forward-token))
-     ((not  (srefactor--lisp-token-in-punctuation-p next-token))
+     ((not (srefactor--lisp-token-in-punctuation-p next-token))
       (insert "\n"))
      (t)))
    ((eq format-type 'one-line)
     (srefactor--lisp-oneline-formatter))
-   ((equal token-str "~@")
-    "")
+   ((equal token-str "~@") "")
    ((eq format-type 'multi-line)
     (srefactor--lisp-multiline-formatter))))
 
@@ -499,13 +491,11 @@ function `srefactor--lisp-format-one-or-multi-lines'"
     token))
 
 (defsubst srefactor--lisp-comment-formatter ()
-  (let (comment-token comment-token-start
-                      comment-token-end comment-content
-                      next-token-real-line
-                      token-real-line comment-real-line-start
-                      comment-real-line-end)
+  (let (comment-token comment-token-start comment-token-end
+                      comment-content next-token-real-line token-real-line
+                      comment-real-line-start comment-real-line-end)
     (when (and tok-end next-token-start)
-      (setq comment-token (with-current-buffer cur-buf   ;; asdf
+      (setq comment-token (with-current-buffer cur-buf ;; asdf
                             (condition-case nil
                                 (car (semantic-comment-lexer tok-end next-token-start))
                               (error nil))))
@@ -518,7 +508,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                                 (setq comment-real-line-end (line-number-at-pos comment-token-end))
                                 (setq token-real-line (line-number-at-pos tok-end))
                                 (setq next-token-real-line (line-number-at-pos next-token-start))
-                                (buffer-substring-no-properties comment-token-start comment-token-end)))
+                                (buffer-substring-no-properties comment-token-start
+                                                                comment-token-end)))
         (cond
          ;; if comment token is next to a string, chances are it is below the
          ;; docstring. Add a newlien in between.
@@ -532,7 +523,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 
 (defsubst srefactor--lisp-oneline-formatter ()
   (unless (srefactor--lisp-token-in-punctuation-p token)
-    (let ((distance (- (point) (line-beginning-position))))
+    (let ((distance (- (point)
+                       (line-beginning-position))))
       (if (or (eq orig-format-type 'one-line)
               (<= distance srefactor-newline-threshold))
           (insert " ")
