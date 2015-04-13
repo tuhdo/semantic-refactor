@@ -454,8 +454,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
       (srefactor--lisp-forward-token))
     (insert token-str)
     (cond
-     ((or (equal next-token-str "}")
-          (equal next-token-str "]"))
+     ((or (equal next-token-str "}"))
       (insert next-token-str "\n" " ")
       (srefactor--lisp-comment-formatter)
       (srefactor--lisp-forward-token))
