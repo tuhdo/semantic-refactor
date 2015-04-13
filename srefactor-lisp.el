@@ -518,7 +518,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
         ;; If the next token is a punctuation (open/close paren, punctuation)
         ;; add a newline no matter what; otherwise it destroys the layout of
         ;; sexp which is dangerous
-        (when (srefactor--lisp-token-in-punctuation-p next-token)
+        (when (or (srefactor--lisp-token-in-punctuation-p next-token)
+                  (string-match "[]}]" token-str))
           (insert "\n"))))))
 
 (defsubst srefactor--lisp-oneline-formatter ()
