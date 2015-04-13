@@ -397,17 +397,13 @@ Return the position of last closing sexp."
                   (srefactor--lisp-oneline-formatter))
                  ((eq format-type 'multi-line)
                   (srefactor--lisp-multiline-formatter))))))
-          (save-excursion
-            (kill-region beg end)
-            (insert (with-current-buffer tmp-buf
-                      (buffer-substring-no-properties (point-min)
-                                                      (point-max)))))
-          (forward-sexp)
+          (kill-region beg end)
+          (setq beg (point))
+          (insert (with-current-buffer tmp-buf
+                    (buffer-substring-no-properties (point-min)
+                                                    (point-max))))
           (setq end (point))
           ;; descend into sub-sexpressions
-          (goto-char beg)
-          (forward-sexp)
-          (setq end (point))
           (setq lexemes (semantic-emacs-lisp-lexer beg end 1))
           (when recursive-p
             (srefactor--lisp-visit-semantic-list-lex (nreverse lexemes))))
