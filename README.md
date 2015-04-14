@@ -72,6 +72,7 @@ This package can be obtained from MELPA:
 
 ```elisp
     (require 'srefactor)
+    (require 'srefactor-lisp)
     
     ;; OPTIONAL: ADD IT ONLY IF YOU USE C/C++. 
     (semantic-mode 1) ;; -> this is optional for Lisp
