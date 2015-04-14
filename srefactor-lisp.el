@@ -387,10 +387,6 @@ Return the position of last closing sexp."
                       (eq token-type 'close-paren)
                       (eq next-token-type 'close-paren))
                   (srefactor--lisp-punctuation-formatter))
-                 ((equal token-str ".")
-                  (insert " " next-token-str)
-                  (srefactor--lisp-comment-formatter)
-                  (srefactor--lisp-forward-token))
                  ((eq token-type 'symbol)
                   (srefactor--lisp-symbol-formatter))
                  ((eq format-type 'one-line)
@@ -458,9 +454,11 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                (null next-token)))
       (insert "\n"))
      (t)))
+   ((equal token-str "~@") "")
+   ((equal token-str "?") "")
+   ((equal token-str ".") "")
    ((eq format-type 'one-line)
     (srefactor--lisp-oneline-formatter))
-   ((equal token-str "~@") "")
    ((eq format-type 'multi-line)
     (srefactor--lisp-multiline-formatter))))
 
@@ -574,7 +572,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (member token-name srefactor-lisp-symbol-to-skip))
 
 (defsubst srefactor--lisp-token-in-punctuation-p (token)
-  (member (semantic-lex-token-class token) '(open-paren close-paren punctuation)))
+  (member (semantic-lex-token-class token) '(open-paren charquote close-paren punctuation)))
 
 (defsubst srefactor--lisp-token-paren-p (token)
   (member (semantic-lex-token-class token) '(open-paren close-paren)))
