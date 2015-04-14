@@ -513,12 +513,15 @@ function `srefactor--lisp-format-one-or-multi-lines'"
          ((not (= token-real-line comment-real-line-start))
           (insert "\n" comment-content))
          (t))
-        ;; If the next token is a punctuation (open/close paren, punctuation)
-        ;; add a newline no matter what; otherwise it destroys the layout of
-        ;; sexp which is dangerous
-        (when (or (srefactor--lisp-token-in-punctuation-p next-token)
+        ;; If the current/next token is a punctuation (open/close paren,
+        ;; punctuation) add a newline no matter what; otherwise it destroys the
+        ;; layout of sexp because nonewline is inserted after the current/next
+        ;; token and it will be in the same line with the just inserted comment
+        ;; and be part of it, which is dangerous
+        (when (or (srefactor--lisp-token-in-punctuation-p token)
+                  (srefactor--lisp-token-in-punctuation-p next-token)
                   (string-match "[]}]" token-str))
-          (insert "\n"))))))
+        (insert "\n"))))))
 
 (defsubst srefactor--lisp-oneline-formatter ()
   (unless (srefactor--lisp-token-in-punctuation-p token)
