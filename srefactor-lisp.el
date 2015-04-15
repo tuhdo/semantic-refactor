@@ -138,7 +138,9 @@
                                            (">=" . 2)
                                            ("/=" . 2)
                                            ("=" . 2)
-                                           ("some" . 2))
+                                           ("some" . 2)
+                                           ("define-key" . 3)
+                                           ("modify-syntax-entry" . 3))
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting the first newline. "
   :group 'srefactor)
