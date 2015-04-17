@@ -1585,20 +1585,16 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
           (parent-end (if parent-tag
                           (semantic-tag-end parent-tag)
                         (point-max)))
-          (current-tag-name (semantic-tag-name (semantic-current-tag)))
-          (tag-name (semantic-tag-name tag))
           positions)
       (save-excursion
         (dolist (p matching-positions)
-          (when (<= p parent-start)
-            (delete p matching-positions))))
-
-      (dolist (pos matching-positions positions)
-        (goto-char pos)
-        (when (or (equal tag-name (semantic-tag-name (srefactor--local-var-at-point)))
-                  (equal (semantic-tag-name tag) current-tag-name))
-          (push pos positions)))))
-  )
+          (when (> p parent-start)
+            ;; must compare tag to avoid tags with the same name but are
+            ;; different types and/or different scopes
+            (when (or (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
+                      (semantic-equivalent-tag-p tag (semantic-current-tag)))
+              (push p positions))))
+        positions))))
 
 (defun srefactor--collect-var-positions (local-var-tag &optional beg end with-content)
   "Return all lines that LOCAL-VAR-TAG occurs in FUNCTION-TAG.
