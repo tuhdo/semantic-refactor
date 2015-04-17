@@ -1603,6 +1603,10 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
                 (overlay-put overlay 'face 'match))))
           tag-occurrences)))
 
+(defun srefactor--unhighlight-tag (tag)
+  "Unhighlight TAG."
+  (remove-overlays))
+
 (defun srefactor--switch-to-window (file-path)
   "Switch to window that contains FILE-PATH string."
   (catch 'found
