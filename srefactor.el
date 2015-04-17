@@ -286,12 +286,9 @@ FILE-OPTION is a file destination associated with OPERATION."
                     (srefactor--rename-local-var local-var
                                                  tag-occurrences
                                                  refactor-tag
-                                                 (read-from-minibuffer prompt))
-                    (srefactor--unhighlight-tag local-var))
+                                                 (read-from-minibuffer prompt)))
                 (error nil))
-            (srefactor--unhighlight-tag local-var)
-            (semantic-mode 1))
-          (srefactor--unhighlight-tag local-var)))
+            (srefactor--unhighlight-tag local-var))))
        (t
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -1450,18 +1447,8 @@ tag and OPTIONS is a list of possible choices for each menu item.
                ;; The CTXT is an EIEIO object.  The below
                ;; method will attempt to pick the most interesting
                ;; tag associated with the current context.
-               (semantic-analyze-interesting-tag ctxt)))
-         )
-    (condition-case nil
-        (catch 'found
-          (mapc (lambda (var)
-                  (when (or (semantic-equivalent-tag-p var pf)
-                            (string-equal (semantic-tag-name var)
-                                          (semantic-tag-name pf)))
-                    (throw 'found var)))
-                (semantic-get-all-local-variables))
-          nil)
-      (error nil))))
+               (semantic-analyze-interesting-tag ctxt))))
+    pf))
 
 (defun srefactor--activate-region (beg end)
   "Activate a region from BEG to END."
