@@ -271,7 +271,7 @@ FILE-OPTION is a file destination associated with OPERATION."
        ((eq operation 'extract-function)
         (srefactor--extract-region 'function))
        ((eq operation 'rename-local-var)
-        (let* ((local-var (srefactor--local-var-at-point))
+        (let* ((local-var (srefactor--tag-at-point))
                (function-tag (semantic-current-tag))
                (search-start (semantic-tag-start function-tag))
                (search-end (semantic-tag-end function-tag))
@@ -1394,7 +1394,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
 
 (defun srefactor--menu-add-rename-local-p ()
   "Check whether to add rename menu item."
-  (let ((local-var (srefactor--local-var-at-point)))
+  (let ((local-var (srefactor--tag-at-point)))
     (when (and local-var
                (eq (semantic-tag-class (semantic-current-tag)) 'function)
                (not (semantic-tag-prototype-p (semantic-current-tag)))
@@ -1430,17 +1430,6 @@ tag and OPTIONS is a list of possible choices for each menu item.
                                   (semantic-current-tag))))
 
 (defun srefactor--tag-at-point ()
-  "Retrieve current tag at point."
-  (let* ((ctxt (semantic-analyze-current-context (point)))
-         (pf (when ctxt
-               ;; The CTXT is an EIEIO object.  The below
-               ;; method will attempt to pick the most interesting
-               ;; tag associated with the current context.
-               (semantic-analyze-interesting-tag ctxt)))
-         )
-    pf))
-
-(defun srefactor--local-var-at-point ()
   "Retrieve current variable tag at piont."
   (let* ((ctxt (semantic-analyze-current-context (point)))
          (pf (when ctxt
@@ -1537,7 +1526,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
 (defun srefactor--unknown-symbol-at-point-p ()
   "Check whether a symbol at point is an unknown variable."
   (unless (and (semantic-ctxt-current-symbol)
-               (srefactor--local-var-at-point))
+               (srefactor--tag-at-point))
     t))
 
 (defun srefactor--introduce-variable-at-point ()
@@ -1569,7 +1558,7 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
         ;; different types and/or different scopes
         (save-excursion
           (goto-char p)
-          (when (or (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
+          (when (or (semantic-equivalent-tag-p tag (srefactor--tag-at-point))
                     (semantic-equivalent-tag-p tag (semantic-current-tag)))
             (push (if with-content
                       (cons p (buffer-substring-no-properties (line-beginning-position)
