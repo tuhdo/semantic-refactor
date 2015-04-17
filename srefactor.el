@@ -275,10 +275,12 @@ FILE-OPTION is a file destination associated with OPERATION."
                prompt)
           (unwind-protect
               (condition-case nil
-                  (progn
-                    (srefactor--highlight-tag local-var refactor-tag 'match)
+                  (let ((tag-occurrences (srefactor--collect-tag-occurrences local-var
+                                                                             (semantic-current-tag))))
+                    (srefactor--highlight-tag local-var tag-occurrences refactor-tag 'match)
                     (setq prompt (format "Replace (%s) with: " (semantic-tag-name local-var)))
                     (srefactor--rename-local-var local-var
+                                                 tag-occurrences
                                                  refactor-tag
                                                  (read-from-minibuffer prompt))
                     (srefactor--unhighlight-tag local-var))
@@ -990,26 +992,25 @@ TAG-TYPE is the return type such as int, long, float, double..."
 ;;
 ;; VARIABLE
 ;;
-(defun srefactor--rename-local-var (local-var-tag function-tag new-name)
-  "Rename the name of a LOCAL-VAR-TAG in FUNCTION-TAG to NEW-NAME."
+(defun srefactor--rename-local-var (tag tag-occurrences function-tag new-name)
+  "Rename the variable instances in TAG-OCCURRENCES in FUNCTION-TAG to NEW-NAME."
   (save-excursion
     (goto-char (semantic-tag-start function-tag))
     (let* ((distance (- (length new-name)
-                        (length (semantic-tag-name local-var-tag))))
-           (var-list (srefactor--collect-tag-occurrences local-var-tag function-tag))
-           (var-list (loop for v in var-list
-                           for i from 0 upto (1- (length var-list))
+                        (length (semantic-tag-name tag))))
+           (var-list (loop for v in tag-occurrences
+                           for i from 0 upto (1- (length tag-occurrences))
                            collect (if (consp v)
                                        (cons (+ (car v) (* 14 i)) (cdr v))
                                      (+ v (* distance i))))))
       (mapc (lambda (c)
               (goto-char c)
-              (search-forward-regexp (srefactor--local-var-regexp local-var-tag)
+              (search-forward-regexp (srefactor--local-var-regexp tag)
                                      (semantic-tag-end function-tag)
                                      t)
               (replace-match new-name t t nil 1))
             var-list)
-      (message (format "Renamed %d occurrences of %s to %s" (length var-list) (semantic-tag-name local-var-tag) new-name)))))
+      (message (format "Renamed %d occurrences of %s to %s" (length var-list) (semantic-tag-name tag) new-name)))))
 
 ;;
 ;; GENERAL
@@ -1431,22 +1432,22 @@ tag and OPTIONS is a list of possible choices for each menu item.
 (defun srefactor--tag-at-point ()
   "Retrieve current tag at point."
   (let* ((ctxt (semantic-analyze-current-context (point)))
-	 (pf (when ctxt
-	       ;; The CTXT is an EIEIO object.  The below
-	       ;; method will attempt to pick the most interesting
-	       ;; tag associated with the current context.
-	       (semantic-analyze-interesting-tag ctxt)))
+         (pf (when ctxt
+               ;; The CTXT is an EIEIO object.  The below
+               ;; method will attempt to pick the most interesting
+               ;; tag associated with the current context.
+               (semantic-analyze-interesting-tag ctxt)))
          )
     pf))
 
 (defun srefactor--local-var-at-point ()
   "Retrieve current variable tag at piont."
   (let* ((ctxt (semantic-analyze-current-context (point)))
-	 (pf (when ctxt
-	       ;; The CTXT is an EIEIO object.  The below
-	       ;; method will attempt to pick the most interesting
-	       ;; tag associated with the current context.
-	       (semantic-analyze-interesting-tag ctxt)))
+         (pf (when ctxt
+               ;; The CTXT is an EIEIO object.  The below
+               ;; method will attempt to pick the most interesting
+               ;; tag associated with the current context.
+               (semantic-analyze-interesting-tag ctxt)))
          )
     (condition-case nil
         (catch 'found
@@ -1584,6 +1585,8 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
           (parent-end (if parent-tag
                           (semantic-tag-end parent-tag)
                         (point-max)))
+          (current-tag-name (semantic-tag-name (semantic-current-tag)))
+          (tag-name (semantic-tag-name tag))
           positions)
       (save-excursion
         (dolist (p matching-positions)
@@ -1592,8 +1595,8 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
 
       (dolist (pos matching-positions positions)
         (goto-char pos)
-        (when (or (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
-                  (semantic-equivalent-tag-p tag (semantic-current-tag)))
+        (when (or (equal tag-name (semantic-tag-name (srefactor--local-var-at-point)))
+                  (equal (semantic-tag-name tag) current-tag-name))
           (push pos positions)))))
   )
 
@@ -1615,31 +1618,17 @@ is a cons of a line and the content of that line."
                lines))
       lines)))
 
-(defun srefactor--highlight-tag (tag &optional scope-tag face)
-  "Highlight TAG in SCOPE-TAG with FACE."
-  (let ((positions (srefactor--collect-tag-occurrences tag scope-tag))
-        beg end)
+(defun srefactor--highlight-tag (tag tag-occurrences &optional scope-tag face)
+  "Highlight tag in TAG-OCCURRENCES in SCOPE-TAG with FACE."
+  (let (beg end)
     (mapc (lambda (p)
             (save-excursion
               (goto-char p)
-              (save-excursion
-                (search-forward-regexp (srefactor--local-var-regexp tag)
-                                     (if scope-tag
-                                         (semantic-tag-end scope-tag)
-                                       (point-max))
-                                     t))
-              (setq beg (match-beginning 0))
-              (forward-sexp 1)
-              (setq end (point))
-
-              (let ((overlay (make-overlay beg end)))
-                (overlay-put overlay 'srefactor-overlay t)
+              (let ((overlay (make-overlay p (progn
+                                               (forward-sexp 1)
+                                               (point)))))
                 (overlay-put overlay 'face 'match))))
-          positions)))
-
-(defun srefactor--unhighlight-tag (tag)
-  "Unhighlight TAG."
-  (remove-overlays))
+          tag-occurrences)))
 
 (defun srefactor--switch-to-window (file-path)
   "Switch to window that contains FILE-PATH string."
