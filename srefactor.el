@@ -272,11 +272,15 @@ FILE-OPTION is a file destination associated with OPERATION."
         (srefactor--extract-region 'function))
        ((eq operation 'rename-local-var)
         (let* ((local-var (srefactor--local-var-at-point))
+               (function-tag (semantic-current-tag))
+               (search-start (semantic-tag-start function-tag))
+               (search-end (semantic-tag-end function-tag))
                prompt)
           (unwind-protect
               (condition-case nil
                   (let ((tag-occurrences (srefactor--collect-tag-occurrences local-var
-                                                                             (semantic-current-tag))))
+                                                                             search-start
+                                                                             search-end)))
                     (srefactor--highlight-tag local-var tag-occurrences refactor-tag 'match)
                     (setq prompt (format "Replace (%s) with: " (semantic-tag-name local-var)))
                     (srefactor--rename-local-var local-var
@@ -287,8 +291,7 @@ FILE-OPTION is a file destination associated with OPERATION."
                 (error nil))
             (srefactor--unhighlight-tag local-var)
             (semantic-mode 1))
-          (srefactor--unhighlight-tag local-var)
-          ))
+          (srefactor--unhighlight-tag local-var)))
        (t
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -1566,53 +1569,27 @@ tag and OPTIONS is a list of possible choices for each menu item.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions - Utilities
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun srefactor--collect-tag-occurrences (tag &optional parent-tag)
+(defun srefactor--collect-tag-occurrences (tag beg end &optional with-content)
   "Collect all TAG occurrences.
 PARENT-TAG is the tag that contains TAG, such as a function or a class or a namespace."
   (save-excursion
-    (let ((matching-positions
-           (srefactor--collect-var-positions tag
-                                             (if parent-tag
-                                                 (semantic-tag-start parent-tag)
-                                               (point-min))
-                                             (if parent-tag
-                                                 (semantic-tag-end parent-tag)
-                                               (point-max))
-                                             nil))
-          (parent-start (if parent-tag
-                            (semantic-tag-start parent-tag)
-                          (point-min)))
-          (parent-end (if parent-tag
-                          (semantic-tag-end parent-tag)
-                        (point-max)))
-          positions)
-      (save-excursion
-        (dolist (p matching-positions)
-          (when (> p parent-start)
-            ;; must compare tag to avoid tags with the same name but are
-            ;; different types and/or different scopes
-            (when (or (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
-                      (semantic-equivalent-tag-p tag (semantic-current-tag)))
-              (push p positions))))
-        positions))))
-
-(defun srefactor--collect-var-positions (local-var-tag &optional beg end with-content)
-  "Return all lines that LOCAL-VAR-TAG occurs in FUNCTION-TAG.
-If WITH-CONTENT is nil, returns a list of line numbers.  If
-WITH-CONTENT is t, returns a list of pairs, in which each element
-is a cons of a line and the content of that line."
-  (save-excursion
-    (goto-char (if beg beg (point-min)))
-    (let ((local-var-regexp (srefactor--local-var-regexp local-var-tag))
-          p lines)
+    (let ((local-var-regexp (srefactor--local-var-regexp tag))
+          p positions)
+      (goto-char beg)
       (while (re-search-forward local-var-regexp end t)
         (setq p (match-beginning 0))
-        (push  (if with-content
-                   (cons p (buffer-substring-no-properties (point)
-                                                           (line-end-position)))
-                 p)
-               lines))
-      lines)))
+        ;; must compare tag to avoid tags with the same name but are
+        ;; different types and/or different scopes
+        (save-excursion
+          (goto-char p)
+          (when (or (semantic-equivalent-tag-p tag (srefactor--local-var-at-point))
+                    (semantic-equivalent-tag-p tag (semantic-current-tag)))
+            (push (if with-content
+                      (cons p (buffer-substring-no-properties (line-beginning-position)
+                                                              (line-end-position)))
+                    p)
+                  positions))))
+      (nreverse positions))))
 
 (defun srefactor--highlight-tag (tag tag-occurrences &optional scope-tag face)
   "Highlight tag in TAG-OCCURRENCES in SCOPE-TAG with FACE."
