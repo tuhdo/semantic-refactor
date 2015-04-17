@@ -800,7 +800,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
         (insert (srefactor--tag-function-string func-tag)))
       (unless (eq major-mode 'c-mode)
         (search-forward-regexp (regexp-quote func-tag-name) (line-end-position) t)
-        (search-backward-regexp (regexp-quote func-tag-name) (line-beginning-position) t)
+        (goto-char (match-string 0))
 
         (when (srefactor--tag-function-destructor func-tag)
           (forward-char -1))
@@ -1620,20 +1620,13 @@ is a cons of a line and the content of that line."
     (mapc (lambda (p)
             (save-excursion
               (goto-char p)
-
-              (search-forward-regexp (srefactor--local-var-regexp tag)
+              (save-excursion
+                (search-forward-regexp (srefactor--local-var-regexp tag)
                                      (if scope-tag
                                          (semantic-tag-end scope-tag)
                                        (point-max))
-                                     t)
-
-              ;; if so, go back to the beginning
-              (search-backward-regexp (srefactor--local-var-regexp tag)
-                                      (if scope-tag
-                                          (semantic-tag-start scope-tag)
-                                        (point-min))
-                                      t)
-              (setq beg (point))
+                                     t))
+              (setq beg (match-beginning 0))
               (forward-sexp 1)
               (setq end (point))
 
