@@ -534,9 +534,13 @@ namespace.
                     (insert (srefactor--function-to-function-pointer refactor-tag))
                     (insert ";"))
                 (newline 1)
-                (yank)
-                (indent-according-to-mode))
-              (newline-and-indent))
+                (if (eq class 'function)
+                    (srefactor--insert-function refactor-tag (if (semantic-tag-prototype-p refactor-tag)
+                                                                 'gen-func-proto
+                                                               'gen-func-proto))
+                  (yank)
+                  (indent-according-to-mode)
+                  (newline-and-indent))))
              (t (senator-yank-tag)))))
       (goto-char (point-max))
       (cond
