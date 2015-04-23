@@ -513,7 +513,9 @@ namespace.
               (newline-and-indent)
               (recenter))
              ((eq insert-type 'gen-func-impl)
-              (srefactor--insert-function-implementation refactor-tag))
+              (srefactor--insert-function refactor-tag 'gen-func-impl))
+             ((eq insert-type 'gen-func-proto)
+              (srefactor--insert-function refactor-tag 'gen-func-proto))
              ((srefactor--tag-pointer refactor-tag)
               (semantic-insert-foreign-tag (srefactor--function-pointer-to-function refactor-tag)))
              ((eq insert-type 'move)
@@ -522,9 +524,7 @@ namespace.
                   (goto-char (semantic-tag-start refactor-tag))
                   (delete-region (semantic-tag-start refactor-tag)
                                  (semantic-tag-end refactor-tag))
-                  (delete-blank-lines)
-                  )
-                )
+                  (delete-blank-lines)))
               (if (and (or (srefactor--tag-struct-p dest-tag)
                            (srefactor--tag-struct-p
                             (srefactor--calculate-parent-tag dest-tag)))
@@ -543,7 +543,9 @@ namespace.
        ((eq insert-type 'gen-func-ptr)
         (srefactor--insert-function-pointer refactor-tag))
        ((eq insert-type 'gen-func-impl)
-        (srefactor--insert-function-implementation refactor-tag))
+        (srefactor--insert-function refactor-tag 'gen-func-impl))
+       ((eq insert-type 'gen-func-proto)
+        (srefactor--insert-function refactor-tag 'gen-func-proto))
        ((semantic-tag-get-attribute refactor-tag :function-pointer)
         (semantic-insert-foreign-tag (srefactor--function-pointer-to-function refactor-tag)))
        (t (senator-yank-tag))))
@@ -569,8 +571,7 @@ namespace.
                 (srefactor--maybe-insert-function-end dest-tag insert-type)
                 (indent-according-to-mode)
                 (srefactor--indent-and-newline 1))
-              (goto-char (line-end-position)))
-          (srefactor--maybe-insert-function-end dest-tag insert-type))))
+              (goto-char (line-end-position))))))
     ))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -766,7 +767,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
 ;;
 ;; FUNCTION
 ;;
-(defun srefactor--insert-function-implementation (func-tag)
+(defun srefactor--insert-function (func-tag type)
   "Insert function implementations for FUNC-TAG at point, a tag that is a function."
   (forward-line 0)
   (open-line 1)
@@ -800,26 +801,33 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                ))
         (goto-char endofinsert)
         (insert "\n\n"))
+    ;; official routine
     (let ((func-tag-name (srefactor--tag-name func-tag))
           (parent (srefactor--calculate-parent-tag func-tag)))
       (when (srefactor--tag-function-modifiers func-tag)
         (semantic-tag-put-attribute func-tag :typemodifiers nil))
       (save-excursion
-        (when (and (eq major-mode 'c++-mode) parent)
+        (when (and (eq major-mode 'c++-mode)
+                   parent)
           (insert (srefactor--tag-templates-declaration-string parent)))
-        (insert (srefactor--tag-function-string func-tag)))
+        (insert (srefactor--tag-function-string func-tag))
+        (when (eq type 'gen-func-proto)
+          (insert ";\n")))
       (unless (eq major-mode 'c-mode)
         (search-forward-regexp (regexp-quote func-tag-name) (line-end-position) t)
         (search-backward-regexp (regexp-quote func-tag-name) (line-beginning-position) t)
         (when (srefactor--tag-function-destructor func-tag)
           (forward-char -1))
-        (unless (srefactor--tag-friend-p func-tag)
+
+        ;; insert tag parent if any
+        (unless (or (srefactor--tag-friend-p func-tag)
+                    (eq type 'gen-func-proto))
           (insert (srefactor--tag-parents-string func-tag)))
         (when (srefactor--tag-function-constructor func-tag)
           (let ((variables (srefactor--tag-filter #'semantic-tag-class
                                                   '(variable)
                                                   (semantic-tag-type-members parent))))
-            (setq variables
+            (setq varbiables
                   (remove-if-not (lambda (v)
                                    (string-match "const" (srefactor--tag-type-string v)))
                                  variables))
@@ -830,7 +838,8 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                       (when (string-match "const" (srefactor--tag-type-string v))
                         (insert (semantic-tag-name v))
                         (insert "()")))
-                    variables))))))))
+                    variables))))
+        ))))
 
 (defun srefactor--insert-function-pointer (tag)
   "Insert function pointer definition for TAG."
@@ -986,15 +995,6 @@ TAG-TYPE is the return type such as int, long, float, double..."
     (setq end (point))
     (indent-region beg end)
     (setq mark-active nil)))
-
-(defun srefactor--maybe-insert-function-end (dest-tag function-insert-type)
-  "Insert semicolon depend on the context of DEST-TAG and FUNCTION-INSERT-TYPE."
-  ;; handle prototype insertion into a parent class
-  (when (and (eq (semantic-tag-class (semantic-tag-calculate-parent dest-tag)) 'type)
-             (not (eq function-insert-type 'move))
-             (not (eq function-insert-type 'gen-func-ptr)))
-    (insert ";")
-    (newline-and-indent)))
 
 ;;
 ;; VARIABLE
