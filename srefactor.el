@@ -1437,9 +1437,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
 (defun srefactor--menu-add-move-p ()
   "Check whether to add move menu."
   (and (semantic-current-tag)
-       (not (region-active-p))
-       (semantic-equivalent-tag-p (srefactor--tag-at-point)
-                                  (semantic-current-tag))))
+       (not (region-active-p))))
 
 (defun srefactor--tag-at-point ()
   "Retrieve current variable tag at piont."
