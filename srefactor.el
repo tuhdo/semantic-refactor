@@ -486,7 +486,8 @@ namespace.
 "
   (let* ((parent-is-func-p (eq (semantic-tag-class (semantic-tag-calculate-parent dest-tag))
                                'function))
-         (class (semantic-tag-class refactor-tag)))
+         (class (semantic-tag-class refactor-tag))
+         beg end)
 
     ;; if  refactor-tag dest-tag is nil, just insert at end of file
     (if dest-tag
@@ -533,14 +534,16 @@ namespace.
                   (progn
                     (insert (srefactor--function-to-function-pointer refactor-tag))
                     (insert ";"))
-                (newline 1)
+                (delete-trailing-whitespace)
                 (if (eq class 'function)
                     (srefactor--insert-function refactor-tag (if (semantic-tag-prototype-p refactor-tag)
                                                                  'gen-func-proto
                                                                'gen-func-proto))
+                  (setq beg (point))
                   (yank)
-                  (indent-according-to-mode)
-                  (newline-and-indent))))
+                  (insert "\n")
+                  (setq end (point))
+                  (indent-region beg end))))
              (t (senator-yank-tag)))))
       (goto-char (point-max))
       (cond
@@ -773,9 +776,6 @@ BUFFER is the destination buffer from file user selects from contextual menu."
 ;;
 (defun srefactor--insert-function (func-tag type)
   "Insert function implementations for FUNC-TAG at point, a tag that is a function."
-  (forward-line 0)
-  (open-line 1)
-  (forward-line 1)
   (if srefactor-use-srecode-p
       ;; Try using SRecode as the mechanism for inserting a tag.
       (let* ((copy (semantic-tag-copy func-tag))
