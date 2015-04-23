@@ -810,8 +810,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
         (insert (srefactor--tag-function-string func-tag)))
       (unless (eq major-mode 'c-mode)
         (search-forward-regexp (regexp-quote func-tag-name) (line-end-position) t)
-        (goto-char (match-string 0))
-
+        (search-backward-regexp (regexp-quote func-tag-name) (line-beginning-position) t)
         (when (srefactor--tag-function-destructor func-tag)
           (forward-char -1))
         (unless (srefactor--tag-friend-p func-tag)
