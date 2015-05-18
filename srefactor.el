@@ -575,10 +575,8 @@ namespace.
                      ""
                    (semantic-tag-type refactor-tag)))
                 (insert "}")
-                (indent-according-to-mode)
-                (srefactor--indent-and-newline 1))
-              (goto-char (line-end-position))))))
-    ))
+                (indent-according-to-mode))
+              (goto-char (line-end-position))))))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions - IO
@@ -824,7 +822,9 @@ BUFFER is the destination buffer from file user selects from contextual menu."
 
         ;; insert tag parent if any
         (unless (or (srefactor--tag-friend-p func-tag)
-                    (eq type 'gen-func-proto))
+                    (eq type 'gen-func-proto)
+                    ;; insert inside a tag
+                    (semantic-current-tag))
           (insert (srefactor--tag-parents-string func-tag)))
         (when (srefactor--tag-function-constructor func-tag)
           (let ((variables (srefactor--tag-filter #'semantic-tag-class
@@ -841,8 +841,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                       (when (string-match "const" (srefactor--tag-type-string v))
                         (insert (semantic-tag-name v))
                         (insert "()")))
-                    variables))))
-        ))))
+                    variables))))))))
 
 (defun srefactor--insert-function-pointer (tag)
   "Insert function pointer definition for TAG."
@@ -965,8 +964,7 @@ TAG-TYPE is the return type such as int, long, float, double..."
    ((string-match "char" tag-type)
     (insert "return 'a';"))
    (t))
-  (srefactor--indent-and-newline 1)
-  (forward-line 1))
+  (srefactor--indent-and-newline 1))
 
 ;; TODO: work on this in next release
 (defun srefactor--insert-new-macro-from-region ()
