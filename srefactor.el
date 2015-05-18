@@ -575,7 +575,6 @@ namespace.
                      ""
                    (semantic-tag-type refactor-tag)))
                 (insert "}")
-                (srefactor--maybe-insert-function-end dest-tag insert-type)
                 (indent-according-to-mode)
                 (srefactor--indent-and-newline 1))
               (goto-char (line-end-position))))))
