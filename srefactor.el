@@ -1213,7 +1213,11 @@ If it does not exist, perform additional check to make sure it
 does not, since the actual text in buffer has it but for some
 complicated language construct, Semantic cannot retrieve it."
   (let ((reference (semantic-tag-get-attribute tag :reference))
-        (tag-buffer (semantic-tag-buffer tag)))
+        (tag-buffer (semantic-tag-buffer tag))
+        (tag-start (semantic-tag-start tag))
+        (tag-end (semantic-tag-end tag))
+        ref-start ref-end
+        statement-beg)
     (if reference
         reference
       (save-excursion
@@ -1222,10 +1226,20 @@ complicated language construct, Semantic cannot retrieve it."
                                ;; only tag in current buffer does not
                                ;; carry buffer information
                                (current-buffer))
-          (goto-char (semantic-tag-start tag))
-          (re-search-forward (concat ".*&[ ]+.*" (regexp-quote (semantic-tag-name tag)))
-                             (semantic-tag-end tag)
-                             t))))))
+          (goto-char tag-end)
+          (setq statement-beg (save-excursion
+                                (c-beginning-of-statement-1)
+                                (point)))
+          (goto-char statement-beg)
+          (setq ref-start (re-search-forward "&"
+                                             tag-end
+                                             t))
+          (goto-char statement-beg)
+          (setq ref-end (re-search-forward "[&]+"
+                                           tag-end
+                                           t))
+          (when (and ref-end ref-start)
+            (1+ (- ref-end ref-start))))))))
 
 (defun srefactor--tag-name (tag)
   "Return TAG name and handle edge cases."
@@ -1241,6 +1255,12 @@ complicated language construct, Semantic cannot retrieve it."
   "Return a complete return type of a TAG as string."
   (let* ((ptr-level (srefactor--tag-pointer tag))
          (ref-level (srefactor--tag-reference tag))
+         (ptr-string (if ptr-level
+                         (make-string ptr-level ?\*)
+                       ""))
+         (ref-string (if ref-level
+                         (make-string ref-level ?\&)
+                       ""))
          (tag-type (semantic-tag-type tag))
          (const-p (semantic-tag-variable-constant-p tag))
          (template-specifier (when (semantic-tag-p tag-type)
@@ -1260,11 +1280,10 @@ complicated language construct, Semantic cannot retrieve it."
                                         ">"
                                         (cond
                                          (ptr-level
-                                          (make-string ptr-level ?\*))
+                                          ptr-string)
                                          (ref-level
-                                          (make-string ref-level ?\&))
-                                         (t ""))))
-      )
+                                          ref-string)
+                                         (t "")))))
      (t
       (if (listp tag-type)
           (concat (when const-p
@@ -1272,8 +1291,11 @@ complicated language construct, Semantic cannot retrieve it."
                   (when (srefactor--tag-struct-p tag)
                     "struct ")
                   (car tag-type)
-                  (when (srefactor--tag-reference tag)
-                    " &"))
+                  (cond
+                   (ref-level
+                    ref-string)
+                   (ptr-level
+                    ptr-string)))
         tag-type)))))
 
 (defun srefactor--tag-type-string-inner-template-list (tmpl-spec-list)
