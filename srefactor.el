@@ -1377,7 +1377,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
                                      (format "%s|%s%s" spaces dashes "►"))
                                    (semantic-format-tag-summarize tag nil t)
                                    (if (eq cur-type 'type)
-                                       " (Before)")))
+                                       " (Inside)")))
              (and type-p
                   (setq class (car tag)))
              ;; Recurse to children
