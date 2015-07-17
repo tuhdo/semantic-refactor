@@ -159,7 +159,7 @@
 Each menu item added returns a token for what type of refactoring
 to perform."
   (interactive)
-  (let* ((semanticdb-find-throttle-custom-list nil)
+  (let* ((semanticdb-find-default-throttle '(file))
          (refresh (semantic-parse-changes-default))
          (srefactor--file-options (srefactor-ui--return-option-list 'file))
          (tag (srefactor--copy-tag))
