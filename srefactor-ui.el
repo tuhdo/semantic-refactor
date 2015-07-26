@@ -226,7 +226,8 @@ when the corresponding MENU-ITEM is selected."
                                  100)
                               (/ (* (frame-height) 10)
                                  100))
-        (when evil-mode
+        (when (and (fboundp 'evil-mode)
+                   evil-mode)
           (evil-emacs-state)))
     (error (srefactor-ui--clean-up-menu-window)
            (message "Error when creating menu."))))
