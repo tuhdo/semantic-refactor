@@ -1427,13 +1427,12 @@ tag and OPTIONS is a list of possible choices for each menu item.
   "Check whether to add rename menu item."
   (let* ((local-var (srefactor--tag-at-point))
          (cur-tag (semantic-current-tag))
-         (cur-tag-start (semantic-tag-start cur-tag))
-         (tag-name (semantic-tag-name cur-tag))
-         (cur-tag-end (semantic-tag-end cur-tag)))
+         cur-tag-start cur-tag-end tag-name)
     (when (and local-var
                (eq (semantic-tag-class cur-tag) 'function)
-               (not (equal (car (semantic-ctxt-current-symbol)) tag-name))
-               (not (semantic-tag-prototype-p (semantic-current-tag)))
+               (not (equal (car (semantic-ctxt-current-symbol))
+                           (semantic-tag-name cur-tag)))
+               (not (semantic-tag-prototype-p cur-tag))
                (not (region-active-p)))
       local-var)))
 
