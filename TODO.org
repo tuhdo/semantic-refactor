@@ -1,4 +1,8 @@
-* TODO Check whether a dot character is a cons or a number
+* DONE Check whether a dot character is a cons or a number
+CLOSED: [2015-12-03 Thu 18:44]
+Actually we don't need to check because when dot is a inside a number, Semantic
+can recognize it. When it's a cons operator, Semantic treats such dot character
+a symbol.
 * TODO [#A] Handle character syntax in Emacs, otherwise it becomes a mess
   Samples:
 
