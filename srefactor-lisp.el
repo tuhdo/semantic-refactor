@@ -424,7 +424,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
 (defsubst srefactor--lisp-punctuation-formatter ()
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
-  (let ((orig-token token) token
+  (let ((orig-token token)
+        token
         token-str)
     (while (srefactor--lisp-token-in-punctuation-p (srefactor--lisp-forward-token))
       (insert token-str)
@@ -435,8 +436,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
       (push token lexemes))))
 
 (defsubst srefactor--lisp-symbol-formatter ()
-  " Make use of dynamic scope of its parent
-function `srefactor--lisp-format-one-or-multi-lines'"
+  "Insert additional text based on symbol appearance. Make use of
+dynamic scope of its parent function `srefactor--lisp-format-one-or-multi-lines'"
   (cond
    ((and (not (equal token-str first-token-name))
          (eq orig-format-type 'multi-line)
@@ -456,9 +457,8 @@ function `srefactor--lisp-format-one-or-multi-lines'"
                (null next-token)))
       (insert "\n"))
      (t)))
-   ((equal token-str "~@") "")
-   ((equal token-str "?") "")
-   ((equal token-str ".") "")
+   ((member token-str '("~@" "?")) "")
+   ((string-equal token-str ".") (insert " "))
    ((eq format-type 'one-line)
     (srefactor--lisp-oneline-formatter))
    ((eq format-type 'multi-line)
