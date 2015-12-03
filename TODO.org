@@ -1,3 +1,4 @@
+* TODO Check whether a dot character is a cons or a number
 * TODO [#A] Handle character syntax in Emacs, otherwise it becomes a mess
   Samples:
 
@@ -6,5 +7,4 @@
   (modify-syntax-entry ? \> (if vhdl-underscore-is-part-of-word "w" "_")
                            st)            ; erroneous space between ? and \>
 #+end_src
-
 * TODO [#B] Allow uers to add customizability and extensibility for arbitrary form
