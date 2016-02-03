@@ -192,15 +192,15 @@ to perform."
       (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
                                      gen-getter-setter
                                      ,srefactor--file-options)))
+    (when (srefactor--menu-add-move-p)
+      (add-to-list 'menu-item-list `("Move (Current file)"
+                                     move
+                                     ,srefactor--file-options)))
     (when srefactor--current-local-var
       (setq tag srefactor--current-local-var)
       (add-to-list 'menu-item-list `("Rename local variable (Current file)"
                                      rename-local-var
                                      ("(Current file)"))))
-    (when (srefactor--menu-add-move-p)
-      (add-to-list 'menu-item-list `("Move (Current file)"
-                                     move
-                                     ,srefactor--file-options)))
     (when (region-active-p)
       (add-to-list 'menu-item-list `("Extract function (Current file)"
                                      extract-function
