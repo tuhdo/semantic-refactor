@@ -1189,7 +1189,7 @@ The returned string is formatted as:
 (defun srefactor--local-var-regexp (tag)
   "Return regexp for seraching local variable TAG."
   (format (concat "\\(\\_\<%s\\)[ ]*\\([^[:alnum:]_"
-                  (unless (srefactor--tag-lambda-p tag) "(")
+                  ;; (unless (srefactor--tag-lambda-p tag) "(")
                   "]\\)")
           (regexp-quote (semantic-tag-name tag))))
 
