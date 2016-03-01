@@ -1520,14 +1520,15 @@ tag and OPTIONS is a list of possible choices for each menu item.
          (private-label (car (srefactor--tag-filter 'semantic-tag-name
                                                     '("private")
                                                     labels)))
-         (tag-start (semantic-tag-start tag))
-         (private-pos (semantic-tag-start private-label))
-         (public-pos (semantic-tag-start public-label)))
-    (or (and private-label (> tag-start private-pos)
-             public-label (< tag-start public-pos))
-        (and public-label (> tag-start public-pos)
-             private-label (> tag-start private-pos)
-             (> private-pos public-pos)))))
+         (tag-start (when tag (semantic-tag-start tag)))
+         (private-pos (when private-label (semantic-tag-start private-label)))
+         (public-pos (when public-label (semantic-tag-start public-label))))
+    (when (and private-label public-label)
+      (or (and private-label (> tag-start private-pos)
+               public-label (< tag-start public-pos))
+          (and public-label (> tag-start public-pos)
+               private-label (> tag-start private-pos)
+               (> private-pos public-pos))))))
 
 (defun srefactor--tag-auto-p (tag)
   "Check whether a TAG is an auto variable."
