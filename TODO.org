@@ -12,3 +12,14 @@ a symbol.
                            st)            ; erroneous space between ? and \>
 #+end_src
 * TODO [#B] Allow uers to add customizability and extensibility for arbitrary form
+* TODO [#A] Fix getter/setter generation of a list of variables
+Currently, Semantic can't regonize a list of variables with the same type
+properly. For example:
+
+#+BEGIN_SRC c++
+int x, y;
+#+END_SRC
+
+=semantic-current-tag= only returns tag =y=.
+
+I need to write a function to break such list into proper variable tags.
