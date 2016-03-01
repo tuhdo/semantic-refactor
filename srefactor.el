@@ -211,10 +211,7 @@ to perform."
     (oset menu :shortcut-p t)
     (srefactor-ui-create-menu menu)))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Macros
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defmacro srefactor--tag-filter (predicate tag-classes-or-names tags)
+(defun srefactor--tag-filter (predicate tag-classes-or-names tags)
   "Filter TAGS based on PREDICATE that satisfies TAG-CLASSES-OR-NAMES.
 
 TAG-CLASSES-OR-NAMES can be a list of Semantic tag classes, or a
@@ -222,10 +219,10 @@ list of Semantic tag names, but not both.
 
 Based on the type of list passed above, either use
 `semantic-tag-class' or `semantic-tag-name' as PREDICATE."
-  `(let (l)
-     (dolist (tag ,tags l)
-       (when (member (funcall ,predicate tag) ,tag-classes-or-names)
-         (setq l (cons tag l))))))
+  (let (l)
+    (dolist (tag tags l)
+      (when (member (funcall predicate tag) tag-classes-or-names)
+        (setq l (cons tag l))))))
 
 (defun srefactor--c-tag-start-with-comment (tag)
   (save-excursion
