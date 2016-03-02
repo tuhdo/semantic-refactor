@@ -828,7 +828,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
           (let ((variables (srefactor--tag-filter #'semantic-tag-class
                                                   '(variable)
                                                   (semantic-tag-type-members parent))))
-            (setq varbiables
+            (setq variables
                   (remove-if-not (lambda (v)
                                    (string-match "const" (srefactor--tag-type-string v)))
                                  variables))
