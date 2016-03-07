@@ -801,6 +801,9 @@ BUFFER is the destination buffer from file user selects from contextual menu."
         (goto-char endofinsert)
         (insert "\n\n"))
     ;; official routine
+    ;; add 2 newlines before insert the function
+    (newline-and-indent)
+    (newline-and-indent)
     (let ((func-tag-name (srefactor--tag-name func-tag))
           (parent (srefactor--calculate-parent-tag func-tag)))
       (when (srefactor--tag-function-modifiers func-tag)
