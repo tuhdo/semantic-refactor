@@ -1078,11 +1078,12 @@ The returned string is formatted as \"param1, param2, param3,...\"."
 (defun srefactor--tag-function-string (tag)
   "Return a complete string representation of a TAG that is a function."
   (let ((return-type (srefactor--tag-type-string tag))
-        (members (semantic-tag-function-arguments tag)))
-    (string-trim-left (concat return-type
-                              " "
-                              (when (srefactor--tag-function-destructor tag)
-                                "~")
+        (members (semantic-tag-function-arguments tag))
+        (is-constructor (srefactor--tag-function-constructor tag))
+        (is-destructor (srefactor--tag-function-destructor tag)))
+    (string-trim-left (concat (unless (or is-destructor is-constructor)
+                                (concat return-type " "))
+                              (when is-destructor "~")
                               (srefactor--tag-name tag)
                               "("
                               (srefactor--tag-function-parameters-string members)
