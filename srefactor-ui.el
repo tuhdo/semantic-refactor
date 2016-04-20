@@ -329,6 +329,8 @@ when the corresponding MENU-ITEM is selected."
         (defalias cmd
           `(lambda ()
              (interactive)
+             (unless (search-forward (number-to-string ,k) nil t)
+                 (search-backward (number-to-string ,k)) nil t)
              (srefactor-ui--refactor-action (get-char-property (point) 'button))))
         ;; Bind it to a digit key.
         (define-key km (vector (+ k ?0)) cmd)))
