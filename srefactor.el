@@ -163,7 +163,7 @@ to perform."
          (refresh (semantic-parse-changes-default))
          (srefactor--file-options (srefactor-ui--return-option-list 'file))
          (tag (srefactor--copy-tag))
-         (menu (srefactor-ui-menu "menu"))
+         (menu (srefactor-ui-menu))
          menu-item-list)
     (setq srefactor--current-local-var (srefactor--menu-add-rename-local-p))
     (when (srefactor--menu-add-function-implementation-p tag)
