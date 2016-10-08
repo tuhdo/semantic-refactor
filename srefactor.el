@@ -227,16 +227,10 @@ Based on the type of list passed above, either use
 (defun srefactor--c-tag-start-with-comment (tag)
   (save-excursion
     (goto-char (semantic-tag-start tag))
-    (if (eq (semantic-tag-class tag) 'function)
-        (unless (and (semantic-documentation-comment-preceeding-tag tag)
-                     (search-backward-regexp "/\\*" nil t)
-                     (progn
-                       (beginning-of-line)
-                       (looking-at "^[ ]*\\/\\*")))
-          (goto-char (semantic-tag-end tag))
-          (c-beginning-of-statement-1))
-      (when (semantic-documentation-comment-preceeding-tag tag)
-        (search-backward-regexp "/\\*" nil t)))
+    (when (semantic-documentation-comment-preceeding-tag tag)
+      (search-backward-regexp "/\\*" nil t)
+      (beginning-of-line)
+      (looking-at "^[ ]*\\/\\*"))
     (point)))
 
 (defun srefactor--copy-tag ()
