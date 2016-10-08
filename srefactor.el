@@ -228,12 +228,15 @@ Based on the type of list passed above, either use
   (save-excursion
     (goto-char (semantic-tag-start tag))
     (if (eq (semantic-tag-class tag) 'function)
-        (if (semantic-documentation-comment-preceeding-tag tag)
-            (search-backward-regexp "/\\*")
+        (unless (and (semantic-documentation-comment-preceeding-tag tag)
+                     (search-backward-regexp "/\\*" nil t)
+                     (progn
+                       (beginning-of-line)
+                       (looking-at "^[ ]*\\/\\*")))
           (goto-char (semantic-tag-end tag))
           (c-beginning-of-statement-1))
       (when (semantic-documentation-comment-preceeding-tag tag)
-        (search-backward-regexp "/\\*")))
+        (search-backward-regexp "/\\*" nil t)))
     (point)))
 
 (defun srefactor--copy-tag ()
