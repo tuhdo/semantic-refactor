@@ -238,7 +238,6 @@ Based on the type of list passed above, either use
 
 (defun srefactor--copy-tag ()
   "Take the current tag, and place it in the tag ring."
-  (interactive)
   (semantic-fetch-tags)
   (let ((ft (semantic-obtain-foreign-tag)))
     (when ft
@@ -1313,7 +1312,6 @@ complicated language construct, Semantic cannot retrieve it."
   "Extract region based on type.
 
 EXTRACT-TYPE can be 'function or 'macro."
-  (interactive)
   (if (region-active-p)
       (unwind-protect
           (progn
