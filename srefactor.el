@@ -167,44 +167,48 @@ to perform."
          menu-item-list)
     (setq srefactor--current-local-var (srefactor--menu-add-rename-local-p))
     (when (srefactor--menu-add-function-implementation-p tag)
-      (add-to-list 'menu-item-list `("Generate Function Implementation (Other file)"
-                                     gen-func-impl
-                                     ,srefactor--file-options)))
+      (srefactor--add-menu-item "Generate Function Implementation (Other file)"
+                                gen-func-impl
+                                srefactor--file-options))
     (when (srefactor--menu-add-function-proto-p tag)
-      (add-to-list 'menu-item-list `("Generate Function Prototype (Other file)"
-                                     gen-func-proto
-                                     ,srefactor--file-options)))
+      (srefactor--add-menu-item  "Generate Function Prototype (Other file)"
+                                 gen-func-proto
+                                 srefactor--file-options))
     (when (srefactor--menu-add-function-pointer-p tag)
-      (add-to-list 'menu-item-list `("Generate Function Pointer (Current file)"
-                                     gen-func-ptr
-                                     ,srefactor--file-options)))
+      (srefactor--add-menu-item "Generate Function Pointer (Current file)"
+                                gen-func-ptr
+                                srefactor--file-options))
     (when (srefactor--menu-add-getters-setters-p tag)
-      (add-to-list 'menu-item-list `("Generate Getters and Setters (Current file)"
-                                     gen-getters-setters
-                                     ,srefactor--file-options)))
+      (srefactor--add-menu-item  "Generate Getters and Setters (Current file)"
+                                 gen-getters-setters
+                                 srefactor--file-options))
     (when (srefactor--menu-add-getter-setter-p tag)
-      (add-to-list 'menu-item-list `("Generate Setter (Current file)"
-                                     gen-setter
-                                     ,srefactor--file-options))
-      (add-to-list 'menu-item-list `("Generate Getter (Current file)"
-                                     gen-getter
-                                     ,srefactor--file-options))
-      (add-to-list 'menu-item-list `("Generate Getter and Setter (Current file)"
-                                     gen-getter-setter
-                                     ,srefactor--file-options)))
+      (srefactor--add-menu-item  "Generate Setter (Current file)"
+                                 gen-setter
+                                 srefactor--file-options)
+      (srefactor--add-menu-item  "Generate Getter (Current file)"
+                                 gen-getter
+                                 srefactor--file-options)
+      (srefactor--add-menu-item  "Generate Getter and Setter (Current file)"
+                                 gen-getter-setter
+                                 srefactor--file-options))
     (when srefactor--current-local-var
       (setq tag srefactor--current-local-var)
-      (add-to-list 'menu-item-list `("Rename local variable (Current file)"
-                                     rename-local-var
-                                     ("(Current file)"))))
+      (srefactor--add-menu-item  "Rename local variable (Current file)"
+                                 rename-local-var
+                                 ("(Current file)")))
     (when (srefactor--menu-add-move-p)
-      (add-to-list 'menu-item-list `("Move (Current file)"
-                                     move
-                                     ,srefactor--file-options)))
+      (srefactor--add-menu-item  "Move (Current file)"
+                                 move
+                                 srefactor--file-options))
     (when (region-active-p)
-      (add-to-list 'menu-item-list `("Extract function (Current file)"
-                                     extract-function
-                                     nil)))
+      (when (srefactor--tags-from-region)
+        (add-to-list 'menu-item-list `(" (Current file)"
+                                       extract-function
+                                       nil)))
+      (srefactor--add-menu-item  "Extract function (Current file)"
+                                 extract-function
+                                 nil))
     (oset menu :items menu-item-list)
     (oset menu :action #'srefactor-ui--refactor-action)
     (oset menu :context tag)
@@ -507,10 +511,12 @@ namespace.
               (srefactor--insert-function-pointer refactor-tag)
               (newline-and-indent)
               (recenter))
-             ((eq insert-type 'gen-func-impl)
-              (srefactor--insert-function refactor-tag 'gen-func-impl))
-             ((eq insert-type 'gen-func-proto)
-              (srefactor--insert-function refactor-tag 'gen-func-proto))
+             ((or (eq insert-type 'gen-func-impl) (eq insert-type 'gen-func-proto))
+              (if (region-active-p)
+                  (mapcar (lambda (t)
+                            (srefactor--insert-function t insert-type))
+                          (srefactor--tags-from-region))
+                (srefactor--insert-function refactor-tag insert-type)))
              ((srefactor--tag-pointer refactor-tag)
               (semantic-insert-foreign-tag (srefactor--function-pointer-to-function refactor-tag)))
              ((eq insert-type 'move)
@@ -794,9 +800,6 @@ BUFFER is the destination buffer from file user selects from contextual menu."
            ))
     (goto-char endofinsert)
     (insert "\n\n")))
-
-(defmacro srefactor--is-proto (type)
-  `(eq ,type 'gen-func-proto))
 
 (defun srefactor--insert-function (func-tag type)
   "Insert function implementations for FUNC-TAG at point, a tag that is a function.
@@ -1619,10 +1622,6 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
                 (overlay-put overlay 'face 'match))))
           tag-occurrences)))
 
-(defun srefactor--unhighlight-tag (tag)
-  "Unhighlight TAG."
-  (remove-overlays))
-
 (defun srefactor--switch-to-window (file-path)
   "Switch to window that contains FILE-PATH string."
   (catch 'found
@@ -1630,6 +1629,23 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
       (when (equal file-path (buffer-file-name (window-buffer w)))
         (select-window w)
         (throw 'found "Found window.")))))
+
+;; MACROS
+(defmacro srefactor--is-proto (type)
+  `(eq ,type 'gen-func-proto))
+
+(defmacro srefactor--unhighlight-tag (tag)
+  "Unhighlight TAG."
+  (remove-overlays))
+
+(defmacro srefactor--tags-from-region ()
+  "Get tags from current region."
+  (semantic-parse-region (region-beginning) (region-end)))
+
+(defmacro srefactor--add-menu-item (label operation-type file-options)
+  `(add-to-list 'menu-item-list (list ,label
+                                      ',operation-type
+                                      ,file-options)))
 
 (provide 'srefactor)
 
