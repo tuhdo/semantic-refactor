@@ -864,15 +864,15 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                   (semantic-tag-name tag)
                   ")"
                   "("))
-  (mapc (lambda (tag)
-          (let ((ptr-level (srefactor--tag-pointer tag))
-                (ref-level (srefactor--tag-reference tag)))
-            (insert (concat (srefactor--tag-type-string tag)
-                            ", ") )))
-        (semantic-tag-function-arguments tag))
-  (search-backward ",")
-  (replace-match "")
-  (insert ");"))
+  (let ((param-str (mapconcat
+                    (lambda (tag)
+                      (let ((ptr-level (srefactor--tag-pointer tag))
+                            (ref-level (srefactor--tag-reference tag)))
+                        (srefactor--tag-type-string tag)))
+                    (semantic-tag-function-arguments tag)
+                    ", ")))
+    (insert param-str)
+    (insert ");")))
 
 (defun srefactor--insert-function-as-parameter (tag)
   "Insert TAG that is a function as a function parameter.
