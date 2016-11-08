@@ -202,10 +202,6 @@ to perform."
                                  move
                                  srefactor--file-options))
     (when (region-active-p)
-      (when (srefactor--tags-from-region)
-        (add-to-list 'menu-item-list `(" (Current file)"
-                                       extract-function
-                                       nil)))
       (srefactor--add-menu-item  "Extract function (Current file)"
                                  extract-function
                                  nil))
