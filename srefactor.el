@@ -555,24 +555,7 @@ namespace.
 
     ;; indent after inserting refactor-tag
     (indent-according-to-mode)
-
-    ;; post content insertion based on context
-    (unless srefactor-use-srecode-p
-      (unless parent-is-func-p
-        (if (eq insert-type 'gen-func-impl)
-            (progn
-              (end-of-line)
-              (insert " {")
-              (newline 1)
-              (save-excursion
-                (srefactor--insert-initial-content-based-on-return-type
-                 (if (or (srefactor--tag-function-constructor refactor-tag)
-                         (srefactor--tag-function-destructor refactor-tag))
-                     ""
-                   (semantic-tag-type refactor-tag)))
-                (insert "}")
-                (indent-according-to-mode))
-              (goto-char (line-end-position))))))))
+    ))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions - IO
@@ -848,6 +831,20 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                         (insert (semantic-tag-name v))
                         (insert "()")))
                     variables))))))))
+  ;; post content insertion based on context
+  (unless (srefactor--is-proto type)
+    (end-of-line)
+    (insert " {")
+    (newline 1)
+    (save-excursion
+      (srefactor--insert-initial-content-based-on-return-type
+       (if (or (srefactor--tag-function-constructor func-tag)
+               (srefactor--tag-function-destructor func-tag))
+           ""
+         (semantic-tag-type func-tag)))
+      (insert "}")
+      (indent-according-to-mode))
+    (goto-char (line-end-position))))
 
 (defun srefactor--insert-function-pointer (tag)
   "Insert function pointer definition for TAG."
