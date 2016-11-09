@@ -455,8 +455,8 @@ REFACTOR-TAG is a Semantic tag that holds information of a C++ class."
          (dest-buffer-tags (with-current-buffer dest-buffer
                              (semantic-fetch-tags)))
          (diff (set-difference members
-                                dest-buffer-tags
-                                :test #'semantic-equivalent-tag-p))
+                               dest-buffer-tags
+                               :test #'semantic-equivalent-tag-p))
          )
     (dolist (tag diff)
       (cond
