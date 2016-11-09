@@ -227,11 +227,13 @@ Based on the type of list passed above, either use
 (defun srefactor--c-tag-start-with-comment (tag)
   (save-excursion
     (goto-char (semantic-tag-start tag))
-    (when (semantic-documentation-comment-preceeding-tag tag)
-      (search-backward-regexp "/\\*" nil t)
-      (beginning-of-line)
-      (looking-at "^[ ]*\\/\\*"))
-    (point)))
+    (if (and (search-backward-regexp "/\\*" nil t)
+             (semantic-documentation-comment-preceeding-tag tag)
+             (looking-at "^[ ]*\\/\\*"))
+        (progn
+          (beginning-of-line)
+          (point))
+      (semantic-tag-start tag))))
 
 (defun srefactor--copy-tag ()
   "Take the current tag, and place it in the tag ring."
