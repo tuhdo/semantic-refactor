@@ -791,6 +791,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
     ;; (newline-and-indent)
     (unless (srefactor--is-proto type)
       (newline-and-indent))
+
     (let ((func-tag-name (srefactor--tag-name func-tag))
           (parent (srefactor--calculate-parent-tag func-tag)))
       (when (srefactor--tag-function-modifiers func-tag)
@@ -812,9 +813,10 @@ BUFFER is the destination buffer from file user selects from contextual menu."
         ;; insert tag parent if any
         (unless (or (srefactor--tag-friend-p func-tag)
                     (eq type 'gen-func-proto)
-                    ;; insert inside a tag
-                    (semantic-current-tag))
+                    ;; must insert inside a tag
+                    (null (semantic-current-tag)))
           (insert (srefactor--tag-parents-string func-tag)))
+
         (when (srefactor--tag-function-constructor func-tag)
           (let ((variables (srefactor--tag-filter #'semantic-tag-class
                                                   '(variable)
@@ -830,7 +832,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                       (when (string-match "const" (srefactor--tag-type-string v))
                         (insert (semantic-tag-name v))
                         (insert "()")))
-                    variables))))))))
+                    variables)))))))
   ;; post content insertion based on context
   (unless (srefactor--is-proto type)
     (end-of-line)
