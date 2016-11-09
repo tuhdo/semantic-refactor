@@ -196,7 +196,7 @@ to perform."
       (setq tag srefactor--current-local-var)
       (srefactor--add-menu-item  "Rename local variable (Current file)"
                                  rename-local-var
-                                 ("(Current file)")))
+                                 '("(Current file)")))
     (when (srefactor--menu-add-move-p)
       (srefactor--add-menu-item  "Move (Current file)"
                                  move
