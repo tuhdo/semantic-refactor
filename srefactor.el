@@ -1053,29 +1053,32 @@ TAG-TYPE is the return type such as int, long, float, double..."
   "Return a list of parent tags of a TAG.
 The closer to the end of the list, the higher the parents."
   (let* ((tag-buffer (semantic-tag-buffer tag))
-         (parent (with-current-buffer (if tag-buffer
-                                          tag-buffer
-                                        (current-buffer))
-                   (save-excursion
-                     (goto-char (semantic-tag-start tag))
-                     (semantic-current-tag-parent)))))
-    (if (and parent
-             (not (string-equal (semantic-tag-type parent) "namespace")))
-        (cons parent (srefactor--get-all-parents parent))
-      nil)))
+         (parents (cdr (nreverse
+                        (semantic-find-tag-by-overlay (semantic-tag-start tag)
+                                                      (if tag-buffer
+                                                          tag-buffer
+                                                        (current-buffer)))))))
+    parents))
 
 (defun srefactor--tag-parents-string (tag)
   "Return parent prefix string of a TAG.
 
 It is used for prepending to function or variable name defined
 outside of a scope."
-  (let ((parents (srefactor--get-all-parents tag)))
-    (if parents
-        (concat (mapconcat (lambda (T)
-                             (concat (semantic-tag-name T)
-                                     (srefactor--tag-templates-parameters-string T)))
-                           (nreverse parents) "::") "::")
-      "")))
+  (let* ((parents (srefactor--get-all-parents tag))
+         (parents-at-point (semantic-find-tag-by-overlay))
+         (parents-str-lst (mapcar (lambda (tag)
+                                    (concat (semantic-tag-name tag)
+                                            (srefactor--tag-templates-parameters-string tag)))
+                                  parents))
+         (parents-at-point-str-lst (mapcar (lambda (tag)
+                                             (concat (semantic-tag-name tag)
+                                                     (srefactor--tag-templates-parameters-string tag)))
+                                           parents-at-point))
+         (diff (set-difference parents-str-lst
+                               parents-at-point-str-lst
+                               :test #'string-equal)))
+    (concat (mapconcat #'identity (nreverse diff) "::") "::")))
 
 (defun srefactor--tag-function-parameters-string (members)
   "Return function parameter string of a function.
