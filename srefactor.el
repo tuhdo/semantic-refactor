@@ -796,6 +796,10 @@ BUFFER is the destination buffer from file user selects from contextual menu."
 
     (let ((func-tag-name (srefactor--tag-name func-tag))
           (parent (srefactor--calculate-parent-tag func-tag)))
+      ;; insert const if return a const value
+      (when (semantic-tag-get-attribute func-tag :constant-flag)
+        (insert "const "))
+
       (when (srefactor--tag-function-modifiers func-tag)
         (semantic-tag-put-attribute func-tag :typemodifiers nil))
       (save-excursion
@@ -803,6 +807,11 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                    parent)
           (insert (srefactor--tag-templates-declaration-string parent)))
         (insert (srefactor--tag-function-string func-tag))
+
+        ;; insert const modifer for method
+        (when (semantic-tag-get-attribute func-tag :methodconst-flag)
+          (insert " const"))
+
         (when (srefactor--is-proto type)
           (insert ";\n")))
       (unless (eq major-mode 'c-mode)
