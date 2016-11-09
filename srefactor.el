@@ -1436,7 +1436,7 @@ tag and OPTIONS is a list of possible choices for each menu item.
          cur-tag-start cur-tag-end tag-name)
     (when (and local-var
                (eq (semantic-tag-class cur-tag) 'function)
-               (not (equal (car (semantic-ctxt-current-symbol))
+               (not (equal (car (nreverse (semantic-ctxt-current-symbol)))
                            (semantic-tag-name cur-tag)))
                (not (semantic-tag-prototype-p cur-tag))
                (not (region-active-p)))
