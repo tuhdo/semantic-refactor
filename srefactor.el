@@ -844,6 +844,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
                         (insert (semantic-tag-name v))
                         (insert "()")))
                     variables)))))))
+
   ;; post content insertion based on context
   (unless (srefactor--is-proto type)
     (end-of-line)
