@@ -1047,8 +1047,10 @@ The closer to the end of the list, the higher the parents."
                    (save-excursion
                      (goto-char (semantic-tag-start tag))
                      (semantic-current-tag-parent)))))
-    (when parent
-      (cons parent (srefactor--get-all-parents parent)))))
+    (if (and parent
+             (not (string-equal (semantic-tag-type parent) "namespace")))
+        (cons parent (srefactor--get-all-parents parent))
+      nil)))
 
 (defun srefactor--tag-parents-string (tag)
   "Return parent prefix string of a TAG.
