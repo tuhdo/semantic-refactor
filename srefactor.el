@@ -148,6 +148,14 @@
 (defvar srefactor-use-srecode-p nil
   "Use experimental SRecode tag insertion ")
 
+;; MACROS
+(defmacro srefactor--is-proto (type)
+  `(eq ,type 'gen-func-proto))
+
+(defmacro srefactor--add-menu-item (label operation-type file-options)
+  `(add-to-list 'menu-item-list (list ,label
+                                      ',operation-type
+                                      ,file-options)))
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Commands - only one currently
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -163,7 +171,7 @@ to perform."
          (refresh (semantic-parse-changes-default))
          (srefactor--file-options (srefactor-ui--return-option-list 'file))
          (tag (srefactor--copy-tag))
-         (menu (srefactor-ui-menu "menu"))
+         (menu (srefactor-ui-menu))
          menu-item-list)
     (setq srefactor--current-local-var (srefactor--menu-add-rename-local-p))
     (when (srefactor--menu-add-function-implementation-p tag)
@@ -228,7 +236,7 @@ Based on the type of list passed above, either use
   (save-excursion
     (goto-char (semantic-tag-start tag))
     (if (and (search-backward-regexp "/\\*" nil t)
-             (semantic-documentation-comment-preceeding-tag tag)
+             (semantic-documentation-comment-preceding-tag tag)
              (looking-at "^[ ]*\\/\\*"))
         (progn
           (beginning-of-line)
@@ -284,7 +292,7 @@ FILE-OPTION is a file destination associated with OPERATION."
                                                  refactor-tag
                                                  (read-from-minibuffer prompt)))
                 (error nil))
-            (srefactor--unhighlight-tag local-var))))
+            (remove-overlays))))
        (t
         (let ((other-file (srefactor--select-file file-option)))
           (srefactor--refactor-tag (srefactor--contextual-open-file other-file)
@@ -511,9 +519,9 @@ namespace.
               (recenter))
              ((or (eq insert-type 'gen-func-impl) (eq insert-type 'gen-func-proto))
               (if (region-active-p)
-                  (mapcar (lambda (t)
-                            (srefactor--insert-function t insert-type))
-                          (srefactor--tags-from-region))
+                  (mapcar (lambda (f-t)
+                            (srefactor--insert-function f-t insert-type))
+                          (semantic-parse-region (region-beginning) (region-end)))
                 (srefactor--insert-function refactor-tag insert-type)))
              ((srefactor--tag-pointer refactor-tag)
               (semantic-insert-foreign-tag (srefactor--function-pointer-to-function refactor-tag)))
@@ -1642,22 +1650,6 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
         (select-window w)
         (throw 'found "Found window.")))))
 
-;; MACROS
-(defmacro srefactor--is-proto (type)
-  `(eq ,type 'gen-func-proto))
-
-(defmacro srefactor--unhighlight-tag (tag)
-  "Unhighlight TAG."
-  (remove-overlays))
-
-(defmacro srefactor--tags-from-region ()
-  "Get tags from current region."
-  (semantic-parse-region (region-beginning) (region-end)))
-
-(defmacro srefactor--add-menu-item (label operation-type file-options)
-  `(add-to-list 'menu-item-list (list ,label
-                                      ',operation-type
-                                      ,file-options)))
 
 (provide 'srefactor)
 
