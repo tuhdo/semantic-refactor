@@ -800,6 +800,8 @@ BUFFER is the destination buffer from file user selects from contextual menu."
 (defun srefactor--insert-function (func-tag type)
   "Insert function implementations for FUNC-TAG at point, a tag that is a function.
 `type' is the operation to be done, not the type of the tag."
+  (newline)
+  (left-char)
   (if srefactor-use-srecode-p
       ;; Try using SRecode as the mechanism for inserting a tag.
       (srefactor--insert-with-srecode func-tag)
