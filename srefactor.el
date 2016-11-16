@@ -349,29 +349,36 @@ FILE-OPTION is a file destination associated with OPERATION."
                                 projectile-project-root
                                 projectile-find-file))
         other-files file l)
-    (when  (and (featurep 'projectile)
-                (cl-reduce (lambda (acc f)
-                             (and (fboundp f) acc))
-                           projectile-func-list
-                           :initial-value t))
-      (cond
-       ((string-equal option "(Other file)")
-        (setq other-files (projectile-get-other-files (buffer-file-name)
-                                                      (projectile-current-project-files)
-                                                      nil))
-        (setq l (length other-files))
-        (setq file (concat (projectile-project-root)
-                           (cond ((> l 1)
-                                  (completing-read "Select a file: "
-                                                   other-files))
-                                 ((= l 1)
-                                  (car other-files))
-                                 (t (projectile-find-file))))))
-       ((and (string-equal option "(Project file)") (featurep 'projectile))
-        (setq file (concat (projectile-project-root)
-                           (completing-read "Select a file: "
-                                            (projectile-current-project-files)))))
-       ))
+    (if (and (featurep 'projectile)
+             (cl-reduce (lambda (acc f)
+                          (and (fboundp f) acc))
+                        projectile-func-list
+                        :initial-value t))
+        (cond
+         ((string-equal option "(Other file)")
+          (condition-case nil
+              (progn
+                (setq other-files (projectile-get-other-files (buffer-file-name)
+                                                              (projectile-current-project-files)
+                                                              nil))
+                (setq l (length other-files))
+                (setq file (concat (projectile-project-root)
+                                   (cond ((> l 1)
+                                          (completing-read "Select a file: "
+                                                           other-files))
+                                         ((= l 1)
+                                          (car other-files))
+                                         (t (projectile-find-file))))))
+            (error nil)
+            (ff-find-other-file)))
+         ((and (string-equal option "(Project file)")
+               (featurep 'projectile))
+          (setq file (concat (projectile-project-root)
+                             (completing-read "Select a file: "
+                                              (projectile-current-project-files)))))
+         )
+      (if (string-equal option "(Other file)")
+          (ff-find-other-file)))
 
     (when (string-equal option "(Current file)")
       (setq file (buffer-file-name (current-buffer))))
