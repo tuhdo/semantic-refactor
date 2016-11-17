@@ -59,12 +59,15 @@
 ;;
 ;;; Code:
 (require 'semantic/bovine/el)
+(with-no-warnings
+  (require 'cl))
 
 (defcustom srefactor-newline-threshold 40
   "If a token is about to be inserted, if the current posistion
   exceeds this threshold characters, insert the token in the next
   line isntead. Note that this does not account for indentation
-  but the total number of characters in a line.")
+  but the total number of characters in a line."
+  :group 'srefactor)
 
 (defcustom srefactor-lisp-symbol-to-skip '(("progn" . 0)
                                            ("cond" . 0)
@@ -160,7 +163,8 @@
   "A list of pairs of a symbol and a number that denotes how many
   sexp to skip before inserting a newline. This will be merged
   with `srefactor-lisp-symbol-to-skip'. Symbols in this list
-  overrides symbols in `srefactor-lisp-symbol-to-skip'.")
+  overrides symbols in `srefactor-lisp-symbol-to-skip'."
+  :group 'srefactor)
 
 (defun srefactor--appropriate-major-mode (major-mode)
   (cond
@@ -407,7 +411,7 @@ Return the position of last closing sexp."
             (srefactor--lisp-visit-semantic-list-lex (nreverse lexemes))))
       (kill-buffer tmp-buf))))
 
-(defsubst srefactor--lisp-number-formatter ()
+(defun srefactor--lisp-number-formatter ()
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
   (goto-char (semantic-lex-token-end token))
@@ -421,7 +425,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
   (setq second-token (cadr lexemes))
   (srefactor--lisp-forward-token))
 
-(defsubst srefactor--lisp-punctuation-formatter ()
+(defun srefactor--lisp-punctuation-formatter ()
   "Make use of dynamic scope of its parent
 function `srefactor--lisp-format-one-or-multi-lines'"
   (let ((orig-token token)
@@ -435,7 +439,7 @@ function `srefactor--lisp-format-one-or-multi-lines'"
     (when token
       (push token lexemes))))
 
-(defsubst srefactor--lisp-symbol-formatter ()
+(defun srefactor--lisp-symbol-formatter ()
   "Insert additional text based on symbol appearance. Make use of
 dynamic scope of its parent function `srefactor--lisp-format-one-or-multi-lines'"
   (cond
@@ -464,12 +468,12 @@ dynamic scope of its parent function `srefactor--lisp-format-one-or-multi-lines'
    ((eq format-type 'multi-line)
     (srefactor--lisp-multiline-formatter))))
 
-(defsubst srefactor--lisp-forward-first-second-token ()
+(defun srefactor--lisp-forward-first-second-token ()
   (setq first-token token)
   (setq first-token-name (srefactor--lisp-token-text first-token))
   (setq second-token (car lexemes)))
 
-(defsubst srefactor--lisp-forward-token ()
+(defun srefactor--lisp-forward-token ()
   (setq token (pop lexemes))
   (when token
     (setq token-type (semantic-lex-token-class token))
@@ -485,7 +489,7 @@ dynamic scope of its parent function `srefactor--lisp-format-one-or-multi-lines'
                            ""))
     token))
 
-(defsubst srefactor--lisp-comment-formatter ()
+(defun srefactor--lisp-comment-formatter ()
   (let (comment-token comment-token-start comment-token-end
                       comment-content next-token-real-line token-real-line
                       comment-real-line-start comment-real-line-end)
@@ -523,9 +527,9 @@ dynamic scope of its parent function `srefactor--lisp-format-one-or-multi-lines'
         (when (or (srefactor--lisp-token-in-punctuation-p token)
                   (srefactor--lisp-token-in-punctuation-p next-token)
                   (string-match "[]}]" token-str))
-        (insert "\n"))))))
+          (insert "\n"))))))
 
-(defsubst srefactor--lisp-oneline-formatter ()
+(defun srefactor--lisp-oneline-formatter ()
   (unless (srefactor--lisp-token-in-punctuation-p token)
     (let ((distance (- (point)
                        (line-beginning-position))))
@@ -534,7 +538,7 @@ dynamic scope of its parent function `srefactor--lisp-format-one-or-multi-lines'
           (insert " ")
         (insert "\n")))))
 
-(defsubst srefactor--lisp-multiline-formatter ()
+(defun srefactor--lisp-multiline-formatter ()
   (cond
    (ignore-num (when (and (equal first-token-name token-str))
                  (insert " ")
@@ -573,23 +577,23 @@ dynamic scope of its parent function `srefactor--lisp-format-one-or-multi-lines'
     (insert "\n"))
    (t (insert "\n"))))
 
-(defsubst srefactor--lisp-token-name-in-skip-list-p (token-name)
+(defun srefactor--lisp-token-name-in-skip-list-p (token-name)
   (member token-name srefactor-lisp-symbol-to-skip))
 
-(defsubst srefactor--lisp-token-in-punctuation-p (token)
+(defun srefactor--lisp-token-in-punctuation-p (token)
   (member (semantic-lex-token-class token) '(open-paren charquote close-paren punctuation)))
 
-(defsubst srefactor--lisp-token-paren-p (token)
+(defun srefactor--lisp-token-paren-p (token)
   (member (semantic-lex-token-class token) '(open-paren close-paren)))
 
-(defsubst srefactor--lisp-token-text (token)
+(defun srefactor--lisp-token-text (token)
   (if token
       (with-current-buffer cur-buf
         (buffer-substring-no-properties (semantic-lex-token-start token)
                                         (semantic-lex-token-end token)))
     ""))
 
-(defsubst srefactor--lisp-visit-semantic-list-lex (lexemes)
+(defun srefactor--lisp-visit-semantic-list-lex (lexemes)
   "Visit and format all sub-sexpressions (semantic list) in LEXEMES."
   (dolist (token lexemes)
     (let ((tok-start (semantic-lex-token-start token))
