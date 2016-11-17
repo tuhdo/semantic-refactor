@@ -166,6 +166,36 @@
   overrides symbols in `srefactor-lisp-symbol-to-skip'."
   :group 'srefactor)
 
+;; Internal variables of parser state
+(defvar token nil)
+(defvar token-type nil)
+(defvar token-str nil)
+(defvar ignore-num nil)
+(defvar tok-start nil)
+(defvar next-token nil)
+(defvar next-token-start nil)
+(defvar next-token-end nil)
+(defvar next-token-type nil)
+(defvar next-token-str nil)
+(defvar tok-end nil)
+(defvar cur-buf nil)
+(defvar first-token nil)
+(defvar first-token-name nil)
+(defvar second-token nil)
+(defvar lexemes nil)
+(defvar comment-token nil)
+(defvar comment-content nil)
+(defvar token-real-line nil)
+(defvar next-token-real-line nil)
+(defvar comment-real-line-start nil)
+(defvar comment-real-line-end nil)
+(defvar comment-token-start nil)
+(defvar comment-token-end nil)
+(defvar format-type nil)
+(defvar recursive-p nil)
+(defvar orig-format-type nil)
+
+
 (defun srefactor--appropriate-major-mode (major-mode)
   (cond
    ((eq major-mode 'emacs-lisp-mode)
