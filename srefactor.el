@@ -90,8 +90,7 @@
 ;;
 ;;; Code:
 
-(with-no-warnings
-  (require 'cl))
+(require 'cl-lib)
 (require 'cc-mode)
 (require 'semantic)
 (require 'semantic/tag-ls)
