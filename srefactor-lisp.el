@@ -59,8 +59,6 @@
 ;;
 ;;; Code:
 (require 'semantic/bovine/el)
-(with-no-warnings
-  (require 'cl))
 
 (defcustom srefactor-newline-threshold 40
   "If a token is about to be inserted, if the current posistion
@@ -213,9 +211,9 @@
   (cond
    ((and (fboundp 'clojure-mode)
          (eq major-mode 'clojure-mode))
-    (remove-duplicates (append srefactor-lisp-symbol-to-skip srefactor-clojure-symbol-to-skip)
-                       :test (lambda (a b)
-                               (equal (car a) (car b)))))
+    (cl-remove-duplicates (append srefactor-lisp-symbol-to-skip srefactor-clojure-symbol-to-skip)
+                          :test (lambda (a b)
+                                  (equal (car a) (car b)))))
    (t srefactor-lisp-symbol-to-skip)))
 
 (defun srefactor-lisp-format-buffer ()
