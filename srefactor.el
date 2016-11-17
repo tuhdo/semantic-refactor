@@ -103,21 +103,24 @@
 
 (if (not (version< emacs-version "24.4"))
     (require 'subr-x)
-  (defsubst string-empty-p (string)
+  (defun string-empty-p (string)
     "Check whether STRING is empty."
     (string= string ""))
 
-  (defsubst string-trim-left (string)
+  (defun string-trim-left (string)
     "Remove leading whitespace from STRING."
     (if (string-match "\\`[ \t\n\r]+" string)
         (replace-match "" t t string)
       string))
 
-  (defsubst string-trim-right (string)
+  (defun string-trim-right (string)
     "Remove trailing whitespace from STRING."
     (if (string-match "[ \t\n\r]+\\'" string)
         (replace-match "" t t string)
       string)))
+
+(when (version< emacs-version "25")
+  (defalias 'semantic-documentation-comment-preceding-tag 'semantic-documentation-comment-preceeding-tag))
 
 (defvar srefactor--current-local-var nil
   "Current local variable at point")
@@ -171,7 +174,7 @@ to perform."
          (refresh (semantic-parse-changes-default))
          (srefactor--file-options (srefactor-ui--return-option-list 'file))
          (tag (srefactor--copy-tag))
-         (menu (srefactor-ui-menu))
+         (menu (srefactor-ui-menu "menu"))
          menu-item-list)
     (setq srefactor--current-local-var (srefactor--menu-add-rename-local-p))
     (when (srefactor--menu-add-function-implementation-p tag)
@@ -1658,7 +1661,6 @@ PARENT-TAG is the tag that contains TAG, such as a function or a class or a name
       (when (equal file-path (buffer-file-name (window-buffer w)))
         (select-window w)
         (throw 'found "Found window.")))))
-
 
 (provide 'srefactor)
 
