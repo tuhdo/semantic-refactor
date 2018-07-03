@@ -135,11 +135,11 @@
   :group 'srefactor)
 
 (defcustom srefactor--getter-setter-removal-prefix ""
-  "Prefix for inserting getter."
+  "Prefix for removing getter and setter."
   :group 'srefactor)
 
 (defcustom srefactor--getter-setter-capitalize-p nil
-  "Prefix for inserting getter."
+  "Whether getter and setter should be capitalized."
   :group 'srefactor
   :type 'boolean)
 
@@ -265,7 +265,7 @@ Use `senator-yank-tag' for prototype insert.")))
 ;; High level functions that select action to make
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun srefactor--refactor-based-on-tag-class (operation &optional file-option)
-  "Refractor based on current tag in context.
+  "Refactor based on current tag in context.
 
 OPERATION is a refactoring type user selected from the menu.
 FILE-OPTION is a file destination associated with OPERATION."
@@ -345,13 +345,13 @@ FILE-OPTION is a file destination associated with OPERATION."
      (t))))
 
 (defun srefactor--select-file (option)
-  "Select a file based on OPTION selected by a user."
+  "Return a file based on OPTION selected by a user."
   (let ((projectile-func-list '(projectile-get-other-files
                                 projectile-current-project-files
                                 projectile-project-root
                                 projectile-find-file))
         other-files file l)
-    (if (and (featurep 'projectile)
+    (when (and (featurep 'projectile)
              (cl-reduce (lambda (acc f)
                           (and (fboundp f) acc))
                         projectile-func-list
@@ -371,16 +371,13 @@ FILE-OPTION is a file destination associated with OPERATION."
                                          ((= l 1)
                                           (car other-files))
                                          (t (projectile-find-file))))))
-            (error nil)
-            (ff-find-other-file)))
+            (error nil)))
          ((and (string-equal option "(Project file)")
                (featurep 'projectile))
           (setq file (concat (projectile-project-root)
                              (completing-read "Select a file: "
                                               (projectile-current-project-files)))))
-         )
-      (if (string-equal option "(Other file)")
-          (ff-find-other-file)))
+         ))
 
     (when (string-equal option "(Current file)")
       (setq file (buffer-file-name (current-buffer))))
@@ -593,8 +590,8 @@ OTHER-FILE is the selected file from the menu."
         (find-file other-file))
        (t (find-file-other-window other-file)
           (current-buffer)))
-    ;; use ff-find-other-file if no file is chosen When no file is
-    ;; chosen, it means that user selected (Other file) option, but
+    ;; use ff-find-other-file when no file is chosen,
+    ;; it means that user selected (Other file) option, but
     ;; does not install Projectile so he cannot use its function to
     ;; return the filename of other file. In this case, he simply gets
     ;; nil, which mean it's the job for `ff-find-other-file'. This needs
