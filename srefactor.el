@@ -824,7 +824,7 @@ BUFFER is the destination buffer from file user selects from contextual menu."
           (insert (srefactor--tag-templates-declaration-string parent)))
         (insert (srefactor--tag-function-string func-tag))
 
-        ;; insert const modifer for method
+        ;; insert const modifier for method
         (when (semantic-tag-get-attribute func-tag :methodconst-flag)
           (insert " const"))
 
@@ -1321,18 +1321,20 @@ complicated language construct, Semantic cannot retrieve it."
                                           ref-string)
                                          (t "")))))
      (t
-      (if (listp tag-type)
-          (concat (when const-p
-                    "const ")
-                  (when (srefactor--tag-struct-p tag)
-                    "struct ")
-                  (car tag-type)
-                  (cond
-                   (ref-level
-                    ref-string)
-                   (ptr-level
-                    ptr-string)))
-        tag-type)))))
+      (concat (when const-p
+                "const ")
+              (if (not (listp tag-type))
+                tag-type
+                (when (srefactor--tag-struct-p tag)
+                  "struct ")
+                (car tag-type))
+              (cond
+               (ref-level
+                ref-string)
+               (ptr-level
+                ptr-string)
+               (t
+                "")))))))
 
 (defun srefactor--tag-type-string-inner-template-list (tmpl-spec-list)
   (mapconcat (lambda (tmpl)
