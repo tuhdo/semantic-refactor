@@ -361,7 +361,6 @@ FILE-OPTION is a file destination associated with OPERATION."
           (condition-case nil
               (progn
                 (setq other-files (projectile-get-other-files (buffer-file-name)
-                                                              (projectile-current-project-files)
                                                               nil))
                 (setq l (length other-files))
                 (setq file (concat (projectile-project-root)
